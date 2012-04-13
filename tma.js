@@ -2,6 +2,7 @@ function tma () {
 }
 
 tma._head = document.getElementsByTagName("head")[0];
+tma._base = "";
 tma._scripts = {};
 tma.ready = false;
 tma.onload = null;
@@ -42,7 +43,7 @@ tma._load = function (srcs, callback) {
     }
   }
   for (var i = 0; i < srcs.length; i++)
-    tma.load(srcs[i], invoker);
+    tma.load(this._base + srcs[i], invoker);
 };
 
 tma.reload = function (callback) {
@@ -55,10 +56,18 @@ tma.reload = function (callback) {
 };
 
 (function() {
-  var scripts = [
+  var scripts = document.getElementsByTagName("script");
+  for (var i = 0; i < scripts.length; i++) {
+    var match = scripts[i].src.match(/(^|.*\/)tma\.js$/);
+    if (match) {
+      tma._base = match[1];
+      break;
+    }
+  }
+  var libs = [
     "TmaScreen.js"
   ];
-  tma._load(scripts, function () {
+  tma._load(libs, function () {
     tma.ready = true;
     if (tma.onload)
       tma.onload();
