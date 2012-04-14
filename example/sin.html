@@ -1,0 +1,64 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script>
+        tma.onload = function () {
+            var screen = new TmaScreen(500, 240);
+            screen.attachTo(TmaScreen.BODY);
+            screen.fill("rgba(0, 0, 0, 1)");
+            screen.afterimage("rgba(0, 0, 0, 0.4)");
+            screen.blur(0.5, 0.65, 1.03, 2, 0, false);
+
+            function Particle () { TmaParticle.apply(this, arguments); }
+            Particle.prototype = new TmaParticle(null, 0);
+            Particle.prototype.constructor = Particle;
+
+            var container = new TmaParticle.Container(Particle);
+
+            Particle.prototype.initialize = function (x, y, r, b) {
+                this.x = x;
+                this.y = y;
+                this.r = r;
+                this.b = b;
+            };
+
+            Particle.prototype.update = function () {
+                this.x -= 2;
+                if (this.x < 0)
+                    return false;
+                screen.setPixel(this.x, this.y, this.r, 0xff, this.b, 0xff);
+                return true;
+            };
+
+            var oy = 0;
+            var w = 0;
+            var count = 0;
+
+            function main () {
+                count++;
+                if (count > 100) {
+                    count = 0;
+                    console.log("particles: " + container.length);
+                }
+                var o = Math.sin(w / 10);
+                var r = ~~(128 * o);
+                var y = ~~(screen.height / 2 +
+                        screen.height / 3 * Math.sin(o + w++ / 50));
+                var b = ~~(y * 200 / screen.height);
+                var d = (oy < y) ? 1 : -1;
+                for (var i = y/*oy*/;; i += d) {
+                    container.add(screen.width - 1, i, r, b);
+                    if (i == y)
+                        break;
+                }
+                oy = y;
+                screen.lock(TmaScreen.LOCK_WITH_SCREEN);
+                container.update();
+                screen.unlock();
+            }
+
+            setInterval(main, 20);
+        };
+    </script>
+</head>
+</html>

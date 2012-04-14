@@ -1,0 +1,62 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script>
+        tma.onload = function () {
+            // All libraries are loaded asynchronously.
+            tma.log("test.html: libraries must be loaded");
+            var screen = new TmaScreen(640, 480);
+            screen.attachTo(TmaScreen.BODY);
+            screen.fill("rgba(0, 0, 0, 1)");
+            screen.afterimage("rgba(0, 0, 0, 0.2)");
+            screen.blur(1.0, 0.2, 5.0, 0, 0, true);
+
+            function Snow () { TmaParticle.apply(this, arguments); }
+            Snow.prototype = new TmaParticle(null, 0);
+            Snow.prototype.constructor = Snow;
+            Snow.GRAVITY = 10 / 1000;
+
+            var container = new TmaParticle.Container(Snow);
+
+            Snow.emit = function () {
+                var x = Math.random() * screen.width;
+                var vy = Math.random() + 0.5;
+                container.add(x, vy);
+            };
+
+            Snow.prototype.initialize = function (x, vy) {
+                this.y = 0;
+                this.x = x;
+                this.vy = vy;
+            };
+
+            Snow.prototype.update = function () {
+                this.vy += Snow.GRAVITY;
+                this.vy *= 0.99;
+                this.y += this.vy;
+                if (this.y >= screen.height)
+                    return false;
+                screen.setPixel(~~this.x, ~~this.y, 0x88, 0x88, 0xff, 0xff);
+                return true;
+            };
+
+            var count = 0;
+
+            function main () {
+                count++;
+                if (count > 100) {
+                    count = 0;
+                    console.log("particles: " + container.length);
+                }
+                for (i = 0; i < 100; i++)
+                    Snow.emit();
+                var data = screen.lock(TmaScreen.LOCK_WITH_SCREEN).data;
+                container.update();
+                screen.unlock();
+            }
+
+            setInterval(main, 20);
+        };
+    </script>
+</head>
+</html>
