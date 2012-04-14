@@ -6,6 +6,9 @@
  * TmaParticle prototype. Inheritant prototypes should implement nothing in the
  * constructor, but |initialize()| because JavaScript level objects will be
  * reused by calling |initialize()| to optimize performance.
+ * E.g., function Foo () { TmaParticle.apply(this, arguments); }
+ *       Foo.prototype = new TmaParticle(null, 0);
+ *       Foo.prototype.constructor = Foo;
  *
  * This prototype provides particle.
  * @author Takashi Toyoshima <toyoshim@gmail.com>
@@ -13,17 +16,20 @@
 function TmaParticle (container, offset) {
     this._container = container;
     this._offset = offset;
-}
-
-TmaParticle.prototype.initialize = function () {
     this.x = 0;
     this.y = 0;
     this.vx = 0;
     this.vy = 0;
+}
+
+TmaParticle.prototype.initialize = function () {
 };
 
 TmaParticle.prototype.remove = function () {
     this._container.remove(this._offset);
+};
+
+TmaParticle.prototype.update = function () {
 };
 
 TmaParticle.Container = function (func) {
@@ -49,4 +55,13 @@ TmaParticle.Container.prototype.remove = function (offset) {
     this._particles[offset] = this._particles[this.length];
     this._particles[offset]._offset = offset;
     this._particles[this.length] = particle;
+};
+
+TmaParticle.Container.prototype.update = function () {
+    for (var i = 0; i < this.length; ) {
+        if (this._particles[i].update())
+            i++;
+        else
+            this.remove(i);
+    }
 };
