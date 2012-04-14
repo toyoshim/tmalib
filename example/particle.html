@@ -1,0 +1,68 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script>
+        tma.onload = function () {
+            function Particle() {
+                TmaParticle.apply(this, arguments);
+            }
+            Particle.prototype = new TmaParticle(null, 0);
+            Particle.prototype.constructor = Particle;
+
+            var splice = new Array();
+            for (var i = 0; i < 10000; i++)
+                splice.push(new Particle());
+            var start = new Date();
+            for (i = 0; i < 1000000; i++) {
+                var pos = ~~(Math.random() * splice.length);
+                if (Math.random() > 0.5)
+                    splice.splice(pos, 1);
+                else
+                    splice.push(new Particle());
+            }
+            var end = new Date();
+            var time = end.getTime() - start.getTime();
+            console.log("Array push and splice: " + time + "msec");
+            console.log(splice);
+
+            var replace = new Array();
+            var replaceLength = 10000;
+            for (i = 0; i < replaceLength; i++)
+                replace.push(new Particle());
+            start = new Date();
+            for (i = 0; i < 1000000; i++) {
+                pos = ~~(Math.random() * replace.length);
+                if (Math.random() > 0.5) {
+                    replace[pos] = replace[--replaceLength];
+                } else {
+                    if (replace.length == replaceLength)
+                        replace[replaceLength++] = new Particle();
+                    else
+                        replaceLength++;
+                }
+            }
+            end = new Date();
+            time = end.getTime() - start.getTime();
+            console.log("Array push and replace: " + time + "msec");
+            console.log(replace);
+
+            var container = new TmaParticle.Container(Particle);
+            for (i = 0; i < 10000; i++)
+                container.add();
+            start = new Date();
+            for (i = 0; i < 1000000; i++) {
+                pos = ~~(Math.random() * container.length);
+                // .at(pos).remove() is a little slower than .remove(pos).
+                if (Math.random() > 0.5)
+                    container.at(pos).remove();
+                else
+                    container.add();
+            }
+            end = new Date();
+            time = end.getTime() - start.getTime();
+            console.log("ParticleContainer: " + time + "msec");
+            console.log(replace);
+        }
+    </script>
+</head>
+</html>

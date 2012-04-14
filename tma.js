@@ -106,7 +106,8 @@ tma._load = function (srcs, callback) {
         }
     }
     var libs = [
-        "TmaScreen.js"
+        "TmaScreen.js",
+        "TmaParticle.js"
     ];
     tma._load(libs, function () {
         tma.ready = true;
