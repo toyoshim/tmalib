@@ -1,76 +1,116 @@
+/**
+ * T'MediaArt library for JavaScript.
+ */
+
+/**
+ * tma prototype
+ *
+ * This prototype provides base functions.
+ * @author Takashi Toyoshima <toyoshim@gmail.com>
+ */
 function tma () {
 }
 
+/**
+ * Private prototype variables.
+ */
+// Holds head tag element.
 tma._head = document.getElementsByTagName("head")[0];
+// Holds base path for this JavaScript.
 tma._base = "";
+// Holds loaded scripts' data.
 tma._scripts = {};
+// If all external scripts are loaded.
 tma.ready = false;
+// Entry point for callback ti know when all external scripts are loaded.
 tma.onload = null;
 
+/**
+ * Takes a log at a each level.
+ * @param arguments Variable number of arguments to log
+ */
 tma.log = function () {
-  console.log.apply(console, arguments);
+    console.log.apply(console, arguments);
 };
-
 tma.warn = function () {
-  console.warn.apply(console, arguments);
+    console.warn.apply(console, arguments);
 };
-
 tma.error = function () {
-  console.error.apply(console, arguments);
+    console.error.apply(console, arguments);
 };
 
+/**
+ * Loads JavaScript library dynamically.
+ * @param src a source file URL
+ * @param callback callback to be invoked when the JavaScript is loaded
+ */
 tma.load = function (src, callback) {
-  var script = document.createElement("script");
-  script.onload = callback;
-  script.src = src;
-  tma._head.appendChild(script);
-  tma._scripts[src] = script;
+    var script = document.createElement("script");
+    script.onload = callback;
+    script.src = src;
+    tma._head.appendChild(script);
+    tma._scripts[src] = script;
 };
 
+/**
+ * Unloads JavaScript library dynamically.
+ * @param src a source file URL
+ */
 tma.unload = function (src) {
-  tma._head.removeChild(tma._scripts[src]);
-  delete tma._scripts[src];
+    tma._head.removeChild(tma._scripts[src]);
+    delete tma._scripts[src];
 };
 
-tma._load = function (srcs, callback) {
-  var invoker;
-  if (callback) {
-    var done = 0;
-    invoker = function () {
-      done++;
-      if (srcs.length == done)
-        callback();
-    }
-  }
-  for (var i = 0; i < srcs.length; i++)
-    tma.load(this._base + srcs[i], invoker);
-};
-
+/**
+ * Debug function to reload all external JavaScript files which are loaded.
+ * @param callback callback to be invoked when the JavaScript is reloaded
+ */
 tma.reload = function (callback) {
-  var srcs = [];
-  for (var key in tma._scripts) {
-    srcs.push(key);
-    tma._head.removeChild(tma._scripts[key]);
-  }
-  tma._load(srcs, callback);
+    var srcs = [];
+    for (var key in tma._scripts) {
+        srcs.push(key);
+        tma._head.removeChild(tma._scripts[key]);
+    }
+    tma._load(srcs, callback);
 };
 
-(function() {
-  var scripts = document.getElementsByTagName("script");
-  for (var i = 0; i < scripts.length; i++) {
-    var match = scripts[i].src.match(/(^|.*\/)tma\.js$/);
-    if (match) {
-      tma._base = match[1];
-      break;
+/**
+ * Private load implementation to support plural source files.
+ * @param srcs source file paths
+ * @param callback callback to be invoked when the JavaScript is loaded
+ */
+tma._load = function (srcs, callback) {
+    var invoker;
+    if (callback) {
+        var done = 0;
+        invoker = function () {
+            done++;
+            if (srcs.length == done)
+                callback();
+        }
     }
-  }
-  var libs = [
-    "TmaScreen.js"
-  ];
-  tma._load(libs, function () {
-    tma.ready = true;
-    if (tma.onload)
-      tma.onload();
-  });
-})();
+    for (var i = 0; i < srcs.length; i++)
+        tma.load(this._base + srcs[i], invoker);
+};
 
+/**
+ * Initializations.
+ */
+(function() {
+    var scripts = document.getElementsByTagName("script");
+    for (var i = 0; i < scripts.length; i++) {
+        var match = scripts[i].src.match(/(^|.*\/)tma\.js$/);
+        if (match) {
+            tma._base = match[1];
+            break;
+        }
+    }
+    var libs = [
+        "TmaScreen.js"
+    ];
+    tma._load(libs, function () {
+        tma.ready = true;
+        if (tma.onload)
+            tma.onload();
+    });
+})();

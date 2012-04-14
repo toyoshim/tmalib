@@ -1,31 +1,29 @@
 <html>
 <head>
-<script src="../tma.js"></script>
-<script>
-tma.onload = function () {
-  // All libraries are loaded asynchronously.
-  tma.log("test.html: libraries must be loaded");
-  var screen = new TmaScreen(320, 240);
-  screen.attachTo(TmaScreen.BODY);
-  screen.fill("rgba(0, 0, 0, 1)");
-  screen.afterimage("rgba(0, 0, 0, 0.3)");
-  screen.blur(1.0, 0.4, 1.01, 1, 0);
-  screen.lock(TmaScreen.LOCK_WITH_SCREEN);
-  screen.unlock();
+    <script src="../tma.js"></script>
+    <script>
+        tma.onload = function () {
+            // All libraries are loaded asynchronously.
+            tma.log("test.html: libraries must be loaded");
+            var screen = new TmaScreen(320, 240);
+            screen.attachTo(TmaScreen.BODY);
+            screen.fill("rgba(0, 0, 0, 1)");
+            screen.afterimage("rgba(0, 0, 0, 0.3)");
+            screen.blur(1.0, 0.4, 1.01, 1, 0);
 
-  // for test
-  _ = screen;
-  __ = function () {
-    setInterval(function () {
-      _.lock(TmaScreen.LOCK_WITH_SCREEN);
-      var mouse = _.mouse();
-      if (mouse.over)
-        _.setPixel(mouse.x, mouse.y, 255, 255, 255, 255);
-      _.unlock();
-    }, 10);
-  };
-  __();
-};
-</script>
+            // for test
+            _ = screen;
+            __ = function () {
+                setInterval(function () {
+                    _.lock(TmaScreen.LOCK_WITH_SCREEN);
+                    var mouse = _.mouse();
+                    if (mouse.over)
+                        _.setPixel(mouse.x, mouse.y, 255, 255, 255, 255);
+                    _.unlock();
+                }, 10);
+            };
+            //__();
+        };
+    </script>
 </head>
 </html>
