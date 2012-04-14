@@ -9,7 +9,78 @@
             screen.attachTo(TmaScreen.BODY);
             screen.fill("rgba(0, 0, 0, 1)");
             screen.afterimage("rgba(0, 0, 0, 0.3)");
-            screen.blur(1.0, 0.4, 1.01, 1, 0);
+            screen.blur(1.0, 0.4, 1.01, 1, 0, true);
+
+            // Generates data for benchmarks.
+            var x = new Array(1024);
+            var y = new Array(1024);
+            for (var i = 0; i < 1024; i++) {
+                x[i] = ~~(Math.random() * 320);
+                y[i] = ~~(Math.random() * 240);
+            }
+
+            // A benchmark test for setPixel.
+            screen.lock();
+            var startDate = new Date();
+            for (i = 0; i < 1024 * 1024 * 10; i++) {
+                var j = i & 0x3ff;
+                var k = (i >> 10) & 0xff;
+                screen.setPixel(x[j], y[j], x[j], y[j], k, 255);
+            }
+            var endDate = new Date();
+            screen.unlock();
+            var time = endDate.getTime() - startDate.getTime();
+            tma.log("SetPixelTest: " + time + " msec");
+
+            // A benchmark test for raw ImageData handling.
+            var image = screen.lock();
+            startDate = new Date();
+            var data = image.data;
+            var width = 320;
+            for (i = 0; i < 1024 * 1024 * 10; i++) {
+                j = i & 0x3ff;
+                k = (i >> 10) & 0xff;
+                var offset = (y[j] * width + x[j]) * 4;
+                data[offset + 0] = x[j];
+                data[offset + 1] = y[j];
+                data[offset + 2] = k;
+                data[offset + 3] = 255;
+            }
+            endDate = new Date();
+            screen.unlock();
+            time = endDate.getTime() - startDate.getTime();
+            tma.log("ImageDataTest: " + time + " msec");
+
+            // A benchmark test for addPixel.
+            screen.lock();
+            startDate = new Date();
+            for (i = 0; i < 1024 * 1024 * 10; i++) {
+                j = i & 0x3ff;
+                k = (i >> 10) & 0xff;
+                screen.addPixel(x[j], y[j], x[j], y[j], k, 255);
+            }
+            endDate = new Date();
+            screen.unlock();
+            time = endDate.getTime() - startDate.getTime();
+            tma.log("AddPixelTest: " + time + " msec");
+
+            // A benchmark test for lock.
+            startDate = new Date();
+            for (i = 0; i < 100; i++) {
+                screen.lock(TmaScreen.LOCK_WITH_SCREEN);
+                screen.unlock();
+            }
+            endDate = new Date();
+            time = endDate.getTime() - startDate.getTime();
+            tma.log("LockTest with screen: " + time + " msec");
+            startDate = new Date();
+            for (i = 0; i < 100; i++) {
+                screen.lock();
+                screen.unlock();
+            }
+            endDate = new Date();
+            time = endDate.getTime() - startDate.getTime();
+            tma.log("LockTest without screen: " + time + " msec");
 
             // for test
             _ = screen;
