@@ -12,7 +12,6 @@
  * @param height screen height
  */
 function TmaScreen (width, height) {
-    // TODO: Support offscreen specific mode and omit to create unused objects.
     this.width = width;
     this.height = height;
     this.canvas = document.createElement("canvas");
@@ -22,8 +21,12 @@ function TmaScreen (width, height) {
     this.canvas.onmouseout = this._onmouseout.bind(this);
     this.context = this.canvas.getContext("2d");
     this._image = this.context.getImageData(0, 0, this.width, this.height);
+    this._offscreenCanvas = document.createElement("canvas");
+    this._offscreenCanvas.width = width;
+    this._offscreenCanvas.height = height;
+    this._offscreenContext = this._offscreenCanvas.getContext("2d");
     this._offscreenImage = this.createImageData();
-    this._afterimage = "rgba(0, 0, 0, 0.05)";
+    this._afterimage = 0;
     this._blurCanvas = document.createElement("canvas");
     this._blurCanvas.width = width;
     this._blurCanvas.height = height;
@@ -34,6 +37,7 @@ function TmaScreen (width, height) {
     this._blurHeight = 0;
     this._blurSource = { x: 0, y: 0, w: 0, h: 0 };
     this._blurDestination = { x: 0, y: 0, w: 0, h: 0 };
+    this._blurSync = true;
     this._mouse = false;
     this._mouseX = 0;
     this._mouseY = 0;
@@ -75,7 +79,6 @@ TmaScreen.prototype.createImageData = function () {
 /**
  * Sets pixel data to specified point, color, and alpha blending parameters.
  * This operation is applied to locked image data.
- * TODO: Supports addPixel function.
  * @param x X position to set pixel
  * @param y Y position to set pixel
  * @param r Red (from 0 to 255)
@@ -90,6 +93,25 @@ TmaScreen.prototype.setPixel = function (x, y, r, g, b, a) {
     data[offset + 1] = g;
     data[offset + 2] = b;
     data[offset + 3] = a;
+};
+
+/**
+ * Composites pixel data to specified point, color, and alpha blending
+ * parameters. This operation is applied to locked image data.
+ * @param x X position to set pixel
+ * @param y Y position to set pixel
+ * @param r Red (from 0 to 255)
+ * @param g Green (from 0 to 255)
+ * @param b Blue (from 0 to 255)
+ * @param a Alpha (from 0 to 255)
+ */
+TmaScreen.prototype.addPixel = function (x, y, r, g, b, a) {
+    var offset = (y * this.width + x) * 4;
+    var data = this._image.data;
+    data[offset + 0] += r;
+    data[offset + 1] += g;
+    data[offset + 2] += b;
+    data[offset + 3] += a;
 };
 
 /**
@@ -111,9 +133,11 @@ TmaScreen.prototype.lock = function (method) {
  * Unlocks screen to apply effects. This function must be called after |lock|.
  */
 TmaScreen.prototype.unlock = function () {
-    this.context.putImageData(this._image, 0, 0);
-    this._applyBlur();
-    this._applyAfterimage();
+    if (this._blurRatio && this._blurSync)
+        this._offscreenContext.putImageData(this._image, 0, 0);
+    else
+        this.context.putImageData(this._image, 0, 0);
+    this.applyEffects();
 };
 
 /**
@@ -133,8 +157,9 @@ TmaScreen.prototype.afterimage = function (rgba) {
  * @param zoom Zoom ratio of blur effect (> 1.0)
  * @param x X motion parameter (from -width to +width makes sense)
  * @param y Y motion parameter (from -height to +height makes sense)
+ * @param sync Applies effects offscreen
  */
-TmaScreen.prototype.blur = function (ratio, alpha, zoom, x, y) {
+TmaScreen.prototype.blur = function (ratio, alpha, zoom, x, y, sync) {
     this._blurRatio = ratio;
     this._blurAlpha = alpha;
     this._blurWidth = ~~(this.width * ratio);
@@ -165,6 +190,7 @@ TmaScreen.prototype.blur = function (ratio, alpha, zoom, x, y) {
         this._blurSource.y += sy;
     else if (y < 0)
         this._blurDestination.y += sy;
+    this._blurSync = sync;
 };
 
 /**
@@ -177,7 +203,13 @@ TmaScreen.prototype.fill = function (rgba) {
     this.context.fillRect(0, 0, this.width, this.height);
 };
 
-// TODO: Supports offscreen image blt function.
+/**
+ * Applies effects.
+ */
+TmaScreen.prototype.applyEffects = function () {
+    this._applyBlur();
+    this._applyAfterimage();
+};
 
 /**
  * Get mouse information.
@@ -211,16 +243,27 @@ TmaScreen.prototype._applyAfterimage = function () {
 TmaScreen.prototype._applyBlur = function () {
     if (!this._blurRatio)
         return;
-    this._blurContext.drawImage(this.canvas, 0, 0, this.width, this.height,
-            0, 0, this._blurWidth, this._blurHeight);
-    this.context.globalCompositeOperation = "lighter";
-    this.context.globalAlpha = this._blurAlpha;
-    this.context.drawImage(this._blurCanvas, this._blurSource.x,
-            this._blurSource.y, this._blurSource.w, this._blurSource.h,
-            this._blurDestination.x, this._blurDestination.y,
-            this._blurDestination.w, this._blurDestination.h);
-    this.context.globalCompositeOperation = "source-over";
-    this.context.globalAlpha = 1;
+    var canvas;
+    var context;
+    if (this._blurSync) {
+        canvas = this._offscreenCanvas;
+        context = this._offscreenContext;
+    } else {
+        canvas = this.canvas;
+        context = this.context;
+    }
+    this._blurContext.drawImage(canvas, 0, 0, this.width, this.height,
+        0, 0, this._blurWidth, this._blurHeight);
+    context.globalCompositeOperation = "lighter";
+    context.globalAlpha = this._blurAlpha;
+    context.drawImage(this._blurCanvas, this._blurSource.x,
+        this._blurSource.y, this._blurSource.w, this._blurSource.h,
+        this._blurDestination.x, this._blurDestination.y,
+        this._blurDestination.w, this._blurDestination.h);
+    context.globalCompositeOperation = "source-over";
+    context.globalAlpha = 1;
+    if (this._blurSync)
+        this.context.drawImage(canvas, 0, 0);
 };
 
 /**
