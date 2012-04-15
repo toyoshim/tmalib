@@ -96,6 +96,7 @@ tma._load = function (srcs, callback) {
 /**
  * Initializations.
  */
+var exports = {};
 (function() {
     var scripts = document.getElementsByTagName("script");
     for (var i = 0; i < scripts.length; i++) {
@@ -107,7 +108,8 @@ tma._load = function (srcs, callback) {
     }
     var libs = [
         "TmaScreen.js",
-        "TmaParticle.js"
+        "TmaParticle.js",
+        "TmaMotionBvh.js"
     ];
     tma._load(libs, function () {
         tma.ready = true;

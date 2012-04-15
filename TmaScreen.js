@@ -194,7 +194,7 @@ TmaScreen.prototype.blur = function (ratio, alpha, zoom, x, y, sync) {
 };
 
 /**
- * Fill screen with |rgba|.
+ * Fills screen with |rgba|.
  * @param rgba Color and alpha parameter (E.g., "rgba(255, 0, 0, 1.0)")
  */
 TmaScreen.prototype.fill = function (rgba) {
@@ -212,8 +212,8 @@ TmaScreen.prototype.applyEffects = function () {
 };
 
 /**
- * Get mouse information.
- * @return object containing
+ * Gets mouse information.
+ * @return an object containing
  *      over: true if mouse is currently over this screen
  *      x: mouse x position if |over| is true
  *      y: mouse y position if |over| is true
@@ -284,3 +284,6 @@ TmaScreen.prototype._onmousemove = function (e) {
 TmaScreen.prototype._onmouseout = function (e) {
     this._mouse = false;
 };
+
+// node.js compatible export.
+exports.TmaScreen = TmaScreen;

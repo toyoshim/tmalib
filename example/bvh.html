@@ -1,0 +1,93 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script>
+        var audio = new Audio("data/Perfume_globalsite_sound.wav");
+        tma.onload = function () {
+            var xhr = new XMLHttpRequest();
+            xhr.open("get", "data/kashiyuka.bvh", true);
+            xhr.responseType = "arraybuffer";
+            xhr.onload = function () {
+                tma.log("bvh loaded.");
+                var bvh = new TmaMotionBvh();
+                bvh.load(xhr.response);
+                start(bvh);
+            };
+            xhr.send();
+        };
+        function start (bvh) {
+            var screen = new TmaScreen(1200, 300);
+            screen.attachTo(TmaScreen.BODY);
+            screen.fill("rgba(0, 0, 0, 1)");
+            screen.afterimage("rgba(0, 0, 0, 0.45)");
+            screen.blur(0.5, 0.65, 1.01, 2, 0, false);
+
+            function Particle () { TmaParticle.apply(this, arguments); }
+            Particle.prototype = new TmaParticle(null, 0);
+            Particle.prototype.constructor = Particle;
+
+            var container = new TmaParticle.Container(Particle);
+
+            Particle.prototype.initialize = function (x, y, r, g, b) {
+                this.x = ~~x;
+                this.y = y;
+                this.r = r;
+                this.g = g;
+                this.b = b;
+            };
+
+            Particle.prototype.update = function () {
+                this.y += 2;
+                if (this.y >= screen.height)
+                    return false;
+                if ((0 < this.x) && (this.x < screen.width))
+                    screen.setPixel(
+                            this.x, this.y, this.r, this.g, this.b, 0xff);
+                return true;
+            };
+
+            var pickup = [];
+            for (var ch = 3; ch < 72; ch++) {
+                var m = ch % 3;
+                var r = 0;
+                var g = 0;
+                var b = 0;
+                if (0 == m)
+                    r = 0xff;
+                else if (1 == m)
+                    g = 0xff;
+                else
+                    b = 0xff;
+                pickup.push([ ch, 3, ~~(ch / 3) * 50, r, g, b ]);
+            }
+            var start = new Date();
+            audio.play();
+            function main () {
+                var now = new Date();
+                var tick = now.getTime() - start.getTime();
+                var frame = ~~(tick / 1000 / bvh.frameTime);
+
+                if (frame < bvh.frameLength) {
+                    var vector = bvh.getFrameAt(frame);
+                    for (var i = 0; i < pickup.length; i++) {
+                        var set = pickup[i];
+                        var x = set[2] + vector[set[0]] / set[1];
+                        var r = set[3];
+                        var g = set[4];
+                        var b = set[5];
+                        if ((0 < x) && (x < screen.width))
+                            container.add(x, 0, r, g, b);
+                    }
+                }
+                screen.lock(TmaScreen.LOCK_WITH_SCREEN);
+                container.update();
+                screen.unlock();
+
+//                if ((frame != bvh.frameLength) && (container.length != 0))
+                    setTimeout(main, 10);
+            }
+            main();
+        }
+    </script>
+</head>
+</html>
