@@ -1,0 +1,60 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script id="vShader" type="x-shader/x-vertex">
+        attribute vec4 vPosition;
+        void main() {
+            gl_Position = vPosition;
+        }
+    </script>
+    <script id="fShader" type="x-shader/x-fragment">
+        precision mediump float;
+        void main() {
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+    </script>
+    <script>
+        tma.onload = function () {
+            // Hello Triangle based on OpenGL ES 2.0 Programming Guide §2.
+            var screen = new TmaScreen(320, 240, TmaScreen.MODE_3D);
+            screen.attachTo(TmaScreen.BODY);
+
+            // Loads vertex and fragment shaders.
+            var vertexShader =
+                    screen.loadShader(Tma3DScreen.VERTEX_SHADER, "vShader");
+            var fragmentShader =
+                    screen.loadShader(Tma3DScreen.FRAGMENT_SHADER, "fShader");
+
+            // Creates a program object.
+            var programObject = screen.gl.createProgram();
+            screen.gl.attachShader(programObject, vertexShader);
+            screen.gl.attachShader(programObject, fragmentShader);
+
+            // Binds vPosition attribute to 0.
+            screen.gl.bindAttribLocation(programObject, 0, "vPosition");
+
+            // Links program object.
+            screen.linkProgram(programObject);
+
+            // Draw screen.
+            // (*) WebGL requires a special buffer to hold vertices.
+            // Tma3DScreen.createData convert it from a usual array data.
+            // These data are bound to WebGL context internally.
+            // (!) The last argument for vertexAttribPointer is not an array,
+            // but an offset in the bound buffer.
+            screen.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            var vVertices = screen.createData([  0.0,  0.5,  0.0,
+                                                -0.5, -0.5,  0.0,
+                                                 0.5, -0.5,  0.0 ]);  // (*)
+            screen.gl.viewport(0, 0, screen.width, screen.height);
+            screen.gl.clear(screen.gl.COLOR_BUFFER_BIT);
+            screen.gl.useProgram(programObject);
+            screen.gl.vertexAttribPointer(0, 3, screen.gl.FLOAT, false, 0,
+                    0); // (!)
+            screen.gl.enableVertexAttribArray(0);
+            screen.gl.drawArrays(screen.gl.TRIANGLES, 0, 3);
+            screen.gl.flush();
+        }
+    </script>
+</head>
+</html>

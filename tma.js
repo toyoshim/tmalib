@@ -108,6 +108,8 @@ var exports = {};
     }
     var libs = [
         "TmaScreen.js",
+        "Tma2DScreen.js",
+        "Tma3DScreen.js",
         "TmaParticle.js",
         "TmaMotionBvh.js"
     ];
