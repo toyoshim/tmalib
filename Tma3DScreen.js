@@ -20,9 +20,20 @@ function Tma3DScreen (width, height) {
     this.canvas.onmousemove = this._onmousemove.bind(this);
     this.canvas.onmouseout = this._onmouseout.bind(this);
     this.gl = this.canvas.getContext("webkit-3d");
+    this.gl.viewport(0, 0, width, height);
     this._mouse = false;
     this._mouseX = 0;
     this._mouseY = 0;
+
+    // Logging GL capabilities.
+    tma.log("WebGL max vertex uniform vectors: " +
+            this.gl.getParameter(this.gl.MAX_VERTEX_UNIFORM_VECTORS));
+    tma.log("WebGL max varying vectors: " +
+            this.gl.getParameter(this.gl.MAX_VARYING_VECTORS));
+    tma.log("WebGL max fragment uniform vectors: " +
+            this.gl.getParameter(this.gl.MAX_FRAGMENT_UNIFORM_VECTORS));
+    tma.log("WebGL max vertex attributes: " +
+            this.gl.getParameter(this.gl.MAX_VERTEX_ATTRIBS));
 }
 
 /**
@@ -77,6 +88,32 @@ Tma3DScreen.prototype.linkProgram = function (program) {
     if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS))
         tma.log("WebGL link program error: " +
                 this.gl.getProgramInfoLog(program));
+    tma.log("WebGL program active attributes " +
+            this.gl.getProgramParameter(program, this.gl.ACTIVE_ATTRIBUTES));
+};
+
+/**
+ * Creates program object and link shader objects.
+ * @param vertex vertex shader
+ * @param fragment fragment shader
+ */
+Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
+    var programObject = this.gl.createProgram();
+    if ("WebGLShader" != vertex.constructor.name)
+        vertex = this.loadShader(Tma3DScreen.VERTEX_SHADER, vertex);
+    this.gl.attachShader(programObject, vertex);
+    if ("WebGLShader" != fragment.constructor.name)
+        fragment = this.loadShader(Tma3DScreen.FRAGMENT_SHADER, fragment);
+    this.gl.attachShader(programObject, fragment);
+    this.linkProgram(programObject);
+    programObject._owner = this;
+    programObject._index = 0;
+    programObject.assign = function (name) {
+        var index = this._index++;
+        this._owner.gl.bindAttribLocation(this, index, name);
+        return index;
+    };
+    return programObject;
 };
 
 /**
@@ -84,12 +121,73 @@ Tma3DScreen.prototype.linkProgram = function (program) {
  * @param vertices
  * @return created buffer
  */
-Tma3DScreen.prototype.createData = function (vertices) {
+Tma3DScreen.prototype.store = function (vertices) {
     var buffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices),
             this.gl.STATIC_DRAW);
     return buffer;
+};
+
+/**
+ * Maps a float array to an internal buffer as a constant attribute array.
+ * @param index attribute index
+ * @param array float array
+ */
+Tma3DScreen.prototype.mapFloat = function (index, array) {
+    if (1 == array.length)
+        this.gl.vertexAttrib1fv(index, array);
+    else if (2 == array.length)
+        this.gl.vertexAttrib2fv(index, array);
+    else if (3 == array.length)
+        this.gl.vertexAttrib3fv(index, array);
+    else if (4 == array.length)
+        this.gl.vertexAttrib4fv(index, array);
+    this.gl.disableVertexAttribArray(index);
+};
+
+/**
+ * Maps float arrays to an internal buffer as a attribute arrays.
+ * @param index attribute index
+ * @param offset offset in stored data buffer
+ * @param dimension array dimension
+ * @param stride stride distance in stored data buffer
+ */
+Tma3DScreen.prototype.mapFloatArray =
+        function (index, offset, dimension, stride) {
+    this.gl.vertexAttribPointer(
+            index, dimension, this.gl.FLOAT, false, stride, offset);
+    this.gl.enableVertexAttribArray(index);
+};
+
+/**
+ * Draws triangles by vertices.
+ * @param program shader object
+ * @param offset start offset
+ * @param length total length
+ */
+Tma3DScreen.prototype.drawTriangles = function (program, offset, length) {
+    this.gl.useProgram(program);
+    this.gl.drawArrays(this.gl.TRIANGLES, offset, length);
+};
+
+/**
+ * Fills screen with specified color.
+ * @param r color R
+ * @param g color G
+ * @param b color B
+ * @param a color A
+ */
+Tma3DScreen.prototype.fillColor = function (r, g, b, a) {
+    this.gl.clearColor(r, g, b, a);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+};
+
+/**
+ * Flush the OpenGL ES 2.0 pipeline.
+ */
+Tma3DScreen.prototype.flush = function () {
+    this.gl.flush();
 };
 
 /**
