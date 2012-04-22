@@ -3,70 +3,40 @@
     <script src="../tma.js"></script>
     <script id="shader-vs" type="x-shader/x-vertex">
         attribute vec3 aVertexPosition;
-        attribute vec4 aVertexColor;
+        attribute vec2 aTextureCoord;
         uniform mat4 uMVMatrix;
         uniform mat4 uPMatrix;
-        varying vec4 vColor;
+        varying vec2 vTextureCoord;
         void main() {
             gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-            vColor = aVertexColor;
+            vTextureCoord = aTextureCoord;
         }
     </script>
     <script id="shader-fs" type="x-shader/x-fragment">
         precision mediump float;
-        varying vec4 vColor;
+        varying vec2 vTextureCoord;
+        uniform sampler2D uSampler;
         void main() {
-            gl_FragColor = vColor;
+            gl_FragColor = texture2D(uSampler,
+                    vec2(vTextureCoord.s, vTextureCoord.t));
         }
     </script>
     <script>
         tma.extlibs = [ 'ext/gl-matrix.js' ];
         tma.onload = function () {
-            // NeHe tutorial #5.
+            // NeHe tutorial #6.
             var screen = new TmaScreen(500, 500, TmaScreen.MODE_3D);
             screen.attachTo(TmaScreen.BODY);
 
+            // Initializes textures.
+            var image = new Image();
+            var texture = null;
+            image.onload = function () {
+                texture = screen.createTexture(image, true);
+            };
+            image.src = 'data/texture.png';
+
             // Initializes buffers.
-            var pyramidVertices = screen.createBuffer([
-                // Front face
-                 0.0,  1.0,  0.0,
-                -1.0, -1.0,  1.0,
-                 1.0, -1.0,  1.0,
-                // Right face
-                 0.0,  1.0,  0.0,
-                 1.0, -1.0,  1.0,
-                 1.0, -1.0, -1.0,
-                // Back face
-                 0.0,  1.0,  0.0,
-                 1.0, -1.0, -1.0,
-                -1.0, -1.0, -1.0,
-                // Left face
-                 0.0,  1.0,  0.0,
-                -1.0, -1.0, -1.0,
-                -1.0, -1.0,  1.0
-            ]);
-            pyramidVertices.dimension = 3;
-            pyramidVertices.items = 12;
-            var pyramidColors = screen.createBuffer([
-                // Front face
-                1.0, 0.0, 0.0, 0.5,
-                0.0, 1.0, 0.0, 0.5,
-                0.0, 0.0, 1.0, 0.5,
-                // Right face
-                1.0, 0.0, 0.0, 0.5,
-                0.0, 0.0, 1.0, 0.5,
-                0.0, 1.0, 0.0, 0.5,
-                // Back face
-                1.0, 0.0, 0.0, 0.5,
-                0.0, 1.0, 0.0, 0.5,
-                0.0, 0.0, 1.0, 0.5,
-                // Left face
-                1.0, 0.0, 0.0, 0.5,
-                0.0, 0.0, 1.0, 0.5,
-                0.0, 1.0, 0.0, 0.5
-            ]);
-            pyramidColors.dimension = 4;
-            pyramidColors.items = 12;
             var cubeVertices = screen.createBuffer([
                 // Front face
                 -1.0, -1.0,  1.0,
@@ -101,27 +71,20 @@
             ]);
             cubeVertices.dimension = 3;
             cubeVertices.items = 24;
-            var cubeColors = screen.createBuffer((function () {
-                var faceColor = [
-                    [ 1.0, 0.0, 0.0, 1.0 ],  // Front face
-                    [ 1.0, 1.0, 0.0, 1.0 ],  // Back face
-                    [ 0.0, 1.0, 0.0, 1.0 ],  // Top face
-                    [ 1.0, 0.5, 0.5, 1.0 ],  // Bottom face
-                    [ 1.0, 0.0, 1.0, 1.0 ],  // Right face
-                    [ 0.0, 0.0, 1.0, 1.0 ]   // Left face
+            var cubeTextureCoords = screen.createBuffer((function () {
+                var baseCoords = [
+                    0.0, 0.0,
+                    1.0, 0.0,
+                    1.0, 1.0,
+                    0.0, 1.0
                 ];
-                var color = [];
-                for (var i = 0; i < 6; i++) {
-                    for (var n = 0; n < 4; n++) {
-                        var copy = [].concat(faceColor[i]);
-                        copy[3] = 1.0 * (n + 1) / 4;
-                        color = color.concat(copy);
-                    }
-                }
-                return color;
+                var coords = [];
+                for (var i = 0; i < 6; i++)
+                    coords = coords.concat(baseCoords);
+                return coords;
             })());
-            cubeColors.dimension = 4;
-            cubeColors.items = 24;
+            cubeTextureCoords.dimension = 2;
+            cubeTextureCoords.items = 24;
             var cubeIndices = screen.createElementBuffer([
                  0,  1,  2,   0,  2,  3,  // Front face
                  4,  5,  6,   4,  6,  7,  // Back face
@@ -144,7 +107,6 @@
             mat4.identity(mvMatrix);
             program.setUniform('uPMatrix', pMatrix);
 
-            var rPyramid = 0;
             var rCube = 0;
             var rSpeed = 0;
             var mvMatrixBase = mat4.create(mvMatrix);
@@ -153,37 +115,26 @@
                 // Initializes screen.
                 screen.fillColor(0.0, 0.0, 0.0, 1.0);
 
-                // Draws pyramid.
-                mat4.set(mvMatrixBase, mvMatrix);
-                mat4.translate(mvMatrix, [-1.5, 0.0, -8.0]);
-                mat4.rotate(mvMatrix, rPyramid, [0, 1, 0]);
-                program.setAttributeArray(
-                        'aVertexPosition', pyramidVertices, 0,
-                        pyramidVertices.dimension, 0);
-                program.setAttributeArray(
-                        'aVertexColor', pyramidColors, 0,
-                        pyramidColors.dimension, 0);
-                program.setUniform('uMVMatrix', mvMatrix);
-                program.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0,
-                        pyramidColors.items);
-
                 // Draws cube.
                 mat4.set(mvMatrixBase, mvMatrix);
-                mat4.translate(mvMatrix, [2.0, 0.0, -10.0]);
+                mat4.translate(mvMatrix, [0.0, 0.0, -5.0]);
                 mat4.rotate(mvMatrix, rCube, [1.0, 0.5, 1]);
                 program.setAttributeArray(
                         'aVertexPosition', cubeVertices, 0,
                         cubeVertices.dimension, 0);
                 program.setAttributeArray(
-                        'aVertexColor', cubeColors, 0,
-                        cubeColors.dimension, 0);
+                        'aTextureCoord', cubeTextureCoords, 0,
+                        cubeTextureCoords.dimension, 0);
+
+                if (texture)
+                    program.setTexture('uSampler', texture);
+
                 program.setUniform('uMVMatrix', mvMatrix);
                 program.drawElements(Tma3DScreen.MODE_TRIANGLES,
                         cubeIndices, 0, cubeIndices.items);
 
                 // Applies Animation.
                 rSpeed += 0.00001;
-                rPyramid += 0.01 + rSpeed;
                 rCube += 0.005 + rSpeed;
             }, 15);
         };

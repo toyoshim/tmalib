@@ -129,12 +129,10 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
         return index;
     };
     programObject.attributeIndex = function (name) {
-        var index = this._owner.gl.getAttribLocation(this, name);
-        return index;
+        return this._owner.gl.getAttribLocation(this, name);
     };
     programObject.uniformIndex = function (name) {
-        var index = this._owner.gl.getUniformLocation(this, name);
-        return index;
+        return this._owner.gl.getUniformLocation(this, name);
     };
     programObject.setAttribute = function (name, array) {
         var index = this._owner.gl.getAttribLocation(this, name);
@@ -149,6 +147,10 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
     programObject.setUniform = function (name, array) {
         var index = this._owner.gl.getUniformLocation(this, name);
         this._owner.setUniform(this, index, array);
+    };
+    programObject.setTexture = function (name, texture) {
+        var index = this._owner.gl.getUniformLocation(this, name);
+        this._owner.setTexture(this, index, texture);
     };
     programObject.drawArrays = function (mode, offset, length) {
         this._owner.drawArrays(this, mode, offset, length);
@@ -178,20 +180,39 @@ Tma3DScreen.prototype.createBuffer = function (array) {
 };
 
 /**
- * Create an element array buffer from |indices| and bind it to WebGL context.
- * @param indices
+ * Create an element array buffer from |array| and bind it to WebGL context.
+ * @param array
  * @return created buffer
  */
-Tma3DScreen.prototype.createIndicesBuffer = function (indices) {
+Tma3DScreen.prototype.createElementBuffer = function (array) {
     var buffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffer);
-    this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices),
+    this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(array),
             this.gl.STATIC_DRAW);
     buffer._owner = this;
     buffer.bind = function () {
         this._owner.gl.bindBuffer(this._owner.gl.ELEMENT_ARRAY_BUFFER, this);
     };
     return buffer;
+};
+
+/**
+ * Create texture buffer from Image object.
+ * @param image Image object
+ * @param flip image flip flag
+ */
+Tma3DScreen.prototype.createTexture = function (image, flip) {
+    var texture = this.gl.createTexture();
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
+    // TODO: Handles level of detail
+    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA,
+            this.gl.UNSIGNED_BYTE, image);
+    this.gl.texParameteri(
+        this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+    this.gl.texParameteri(
+        this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+    return texture;
 };
 
 /**
@@ -245,8 +266,20 @@ Tma3DScreen.prototype.setUniform = function (program, index, array) {
 };
 
 /**
- * Draws triangles by vertices.
- * @param program shader object
+ * Sets |texture| to |program|.
+ * @param program program object
+ * @param texture texture object
+ */
+Tma3DScreen.prototype.setTexture = function (program, index, texture) {
+    // TODO: Handles multiple texture.
+    this.gl.activeTexture(this.gl.TEXTURE0);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    this.gl.uniform1i(index, 0);
+};
+
+/**
+ * Draws primitives by vertices.
+ * @param program program object with shaders
  * @param mode draw mode
  * @param offset start offset
  * @param length total length
@@ -256,6 +289,13 @@ Tma3DScreen.prototype.drawArrays = function (program, mode, offset, length) {
     this.gl.drawArrays(mode, offset, length);
 };
 
+/**
+ * Draws primitives by vertices with indices.
+ * @param program program object with shaders
+ * @param mode draw mode
+ * @param offset start offset
+ * @param length total length
+ */
 Tma3DScreen.prototype.drawElements = function (program, mode, offset, length) {
     this.gl.useProgram(program);
     this.gl.drawElements(mode, length, this.gl.UNSIGNED_SHORT, offset);
