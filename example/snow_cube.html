@@ -1,0 +1,238 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        varying vec2 vTextureCoord;
+        void main() {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            vTextureCoord = aTextureCoord;
+        }
+    </script>
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec2 vTextureCoord;
+        uniform sampler2D uSampler;
+        void main() {
+            gl_FragColor = texture2D(uSampler,
+                    vec2(vTextureCoord.s, vTextureCoord.t));
+            gl_FragColor.a = 0.8;
+        }
+    </script>
+    <script>
+        tma.extlibs = [ 'ext/gl-matrix.js' ];
+        tma.onload = function () {
+            // Renders on texture (Snow + NeHe tutorial #6).
+            var screen = new TmaScreen(500, 500, TmaScreen.MODE_3D);
+            screen.attachTo(TmaScreen.BODY);
+
+            // Initializes textures.
+            var image = new Image();
+            var texture = null;
+            /*
+            image.onload = function () {
+                texture = screen.createTexture(image, true);
+            };
+            image.src = 'data/texture.png';
+            */
+
+            // Initializes buffers.
+            var cubeVertices = screen.createBuffer([
+                // Front face
+                -1.0, -1.0,  1.0,
+                 1.0, -1.0,  1.0,
+                 1.0,  1.0,  1.0,
+                -1.0,  1.0,  1.0,
+                // Back face
+                -1.0, -1.0, -1.0,
+                -1.0,  1.0, -1.0,
+                 1.0,  1.0, -1.0,
+                 1.0, -1.0, -1.0,
+                // Top face
+                -1.0,  1.0, -1.0,
+                -1.0,  1.0,  1.0,
+                 1.0,  1.0,  1.0,
+                 1.0,  1.0, -1.0,
+                // Bottom face
+                -1.0, -1.0, -1.0,
+                 1.0, -1.0, -1.0,
+                 1.0, -1.0,  1.0,
+                -1.0, -1.0,  1.0,
+                // Right face
+                 1.0, -1.0, -1.0,
+                 1.0,  1.0, -1.0,
+                 1.0,  1.0,  1.0,
+                 1.0, -1.0,  1.0,
+                // Left face
+                -1.0, -1.0, -1.0,
+                -1.0, -1.0,  1.0,
+                -1.0,  1.0,  1.0,
+                -1.0,  1.0, -1.0
+            ]);
+            cubeVertices.dimension = 3;
+            cubeVertices.items = 24;
+            var cubeTextureCoords = screen.createBuffer((function () {
+                var baseCoords = [
+                    0.0, 0.0,
+                    1.0, 0.0,
+                    1.0, 1.0,
+                    0.0, 1.0
+                ];
+                var coords = [];
+                for (var i = 0; i < 6; i++)
+                    coords = coords.concat(baseCoords);
+                return coords;
+            })());
+            cubeTextureCoords.dimension = 2;
+            cubeTextureCoords.items = 24;
+            var cubeIndices = screen.createElementBuffer([
+                 0,  1,  2,   0,  2,  3,  // Front face
+                 4,  5,  6,   4,  6,  7,  // Back face
+                 8,  9, 10,   8, 10, 11,  // Top face
+                12, 13, 14,  12, 14, 15,  // Bottom face
+                16, 17, 18,  16, 18, 19,  // Right face
+                20, 21, 22,  20, 22, 23   // Left face
+            ]);
+            cubeIndices.dimension = 1;
+            cubeIndices.items = 36;
+
+            // Initializes program with shaders.
+            var program = screen.createProgram('shader-vs', 'shader-fs');
+
+            // Initializes matrices.
+            var pMatrix = mat4.create();
+            var mvMatrix = mat4.create();
+            mat4.perspective(
+                    45, screen.width / screen.height, 0.1, 100.0, pMatrix);
+            mat4.identity(mvMatrix);
+            program.setUniform('uPMatrix', pMatrix);
+
+            var rCube = 0;
+            var mvMatrixBase = mat4.create(mvMatrix);
+
+            // Draws texture.
+            var offscreen = new TmaScreen(256, 256);
+            offscreen.afterimage();
+            offscreen.blur(0.25, 1.0, 1.0, 0, 2, false);
+
+            function Snow () { TmaParticle.apply(this, arguments); }
+            Snow.prototype = new TmaParticle(null, 0);
+            Snow.prototype.constructor = Snow;
+            Snow.GRAVITY = 10 / 1000;
+
+            var container = new TmaParticle.Container(Snow);
+
+            Snow.emit = function () {
+                var vx = 0;
+                var vy = 0;
+                if (Math.random() > 0.5)
+                    vx = Math.random() * 2 - 1;
+                else
+                    vy = Math.random() * 2 - 1;
+                var x = 0;
+                if (vx <= 0)
+                    x = Math.random() * offscreen.width;
+                var y = 0;
+                if (vy <= 0)
+                    y = Math.random() * offscreen.height;
+                var r = ~~(Math.random() * 255);
+                if (r < 160)
+                    r = 0;
+                var g = ~~(Math.random() * 255);
+                if (g < 160)
+                    g = 0;
+                var b = ~~(Math.random() * 255);
+                if (b < 160)
+                    b = 0;
+                container.add(x, y, vx, vy, r, g, b);
+            };
+
+            Snow.prototype.initialize = function (x, y, vx, vy, r, g, b) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.r = r;
+                this.g = g;
+                this.b = b;
+            };
+
+            Snow.prototype.update = function () {
+                if (this.vy != 0) {
+                    if (this.vy > 0)
+                        this.vy += Snow.GRAVITY;
+                    else
+                        this.vy -= Snow.GRAVITY;
+                    this.vy *= 0.99;
+                    this.y += this.vy;
+                }
+                if ((this.y <= 0) || (offscreen.height <= this.y))
+                    return false;
+                if (this.vx != 0) {
+                    if (this.vx > 0)
+                        this.vx += Snow.GRAVITY;
+                    else
+                        this.vx -= Snow.GRAVITY;
+                    this.vx *= 0.99;
+                    this.x += this.vx;
+                }
+                if ((this.x <= 0) || (offscreen.width <= this.x))
+                    return false;
+                offscreen.setPixel(~~this.x, ~~this.y, this.r, this.g, this.b,
+                        0xff);
+                return true;
+            };
+
+            function drawTexture () {
+                for (i = 0; i < 10; i++)
+                    Snow.emit();
+                var data = offscreen.lock().data;
+                for (var i = 0; i < offscreen.width * offscreen.height; i++) {
+                    // RGBA
+                    data[i * 4 + 0] = 0x00;
+                    data[i * 4 + 1] = 0x00;
+                    data[i * 4 + 2] = 0x00;
+                    data[i * 4 + 3] = 0xee;
+                }
+                container.update();
+                offscreen.unlock();
+            }
+            for (i = 0; i < 256; i++)
+                drawTexture();
+
+            // Periodical rendering.
+            setInterval(function () {
+                // Draws texture.
+                drawTexture();
+                var image = offscreen.lock(TmaScreen.LOCK_WITH_SCREEN);
+                texture = screen.createTexture(image, true);
+                offscreen.unlock();
+
+                // Draws cube.
+                mat4.set(mvMatrixBase, mvMatrix);
+                mat4.translate(mvMatrix, [0.0, 0.0, -5.0]);
+                mat4.rotate(mvMatrix, rCube, [1.0, 0.5, 1]);
+                program.setAttributeArray(
+                        'aVertexPosition', cubeVertices, 0,
+                        cubeVertices.dimension, 0);
+                program.setAttributeArray(
+                        'aTextureCoord', cubeTextureCoords, 0,
+                        cubeTextureCoords.dimension, 0);
+
+                if (texture)
+                    program.setTexture('uSampler', texture);
+
+                program.setUniform('uMVMatrix', mvMatrix);
+                program.drawElements(Tma3DScreen.MODE_TRIANGLES,
+                        cubeIndices, 0, cubeIndices.items);
+
+                // Applies Animation.
+                rCube += 0.02;
+            }, 10);
+        };
+    </script>
+</head>
+</html>
