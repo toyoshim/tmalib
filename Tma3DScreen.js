@@ -153,6 +153,10 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
     programObject.drawArrays = function (mode, offset, length) {
         this._owner.drawArrays(this, mode, offset, length);
     };
+    programObject.drawElements = function (mode, buffer, offset, length) {
+        buffer.bind();
+        this._owner.drawElements(this, mode, offset, length);
+    };
     return programObject;
 };
 
@@ -178,10 +182,10 @@ Tma3DScreen.prototype.createBuffer = function (array) {
  * @param indices
  * @return created buffer
  */
-Tma3DScreen.prototype.createIndices = function (indices) {
+Tma3DScreen.prototype.createIndicesBuffer = function (indices) {
     var buffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffer);
-    this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Float32Array(indices),
+    this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices),
             this.gl.STATIC_DRAW);
     buffer._owner = this;
     buffer.bind = function () {
@@ -250,6 +254,11 @@ Tma3DScreen.prototype.setUniform = function (program, index, array) {
 Tma3DScreen.prototype.drawArrays = function (program, mode, offset, length) {
     this.gl.useProgram(program);
     this.gl.drawArrays(mode, offset, length);
+};
+
+Tma3DScreen.prototype.drawElements = function (program, mode, offset, length) {
+    this.gl.useProgram(program);
+    this.gl.drawElements(mode, length, this.gl.UNSIGNED_SHORT, offset);
 };
 
 /**
