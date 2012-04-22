@@ -24,6 +24,8 @@ tma._scripts = {};
 tma.ready = false;
 // Entry point for callback ti know when all external scripts are loaded.
 tma.onload = null;
+// Additional library URL list to load initially.
+tma.extlibs = [];
 
 /**
  * Takes a log at a each level.
@@ -97,6 +99,7 @@ tma._load = function (srcs, callback) {
  * Initializations.
  */
 var exports = {};
+var global = window;
 (function() {
     var scripts = document.getElementsByTagName("script");
     for (var i = 0; i < scripts.length; i++) {
@@ -115,7 +118,12 @@ var exports = {};
     ];
     tma._load(libs, function () {
         tma.ready = true;
-        if (tma.onload)
+        if (0 != tma.extlibs.length)
+            tma._load(tma.extlibs, function () {
+                if (tma.onload)
+                    tma.onload();
+            });
+        else if (tma.onload)
             tma.onload();
     });
 })();

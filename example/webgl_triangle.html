@@ -43,9 +43,9 @@
             // (!) The last argument for vertexAttribPointer is not an array,
             // but an offset in the bound buffer.
             screen.gl.clearColor(0.0, 0.0, 0.0, 1.0);
-            var vVertices = screen.store([  0.0,  0.5,  0.0,
-                                           -0.5, -0.5,  0.0,
-                                            0.5, -0.5,  0.0 ]);  // (*)
+            var vVertices = screen.setVertices([  0.0,  0.5,  0.0,
+                                                 -0.5, -0.5,  0.0,
+                                                  0.5, -0.5,  0.0 ]);  // (*)
             screen.gl.viewport(0, 0, screen.width, screen.height);
             screen.gl.clear(screen.gl.COLOR_BUFFER_BIT);
             screen.gl.useProgram(programObject);

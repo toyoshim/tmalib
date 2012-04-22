@@ -2,8 +2,8 @@
 <head>
     <script src="../tma.js"></script>
     <script id="vShader" type="x-shader/x-vertex">
-        attribute vec4 a_position;
         attribute vec4 a_color;
+        attribute vec4 a_position;
         varying vec4 v_color;
         void main() {
             v_color = a_color;
@@ -28,14 +28,12 @@
 
             // Prepares vertices.
             var programObject = screen.createProgram("vShader", "fShader");
-            var positionIndex = programObject.assign("a_position");
-            var colorIndex = programObject.assign("a_color");
-            screen.mapFloat(colorIndex, [ 1.0, 0.0, 0.0, 1.0 ]);
-            screen.store([  0.0,  0.5,
-                           -0.5, -0.5,
-                            0.5, -0.5 ]);
-            screen.mapFloatArray(positionIndex, 0, 2, 8);
-            screen.drawTriangles(programObject, 0, 3);
+            programObject.setAttribute("a_color", [ 1.0, 0.0, 0.0, 1.0 ]);
+            var buffer = screen.createVertices([  0.0,  0.5,
+                                                 -0.5, -0.5,
+                                                  0.5, -0.5 ]);
+            programObject.setAttributeArray("a_position", buffer, 0, 2, 8);
+            programObject.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0, 3);
             screen.flush();
         }
     </script>

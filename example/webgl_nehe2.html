@@ -1,0 +1,68 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        void main() {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        }
+    </script>
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        void main() {
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        }
+    </script>
+    <script>
+        tma.extlibs = [ 'ext/gl-matrix.js' ];
+        tma.onload = function () {
+            // NeHe turtorial #2.
+            var screen = new TmaScreen(500, 500, TmaScreen.MODE_3D);
+            screen.attachTo(TmaScreen.BODY);
+
+            // Initialize buffers.
+            var triangleArrayBuffer = screen.createVertices([
+                     0.0,  1.0,  0.0,
+                    -1.0, -1.0,  0.0,
+                     1.0, -1.0,  0.0
+            ]);
+            var squareArrayBuffer = screen.createVertices([
+                     1.0,  1.0,  0.0,
+                    -1.0,  1.0,  0.0,
+                     1.0, -1.0,  0.0,
+                    -1.0, -1.0,  0.0
+            ]);
+
+            // Initialize program with shaders.
+            var program = screen.createProgram('shader-vs', 'shader-fs');
+
+            // Initialize matrices.
+            var pMatrix = mat4.create();
+            var mvMatrix = mat4.create();
+            mat4.perspective(
+                    45, screen.width / screen.height, 0.1, 100.0, pMatrix);
+            mat4.identity(mvMatrix);
+            program.setUniform('uPMatrix', pMatrix);
+
+            // Initializes screen.
+            screen.fillColor(0.0, 0.0, 0.0, 1.0);
+
+            // Draw triangle.
+            mat4.translate(mvMatrix, [-1.5, 0.0, -7.0]);
+            program.setAttributeArray(
+                    'aVertexPosition', triangleArrayBuffer, 0, 3, 0);
+            program.setUniform('uMVMatrix', mvMatrix);
+            program.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0, 3);
+
+            // Draw square.
+            mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
+            program.setAttributeArray(
+                    'aVertexPosition', squareArrayBuffer, 0, 3, 0);
+            program.setUniform('uMVMatrix', mvMatrix);
+            program.drawArrays(Tma3DScreen.MODE_TRIANGLE_STRIP, 0, 4);
+        };
+    </script>
+</head>
+</html>
