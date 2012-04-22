@@ -18,11 +18,11 @@
     <script>
         tma.extlibs = [ 'ext/gl-matrix.js' ];
         tma.onload = function () {
-            // NeHe turtorial #2.
+            // NeHe tutorial #2.
             var screen = new TmaScreen(500, 500, TmaScreen.MODE_3D);
             screen.attachTo(TmaScreen.BODY);
 
-            // Initialize buffers.
+            // Initializes buffers.
             var triangleArrayBuffer = screen.createBuffer([
                      0.0,  1.0,  0.0,
                     -1.0, -1.0,  0.0,
@@ -35,10 +35,10 @@
                     -1.0, -1.0,  0.0
             ]);
 
-            // Initialize program with shaders.
+            // Initializes program with shaders.
             var program = screen.createProgram('shader-vs', 'shader-fs');
 
-            // Initialize matrices.
+            // Initializes matrices.
             var pMatrix = mat4.create();
             var mvMatrix = mat4.create();
             mat4.perspective(
@@ -49,14 +49,14 @@
             // Initializes screen.
             screen.fillColor(0.0, 0.0, 0.0, 1.0);
 
-            // Draw triangle.
+            // Draws triangle.
             mat4.translate(mvMatrix, [-1.5, 0.0, -7.0]);
             program.setAttributeArray(
                     'aVertexPosition', triangleArrayBuffer, 0, 3, 0);
             program.setUniform('uMVMatrix', mvMatrix);
             program.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0, 3);
 
-            // Draw square.
+            // Draws square.
             mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
             program.setAttributeArray(
                     'aVertexPosition', squareArrayBuffer, 0, 3, 0);
