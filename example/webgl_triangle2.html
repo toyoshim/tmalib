@@ -29,9 +29,9 @@
             // Prepares vertices.
             var programObject = screen.createProgram("vShader", "fShader");
             programObject.setAttribute("a_color", [ 1.0, 0.0, 0.0, 1.0 ]);
-            var buffer = screen.createVertices([  0.0,  0.5,
-                                                 -0.5, -0.5,
-                                                  0.5, -0.5 ]);
+            var buffer = screen.createBuffer([  0.0,  0.5,
+                                               -0.5, -0.5,
+                                                0.5, -0.5 ]);
             programObject.setAttributeArray("a_position", buffer, 0, 2, 8);
             programObject.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0, 3);
             screen.flush();

@@ -157,14 +157,14 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
 };
 
 /**
- * Creates an array buffer from |vertices| and bind it to WebGL context.
- * @param vertices
+ * Creates an array buffer from |array| and bind it to WebGL context.
+ * @param array data to store
  * @return created buffer
  */
-Tma3DScreen.prototype.createVertices = function (vertices) {
+Tma3DScreen.prototype.createBuffer = function (array) {
     var buffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
-    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices),
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(array),
             this.gl.STATIC_DRAW);
     buffer._owner = this;
     buffer.bind = function () {

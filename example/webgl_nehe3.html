@@ -3,16 +3,20 @@
     <script src="../tma.js"></script>
     <script id="shader-vs" type="x-shader/x-vertex">
         attribute vec3 aVertexPosition;
+        attribute vec4 aVertexColor;
         uniform mat4 uMVMatrix;
         uniform mat4 uPMatrix;
+        varying vec4 vColor;
         void main() {
             gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            vColor = aVertexColor;
         }
     </script>
     <script id="shader-fs" type="x-shader/x-fragment">
         precision mediump float;
+        varying vec4 vColor;
         void main() {
-            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            gl_FragColor = vColor;
         }
     </script>
     <script>
@@ -23,16 +27,27 @@
             screen.attachTo(TmaScreen.BODY);
 
             // Initialize buffers.
-            var triangleArrayBuffer = screen.createBuffer([
-                     0.0,  1.0,  0.0,
-                    -1.0, -1.0,  0.0,
-                     1.0, -1.0,  0.0
+            var triangleVertices = screen.createBuffer([
+                 0.0,  1.0,  0.0,
+                -1.0, -1.0,  0.0,
+                 1.0, -1.0,  0.0
             ]);
-            var squareArrayBuffer = screen.createBuffer([
-                     1.0,  1.0,  0.0,
-                    -1.0,  1.0,  0.0,
-                     1.0, -1.0,  0.0,
-                    -1.0, -1.0,  0.0
+            var triangleColors = screen.createBuffer([
+                1.0, 0.0, 0.0, 1.0,
+                0.0, 1.0, 0.0, 1.0,
+                0.0, 0.0, 1.0, 1.0
+            ]);
+            var squareVertices = screen.createBuffer([
+                 1.0,  1.0,  0.0,
+                -1.0,  1.0,  0.0,
+                 1.0, -1.0,  0.0,
+                -1.0, -1.0,  0.0
+            ]);
+            var squareColors = screen.createBuffer([
+                0.5, 0.5, 1.0, 1.0,
+                1.0, 0.5, 1.0, 0.5,
+                0.5, 1.0, 1.0, 0.5,
+                0.5, 0.5, 1.0, 1.0
             ]);
 
             // Initialize program with shaders.
@@ -52,14 +67,18 @@
             // Draw triangle.
             mat4.translate(mvMatrix, [-1.5, 0.0, -7.0]);
             program.setAttributeArray(
-                    'aVertexPosition', triangleArrayBuffer, 0, 3, 0);
+                    'aVertexPosition', triangleVertices, 0, 3, 0);
+            program.setAttributeArray(
+                    'aVertexColor', triangleColors, 0, 4, 0);
             program.setUniform('uMVMatrix', mvMatrix);
             program.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0, 3);
 
             // Draw square.
             mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
             program.setAttributeArray(
-                    'aVertexPosition', squareArrayBuffer, 0, 3, 0);
+                    'aVertexPosition', squareVertices, 0, 3, 0);
+            program.setAttributeArray(
+                    'aVertexColor', squareColors, 0, 4, 0);
             program.setUniform('uMVMatrix', mvMatrix);
             program.drawArrays(Tma3DScreen.MODE_TRIANGLE_STRIP, 0, 4);
         };
