@@ -19,7 +19,7 @@
         void main() {
             gl_FragColor = texture2D(uSampler,
                     vec2(vTextureCoord.s, vTextureCoord.t));
-            gl_FragColor.a = 0.8;
+            gl_FragColor.a = 0.88;
         }
     </script>
     <script>
@@ -32,12 +32,6 @@
             // Initializes textures.
             var image = new Image();
             var texture = null;
-            /*
-            image.onload = function () {
-                texture = screen.createTexture(image, true);
-            };
-            image.src = 'data/texture.png';
-            */
 
             // Initializes buffers.
             var cubeVertices = screen.createBuffer([
@@ -195,7 +189,7 @@
                     data[i * 4 + 0] = 0x00;
                     data[i * 4 + 1] = 0x00;
                     data[i * 4 + 2] = 0x00;
-                    data[i * 4 + 3] = 0xee;
+                    data[i * 4 + 3] = 0x77;
                 }
                 container.update();
                 offscreen.unlock();
@@ -235,4 +229,7 @@
         };
     </script>
 </head>
+<body>
+    <img src="data/glow_cube.png" style="display: none;">
+</body>
 </html>

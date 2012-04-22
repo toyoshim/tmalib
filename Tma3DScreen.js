@@ -20,6 +20,8 @@ function Tma3DScreen (width, height) {
     this.canvas.onmousemove = this._onmousemove.bind(this);
     this.canvas.onmouseout = this._onmouseout.bind(this);
     this.gl = this.canvas.getContext("webkit-3d");
+    if (!this.gl)
+        this.gl = this.canvas.getContext("experimental-webgl");
     this.gl.viewport(0, 0, width, height);
     this.gl.enable(this.gl.DEPTH_TEST);
     this.gl.depthFunc(this.gl.LEQUAL);
