@@ -29,10 +29,6 @@
             var screen = new TmaScreen(500, 500, TmaScreen.MODE_3D);
             screen.attachTo(TmaScreen.BODY);
 
-            // Initializes textures.
-            var image = new Image();
-            var texture = null;
-
             // Initializes buffers.
             var cubeVertices = screen.createBuffer([
                 // Front face
@@ -181,10 +177,10 @@
             };
 
             function drawTexture () {
-                for (i = 0; i < 10; i++)
+                for (var i = 0; i < 10; i++)
                     Snow.emit();
                 var data = offscreen.lock().data;
-                for (var i = 0; i < offscreen.width * offscreen.height; i++) {
+                for (i = 0; i < offscreen.width * offscreen.height; i++) {
                     // RGBA
                     data[i * 4 + 0] = 0x00;
                     data[i * 4 + 1] = 0x00;
@@ -194,15 +190,20 @@
                 container.update();
                 offscreen.unlock();
             }
-            for (i = 0; i < 256; i++)
+            // Initializes textures.
+            for (var i = 0; i < 256; i++)
                 drawTexture();
+            var image = offscreen.lock(TmaScreen.LOCK_WITH_SCREEN);
+            var texture = screen.createTexture(
+                    image, true, Tma3DScreen.FILTER_NEAREST);
+            offscreen.unlock();
 
             // Periodical rendering.
             setInterval(function () {
                 // Draws texture.
                 drawTexture();
-                var image = offscreen.lock(TmaScreen.LOCK_WITH_SCREEN);
-                texture = screen.createTexture(image, true);
+                image = offscreen.lock(TmaScreen.LOCK_WITH_SCREEN);
+                texture.update(image);
                 offscreen.unlock();
 
                 // Draws cube.
@@ -216,8 +217,7 @@
                         'aTextureCoord', cubeTextureCoords, 0,
                         cubeTextureCoords.dimension, 0);
 
-                if (texture)
-                    program.setTexture('uSampler', texture);
+                program.setTexture('uSampler', texture);
 
                 program.setUniform('uMVMatrix', mvMatrix);
                 program.drawElements(Tma3DScreen.MODE_TRIANGLES,

@@ -32,7 +32,8 @@
             var image = new Image();
             var texture = null;
             image.onload = function () {
-                texture = screen.createTexture(image, true);
+                texture = screen.createTexture(
+                        image, true, Tma3DScreen.FILTER_LINEAR);
             };
             image.src = 'data/texture.png';
 

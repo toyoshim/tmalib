@@ -19,6 +19,7 @@ function Tma3DScreen (width, height) {
     this.canvas.height = height;
     this.canvas.onmousemove = this._onmousemove.bind(this);
     this.canvas.onmouseout = this._onmouseout.bind(this);
+    this.context = document.createElement("canvas").getContext("2d");
     this.gl = this.canvas.getContext("webkit-3d");
     if (!this.gl)
         this.gl = this.canvas.getContext("experimental-webgl");
@@ -43,6 +44,8 @@ function Tma3DScreen (width, height) {
         Tma3DScreen.MODE_TRIANGLES = this.gl.TRIANGLES;
         Tma3DScreen.MODE_TRIANGLE_STRIP = this.gl.TRIANGLE_STRIP;
         Tma3DScreen.MODE_TRIANGLE_FAN = this.gl.TRIANGLE_FAN;
+        Tma3DScreen.FILTER_NEAREST = this.gl.NEAREST;
+        Tma3DScreen.FILTER_LINEAR = this.gl.LINEAR;
         Tma3DScreen._MODE_INITIALIZED = true;
     }
 }
@@ -59,6 +62,8 @@ Tma3DScreen._MODE_INITIALIZED = false;
 Tma3DScreen.MODE_TRIANGLES = 0;
 Tma3DScreen.MODE_TRIANGLE_STRIP = 0;
 Tma3DScreen.MODE_TRIANGLE_FAN = 0;
+Tma3DScreen.FILTER_NEAREST = 0;
+Tma3DScreen.FILTER_LINEAR = 0;
 
 /**
  * Attaches to a DOMElement. TmaScreen.BODY is useful predefined DOMElement
@@ -124,6 +129,8 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
     this.linkProgram(programObject);
     programObject._owner = this;
     programObject._index = 0;
+    programObject._textureId = 0;
+    programObject._textureIdMap = {};
     programObject.assign = function (name) {
         var index = this._index++;
         this._owner.gl.bindAttribLocation(this, index, name);
@@ -152,7 +159,12 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
     };
     programObject.setTexture = function (name, texture) {
         var index = this._owner.gl.getUniformLocation(this, name);
-        this._owner.setTexture(this, index, texture);
+        var id = this._textureIdMap[name];
+        if (!id) {
+            id = this._textureId++;
+            this._textureIdMap[name] = id;
+        }
+        this._owner.setTexture(this, index, id, texture);
     };
     programObject.drawArrays = function (mode, offset, length) {
         this._owner.drawArrays(this, mode, offset, length);
@@ -199,11 +211,30 @@ Tma3DScreen.prototype.createElementBuffer = function (array) {
 };
 
 /**
- * Create texture buffer from Image object.
- * @param image Image object
- * @param flip image flip flag
+ * Create ImageData for texture.
+ * @param width texture width
+ * @param height texture height
  */
-Tma3DScreen.prototype.createTexture = function (image, flip) {
+Tma3DScreen.prototype.createImage = function (width, height) {
+    var image = this.context.createImageData(width, height);
+    image.setPixel = function (x, y, r, g, b, a) {
+        var offset = (y * this.width + x) * 4;
+        var data = this.data;
+        data[offset + 0] = r;
+        data[offset + 1] = g;
+        data[offset + 2] = b;
+        data[offset + 3] = a;
+    };
+    return image;
+};
+
+/**
+ * Create texture buffer from Image object.
+ * @param image Image object or ImageData object
+ * @param flip image flip flag
+ * @param filter texture mag filter
+ */
+Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
     var texture = this.gl.createTexture();
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
@@ -211,9 +242,17 @@ Tma3DScreen.prototype.createTexture = function (image, flip) {
     this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA,
             this.gl.UNSIGNED_BYTE, image);
     this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+        this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, filter);
     this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+        this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, filter);
+    texture._flip = flip;
+    texture._owner = this;
+    texture.update = function (image) {
+        var gl = this._owner.gl;
+        gl.bindTexture(gl.TEXTURE_2D, this);
+        gl.texImage2D(
+                gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    };
     return texture;
 };
 
@@ -270,13 +309,14 @@ Tma3DScreen.prototype.setUniform = function (program, index, array) {
 /**
  * Sets |texture| to |program|.
  * @param program program object
+ * @param index uniform index
+ * @param id texture ID
  * @param texture texture object
  */
-Tma3DScreen.prototype.setTexture = function (program, index, texture) {
-    // TODO: Handles multiple texture.
-    this.gl.activeTexture(this.gl.TEXTURE0);
+Tma3DScreen.prototype.setTexture = function (program, index, id, texture) {
+    this.gl.activeTexture(this.gl.TEXTURE0 + id);
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-    this.gl.uniform1i(index, 0);
+    this.gl.uniform1i(index, id);
 };
 
 /**

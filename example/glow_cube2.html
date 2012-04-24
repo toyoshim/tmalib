@@ -1,0 +1,254 @@
+<html>
+<head>
+<script src="../tma.js"></script>
+<script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec2 aTextureCoord;
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    varying vec2 vTextureCoord;
+    void main() {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+</script>
+<script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+    varying vec2 vTextureCoord;
+    uniform sampler2D uSampler1;
+    uniform sampler2D uSampler2;
+    void main() {
+        vec4 color1;
+        vec4 color2;
+    color1 = texture2D(uSampler1, vec2(vTextureCoord.s, vTextureCoord.t));
+    color2 = texture2D(uSampler2, vec2(vTextureCoord.s, vTextureCoord.t));
+    gl_FragColor = color1 + color2;
+    gl_FragColor.a = 0.88;
+    }
+</script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js' ];
+tma.onload = function () {
+    // Renders on texture (Snow + NeHe tutorial #6).
+    var screen = new TmaScreen(500, 500, TmaScreen.MODE_3D);
+    screen.attachTo(TmaScreen.BODY);
+
+    // Initializes buffers.
+    var cubeVertices = screen.createBuffer([
+        // Front face
+        -1.0, -1.0,  1.0,
+         1.0, -1.0,  1.0,
+         1.0,  1.0,  1.0,
+        -1.0,  1.0,  1.0,
+        // Back face
+        -1.0, -1.0, -1.0,
+        -1.0,  1.0, -1.0,
+         1.0,  1.0, -1.0,
+         1.0, -1.0, -1.0,
+        // Top face
+        -1.0,  1.0, -1.0,
+        -1.0,  1.0,  1.0,
+         1.0,  1.0,  1.0,
+         1.0,  1.0, -1.0,
+        // Bottom face
+        -1.0, -1.0, -1.0,
+         1.0, -1.0, -1.0,
+         1.0, -1.0,  1.0,
+        -1.0, -1.0,  1.0,
+        // Right face
+         1.0, -1.0, -1.0,
+         1.0,  1.0, -1.0,
+         1.0,  1.0,  1.0,
+         1.0, -1.0,  1.0,
+        // Left face
+        -1.0, -1.0, -1.0,
+        -1.0, -1.0,  1.0,
+        -1.0,  1.0,  1.0,
+        -1.0,  1.0, -1.0
+    ]);
+    cubeVertices.dimension = 3;
+    cubeVertices.items = 24;
+    var cubeTextureCoords = screen.createBuffer((function () {
+        var baseCoords = [
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0
+        ];
+        var coords = [];
+        for (var i = 0; i < 6; i++)
+            coords = coords.concat(baseCoords);
+        return coords;
+    })());
+    cubeTextureCoords.dimension = 2;
+    cubeTextureCoords.items = 24;
+    var cubeIndices = screen.createElementBuffer([
+         0,  1,  2,   0,  2,  3,  // Front face
+         4,  5,  6,   4,  6,  7,  // Back face
+         8,  9, 10,   8, 10, 11,  // Top face
+        12, 13, 14,  12, 14, 15,  // Bottom face
+        16, 17, 18,  16, 18, 19,  // Right face
+        20, 21, 22,  20, 22, 23   // Left face
+    ]);
+    cubeIndices.dimension = 1;
+    cubeIndices.items = 36;
+
+    // Initializes program with shaders.
+    var program = screen.createProgram('shader-vs', 'shader-fs');
+
+    // Initializes matrices.
+    var pMatrix = mat4.create();
+    var mvMatrix = mat4.create();
+    mat4.perspective(
+            45, screen.width / screen.height, 0.1, 100.0, pMatrix);
+    mat4.identity(mvMatrix);
+    program.setUniform('uPMatrix', pMatrix);
+
+    var rCube = 0;
+    var mvMatrixBase = mat4.create(mvMatrix);
+
+    // Draws texture.
+    function Snow () { TmaParticle.apply(this, arguments); }
+    Snow.prototype = new TmaParticle(null, 0);
+    Snow.prototype.constructor = Snow;
+    Snow.GRAVITY = 10 / 1000;
+
+    var container = new TmaParticle.Container(Snow);
+
+    Snow.emit = function () {
+        var vx = 0;
+        var vy = 0;
+        if (Math.random() > 0.5)
+            vx = Math.random() * 2 - 1;
+        else
+            vy = Math.random() * 2 - 1;
+        var x = 0;
+        if (vx <= 0)
+            x = Math.random() * image.width;
+        var y = 0;
+        if (vy <= 0)
+            y = Math.random() * image.height;
+        var r = ~~(Math.random() * 255);
+        if (r < 160)
+            r = 0;
+        var g = ~~(Math.random() * 255);
+        if (g < 160)
+            g = 0;
+        var b = ~~(Math.random() * 255);
+        if (b < 160)
+            b = 0;
+        container.add(x, y, vx, vy, r, g, b);
+    };
+
+    Snow.prototype.initialize = function (x, y, vx, vy, r, g, b) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.r = r;
+        this.g = g;
+        this.b = b;
+    };
+
+    Snow.prototype.update = function () {
+        if (this.vy != 0) {
+            if (this.vy > 0)
+                this.vy += Snow.GRAVITY;
+            else
+                this.vy -= Snow.GRAVITY;
+            this.vy *= 0.99;
+            this.y += this.vy;
+        }
+        if ((this.y <= 0) || (image.height <= this.y))
+            return false;
+        if (this.vx != 0) {
+            if (this.vx > 0)
+                this.vx += Snow.GRAVITY;
+            else
+                this.vx -= Snow.GRAVITY;
+            this.vx *= 0.99;
+            this.x += this.vx;
+        }
+        if ((this.x <= 0) || (image.width <= this.x))
+            return false;
+        image.setPixel(~~this.x, ~~this.y, this.r, this.g, this.b, 0xff);
+        return true;
+    };
+
+    function drawTexture () {
+        for (var i = 0; i < 10; i++)
+            Snow.emit();
+        var data = image.data;
+        var count = image.width * image.height;
+        for (i = 0; i < count; i++) {
+            // RGBA
+            data[i * 4 + 0] >>= 1;
+            data[i * 4 + 1] >>= 1;
+            data[i * 4 + 2] >>= 1;
+            data[i * 4 + 3] = 0x77;
+        }
+        container.update();
+    }
+
+    // Initializes textures.
+    var image = screen.createImage(256, 256);
+    var imageBlur = screen.createImage(64, 64);
+    var texture1 = screen.createTexture(
+            image, false, Tma3DScreen.FILTER_NEAREST);
+    var texture2 = screen.createTexture(
+            imageBlur, false, Tma3DScreen.FILTER_LINEAR);
+    for (var i = 0; i < 256; i++)
+        drawTexture();
+
+    // Periodical rendering.
+    setInterval(function () {
+        // Draws texture.
+        drawTexture();
+        var width = imageBlur.width;
+        var height = imageBlur.height;
+        var dstOffset = 0;
+        var dstData = imageBlur.data;
+        var srcOffset = width * 16 + 4;
+        var srcData = image.data;
+        for (var y = 0; y < height; y++) {
+            for (var x = 0; x < width; x++) {
+                dstData[dstOffset + 0] = srcData[srcOffset + 0];
+                dstData[dstOffset + 1] = srcData[srcOffset + 1];
+                dstData[dstOffset + 2] = srcData[srcOffset + 2];
+                dstData[dstOffset + 3] = srcData[srcOffset + 3];
+                dstOffset += 4;
+                srcOffset += 16;
+            }
+            srcOffset += width * 48;
+        }
+        texture1.update(image);
+        texture2.update(imageBlur);
+
+        // Draws cube.
+        mat4.set(mvMatrixBase, mvMatrix);
+        mat4.translate(mvMatrix, [0.0, 0.0, -5.0]);
+        mat4.rotate(mvMatrix, rCube, [1.0, 0.5, 1]);
+        program.setAttributeArray(
+                'aVertexPosition', cubeVertices, 0,
+                cubeVertices.dimension, 0);
+        program.setAttributeArray(
+                'aTextureCoord', cubeTextureCoords, 0,
+                cubeTextureCoords.dimension, 0);
+
+        program.setTexture('uSampler1', texture1);
+        program.setTexture('uSampler2', texture2);
+
+        program.setUniform('uMVMatrix', mvMatrix);
+        program.drawElements(Tma3DScreen.MODE_TRIANGLES,
+                cubeIndices, 0, cubeIndices.items);
+
+        // Applies Animation.
+        rCube += 0.02;
+    }, 10);
+};
+</script>
+</head>
+<body>
+<img src="data/glow_cube.png" style="display: none;">
+</body>
+</html>
