@@ -38,8 +38,9 @@
     <script>
         tma.extlibs = [ 'ext/gl-matrix.js' ];
         tma.onload = function () {
-            // NeHe tutorial #6 (lighting).
+            // NeHe tutorial #8.
             var screen = new TmaScreen(500, 500, TmaScreen.MODE_3D);
+            screen.setAlphaMode(true, screen.gl.DST_ALPHA, screen.gl.ONE);
             screen.attachTo(document.getElementById('canvas'));
 
             // Initializes program with shaders.

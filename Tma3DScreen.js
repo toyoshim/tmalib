@@ -24,8 +24,7 @@ function Tma3DScreen (width, height) {
     if (!this.gl)
         this.gl = this.canvas.getContext("experimental-webgl");
     this.gl.viewport(0, 0, width, height);
-    this.gl.enable(this.gl.DEPTH_TEST);
-    this.gl.depthFunc(this.gl.LEQUAL);
+    this.setAlphaMode(false);
     this._mouse = false;
     this._mouseX = 0;
     this._mouseY = 0;
@@ -357,6 +356,24 @@ Tma3DScreen.prototype.fillColor = function (r, g, b, a) {
     this.gl.clearColor(r, g, b, a);
     this.gl.clearDepth(1.0);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+};
+
+/**
+ * Sets alpha blending mode.
+ * @param on enable alpha blending
+ * @param src source drawing mode
+ * @param dst destination drawing mode
+ */
+Tma3DScreen.prototype.setAlphaMode = function (on, src, dst) {
+    if (on) {
+        this.gl.disable(this.gl.DEPTH_TEST);
+        this.gl.enable(this.gl.BLEND);
+        this.gl.blendFunc(src, dst);
+    } else {
+        this.gl.disable(this.gl.BLEND);
+        this.gl.enable(this.gl.DEPTH_TEST);
+        this.gl.depthFunc(this.gl.LEQUAL);
+    }
 };
 
 /**

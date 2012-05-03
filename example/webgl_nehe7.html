@@ -1,0 +1,212 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        attribute vec3 aVertexNormal;
+        attribute vec2 aTextureCoord;
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        uniform mat3 uNMatrix;
+        uniform vec3 uLightingDirection;
+        uniform vec3 uDirectionalColor;
+        uniform vec3 uAmbientColor;
+        varying vec2 vTextureCoord;
+        varying vec3 vLightWeighting;
+        void main() {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            vTextureCoord = aTextureCoord;
+            vec3 transformedNormal = uNMatrix * aVertexNormal;
+            float directionalLightWeighting =
+                    max(dot(transformedNormal, uLightingDirection), 0.0);
+            vLightWeighting = uAmbientColor +
+                    uDirectionalColor * directionalLightWeighting;
+        }
+    </script>
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec2 vTextureCoord;
+        varying vec3 vLightWeighting;
+        uniform sampler2D uSampler;
+        void main() {
+            vec4 textureColor = texture2D(uSampler,
+                    vec2(vTextureCoord.s, vTextureCoord.t));
+            gl_FragColor =
+                    vec4(textureColor.rgb * vLightWeighting, textureColor.a);
+        }
+    </script>
+    <script>
+        tma.extlibs = [ 'ext/gl-matrix.js' ];
+        tma.onload = function () {
+            // NeHe tutorial #7.
+            var screen = new TmaScreen(500, 500, TmaScreen.MODE_3D);
+            screen.attachTo(document.getElementById('canvas'));
+
+            // Initializes program with shaders.
+            var program = screen.createProgram('shader-vs', 'shader-fs');
+
+            // Initializes textures.
+            var image = new Image();
+            image.onload = function () {
+                var texture = screen.createTexture(
+                        image, true, Tma3DScreen.FILTER_LINEAR);
+                program.setTexture('uSampler', texture);
+            };
+            image.src = 'data/texture.png';
+
+            // Initializes buffers.
+            var cubeVertices = screen.createBuffer([
+                // Front face
+                -1.0, -1.0,  1.0,
+                 1.0, -1.0,  1.0,
+                 1.0,  1.0,  1.0,
+                -1.0,  1.0,  1.0,
+                // Back face
+                -1.0, -1.0, -1.0,
+                -1.0,  1.0, -1.0,
+                 1.0,  1.0, -1.0,
+                 1.0, -1.0, -1.0,
+                // Top face
+                -1.0,  1.0, -1.0,
+                -1.0,  1.0,  1.0,
+                 1.0,  1.0,  1.0,
+                 1.0,  1.0, -1.0,
+                // Bottom face
+                -1.0, -1.0, -1.0,
+                 1.0, -1.0, -1.0,
+                 1.0, -1.0,  1.0,
+                -1.0, -1.0,  1.0,
+                // Right face
+                 1.0, -1.0, -1.0,
+                 1.0,  1.0, -1.0,
+                 1.0,  1.0,  1.0,
+                 1.0, -1.0,  1.0,
+                // Left face
+                -1.0, -1.0, -1.0,
+                -1.0, -1.0,  1.0,
+                -1.0,  1.0,  1.0,
+                -1.0,  1.0, -1.0
+            ]);
+            cubeVertices.dimension = 3;
+            cubeVertices.items = 24;
+            program.setAttributeArray(
+                    'aVertexPosition', cubeVertices, 0,
+                    cubeVertices.dimension, 0);
+
+            cubeVertexNormals = screen.createBuffer((function () {
+                var baseNormals = [
+                    [  0.0,  0.0,  1.0 ],  // Front face
+                    [  0.0,  0.0, -1.0 ],  // Back face
+                    [  0.0,  1.0,  0.0 ],  // Top face
+                    [  0.0, -1.0,  0.0 ],  // Bottom face
+                    [  1.0,  0.0,  0.0 ],  // Right face
+                    [ -1.0,  0.0,  0.0 ]   // Left face
+                ];
+                var normals = [];
+                for (var i = 0; i < 6; i++)
+                    for (var j = 0; j < 4; j++)
+                        normals = normals.concat(baseNormals[i]);
+                return normals;
+            })());
+            cubeVertexNormals.dimension = 3;
+            cubeVertexNormals.items = 24;
+            program.setAttributeArray(
+                    'aVertexNormal', cubeVertexNormals, 0,
+                    cubeVertexNormals.dimension, 0);
+
+            var cubeTextureCoords = screen.createBuffer((function () {
+                var baseCoords = [
+                    0.0, 0.0,
+                    1.0, 0.0,
+                    1.0, 1.0,
+                    0.0, 1.0
+                ];
+                var coords = [];
+                for (var i = 0; i < 6; i++)
+                    coords = coords.concat(baseCoords);
+                return coords;
+            })());
+            cubeTextureCoords.dimension = 2;
+            cubeTextureCoords.items = 24;
+            program.setAttributeArray(
+                    'aTextureCoord', cubeTextureCoords, 0,
+                    cubeTextureCoords.dimension, 0);
+
+            var cubeIndices = screen.createElementBuffer([
+                 0,  1,  2,   0,  2,  3,  // Front face
+                 4,  5,  6,   4,  6,  7,  // Back face
+                 8,  9, 10,   8, 10, 11,  // Top face
+                12, 13, 14,  12, 14, 15,  // Bottom face
+                16, 17, 18,  16, 18, 19,  // Right face
+                20, 21, 22,  20, 22, 23   // Left face
+            ]);
+            cubeIndices.dimension = 1;
+            cubeIndices.items = 36;
+
+            // Initializes matrices.
+            var pMatrix = mat4.create();
+            var mvMatrix = mat4.create();
+            var nMatrix = mat3.create();
+            mat4.perspective(
+                    45, screen.width / screen.height, 0.1, 100.0, pMatrix);
+            mat4.identity(mvMatrix);
+            program.setUniform('uPMatrix', pMatrix);
+
+            var rCube = 0;
+            var rSpeed = 0;
+            var mvMatrixBase = mat4.create(mvMatrix);
+
+            setInterval(function () {
+                // Initializes screen.
+                screen.fillColor(0.0, 0.0, 0.0, 1.0);
+
+                // Draws cube.
+                mat4.set(mvMatrixBase, mvMatrix);
+                mat4.translate(mvMatrix, [0.0, 0.0, -5.0]);
+                mat4.rotate(mvMatrix, rCube, [1.0, 0.5, 1]);
+                mat4.toInverseMat3(mvMatrix, nMatrix);
+                mat3.transpose(nMatrix);
+                program.setUniform('uMVMatrix', mvMatrix);
+                program.setUniform('uNMatrix', nMatrix);
+                program.setUniform('uLightingDirection', [
+                    parseFloat(document.getElementById('dX').value),
+                    parseFloat(document.getElementById('dY').value),
+                    parseFloat(document.getElementById('dZ').value)
+                ]);
+                program.setUniform('uDirectionalColor', [
+                    parseFloat(document.getElementById('dR').value),
+                    parseFloat(document.getElementById('dG').value),
+                    parseFloat(document.getElementById('dB').value)
+                ]);
+                program.setUniform('uAmbientColor', [
+                    parseFloat(document.getElementById('aR').value),
+                    parseFloat(document.getElementById('aG').value),
+                    parseFloat(document.getElementById('aB').value)
+                ]);
+                program.drawElements(Tma3DScreen.MODE_TRIANGLES,
+                        cubeIndices, 0, cubeIndices.items);
+
+                // Applies Animation.
+                rSpeed += 0.00001;
+                rCube += 0.005 + rSpeed;
+            }, 15);
+        };
+    </script>
+</head>
+<body>
+<div id="canvas"></div>
+<hr>
+<h1>Lighting</h1>
+<h2>Directional light</h2>
+X: <input type="text" id="dX" value="0.25">
+Y: <input type="text" id="dY" value="0.25">
+Z: <input type="text" id="dZ" value="1.0">
+R: <input type="text" id="dR" value="0.8">
+G: <input type="text" id="dG" value="0.8">
+B: <input type="text" id="dB" value="0.8">
+<h2>Ambient light</h2>
+R: <input type="text" id="aR" value="0.2">
+G: <input type="text" id="aG" value="0.2">
+B: <input type="text" id="aB" value="0.2">
+</body>
+</html>
