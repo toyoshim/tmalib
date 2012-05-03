@@ -291,12 +291,15 @@ Tma3DScreen.prototype.setAttributeArray =
 
 /**
  * Sets a float array to an internal buffer as a constant uniform array.
+ * TODO: Split this function into two functions for vectors and matrices.
  * @param index uniform index
  * @param array float array
  */
 Tma3DScreen.prototype.setUniform = function (program, index, array) {
     this.gl.useProgram(program);
-    if (4 == array.length)
+    if (3 == array.length)
+        this.gl.uniform3fv(index, array);
+    else if (4 == array.length)
         this.gl.uniformMatrix2fv(index, false, array);
     else if (9 == array.length)
         this.gl.uniformMatrix3fv(index, false, array);

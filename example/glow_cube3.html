@@ -7,14 +7,18 @@
     uniform mat4 uMVMatrix;
     uniform mat4 uPMatrix;
     varying vec2 vTextureCoord;
+    varying vec3 vLightWeighting;
     void main() {
         gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
         vTextureCoord = aTextureCoord;
+        vLightWeighting = aVertexPosition.xyz / vec3(2, 2, 2) +
+                vec3(0.8, 0.8, 0.8);
     }
 </script>
 <script id="shader-fs" type="x-shader/x-fragment">
     precision mediump float;
     varying vec2 vTextureCoord;
+    varying vec3 vLightWeighting;
     uniform sampler2D uSampler1;
     uniform sampler2D uSampler2;
     void main() {
@@ -22,8 +26,7 @@
         vec4 color2;
         color1 = texture2D(uSampler1, vec2(vTextureCoord.s, vTextureCoord.t));
         color2 = texture2D(uSampler2, vec2(vTextureCoord.s, vTextureCoord.t));
-        gl_FragColor = color1 + color2;
-        gl_FragColor.a = 0.88;
+        gl_FragColor = vec4((color1 + color2).rgb * vLightWeighting, 0.88);
     }
 </script>
 <script>
@@ -37,29 +40,29 @@ tma.onload = function () {
     var cubeVertices = screen.createBuffer([
         // Front face
         -1.0, -1.0,  1.0,
-         1.0, -1.0,  1.0,
-         1.0,  1.0,  1.0,
+        1.0, -1.0,  1.0,
+        1.0,  1.0,  1.0,
         -1.0,  1.0,  1.0,
         // Back face
         -1.0, -1.0, -1.0,
         -1.0,  1.0, -1.0,
-         1.0,  1.0, -1.0,
-         1.0, -1.0, -1.0,
+        1.0,  1.0, -1.0,
+        1.0, -1.0, -1.0,
         // Top face
         -1.0,  1.0, -1.0,
         -1.0,  1.0,  1.0,
-         1.0,  1.0,  1.0,
-         1.0,  1.0, -1.0,
+        1.0,  1.0,  1.0,
+        1.0,  1.0, -1.0,
         // Bottom face
         -1.0, -1.0, -1.0,
-         1.0, -1.0, -1.0,
-         1.0, -1.0,  1.0,
+        1.0, -1.0, -1.0,
+        1.0, -1.0,  1.0,
         -1.0, -1.0,  1.0,
         // Right face
-         1.0, -1.0, -1.0,
-         1.0,  1.0, -1.0,
-         1.0,  1.0,  1.0,
-         1.0, -1.0,  1.0,
+        1.0, -1.0, -1.0,
+        1.0,  1.0, -1.0,
+        1.0,  1.0,  1.0,
+        1.0, -1.0,  1.0,
         // Left face
         -1.0, -1.0, -1.0,
         -1.0, -1.0,  1.0,
@@ -83,9 +86,9 @@ tma.onload = function () {
     cubeTextureCoords.dimension = 2;
     cubeTextureCoords.items = 24;
     var cubeIndices = screen.createElementBuffer([
-         0,  1,  2,   0,  2,  3,  // Front face
-         4,  5,  6,   4,  6,  7,  // Back face
-         8,  9, 10,   8, 10, 11,  // Top face
+        0,  1,  2,   0,  2,  3,  // Front face
+        4,  5,  6,   4,  6,  7,  // Back face
+        8,  9, 10,   8, 10, 11,  // Top face
         12, 13, 14,  12, 14, 15,  // Bottom face
         16, 17, 18,  16, 18, 19,  // Right face
         20, 21, 22,  20, 22, 23   // Left face
