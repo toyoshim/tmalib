@@ -68,8 +68,8 @@ Tma2DScreen.prototype.createImageData = function () {
 };
 
 /**
- * Sets pixel data to specified point, color, and alpha blending parameters.
- * This operation is applied to locked image data.
+ * Sets pixel data to specified point by RGB color, and alpha blending
+ * parameters. This operation is applied to locked image data.
  * @param x X position to set pixel
  * @param y Y position to set pixel
  * @param r Red (from 0 to 255)
@@ -80,6 +80,70 @@ Tma2DScreen.prototype.createImageData = function () {
 Tma2DScreen.prototype.setPixel = function (x, y, r, g, b, a) {
     var offset = (y * this.width + x) * 4;
     var data = this._image.data;
+    data[offset + 0] = r;
+    data[offset + 1] = g;
+    data[offset + 2] = b;
+    data[offset + 3] = a;
+};
+
+/**
+ * Sets pixel data to specified point by HSV color, and alpha blending
+ * parameters. This operation is applied to locked image data.
+ * @param x X position to set pixel
+ * @param y Y position to set pixel
+ * @param h Hue (from 0.0 to 360.0)
+ * @param s Saturation (from 0.0 to 1.0)
+ * @param v Value (from 0.0 to 1.0)
+ * @param a Alpha (from 0 to 255)
+ */
+Tma2DScreen.prototype.setPixelHSV = function (x, y, h, s, v, a) {
+    var offset = (y * this.width + x) * 4;
+    var data = this._image.data;
+    v = v * 255;
+    var iv = ~~v;
+    var r = iv;
+    var g = iv;
+    var b = iv;
+    if (0 != s) {
+        var f = h / 60;
+        var i = ~~f;
+        f -= i;
+        var m = ~~(v * (1 - s));
+        var n = ~~(v * (1 - s * f));
+        var k = ~~(v * (1 - s * (1 - f)));
+        switch (i) {
+            case 0:
+                r = v;
+                g = k;
+                b = m;
+                break;
+            case 1:
+                r = n;
+                g = v;
+                b = m;
+                break;
+            case 2:
+                r = m;
+                g = v;
+                b = k;
+                break;
+            case 3:
+                r = m;
+                g = n;
+                b = v;
+                break;
+            case 4:
+                r = k;
+                g = m;
+                b = v;
+                break;
+            case 5:
+                r = v;
+                g = m;
+                b = n;
+                break;
+        }
+    }
     data[offset + 0] = r;
     data[offset + 1] = g;
     data[offset + 2] = b;
