@@ -1,0 +1,85 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script>
+        tma.onload = function () {
+            // All libraries are loaded asynchronously.
+            var sr = 100;
+            var margin = 45;
+            var screen = new TmaScreen(2 * sr, 2 * sr);
+            screen.attachTo(TmaScreen.BODY);
+            var offset = 0;
+            screen.lock(TmaScreen.LOCK_WITH_SCREEN);
+            var selectedH = 0;
+
+            var getSV = function (x, y) {
+                if ((x < margin) || ((screen.width - margin) <= x) ||
+                        (y < margin) || ((screen.height - margin) <= y))
+                    return null;
+                var max = 2 * (sr - margin);
+                var s = (screen.height - margin - y) / max;
+                var v = (x - margin) / max;
+                return { s: s, v: v };
+            };
+
+            var drawSV = function (h) {
+                var max = 2 * (sr - margin);
+                for (var y = margin; y < screen.height - margin; y++) {
+                    for (var x = margin; x < screen.width - margin; x++) {
+                        var s = (screen.height - margin - y) / max;
+                        var v = (x - margin) / max;
+                        screen.setPixel(x, y, h, s, v, 0xff, true);
+                    }
+                }
+            };
+
+            var getH = function (x, y) {
+                var rx = x - sr;  // r * cos(w)
+                var ry = sr - y;
+                var r = Math.sqrt(rx * rx + ry * ry);
+                var w = Math.acos(rx / r);
+                if (ry > 0)
+                    w = Math.PI * 2 - w;
+                var h = 180 * w / Math.PI;
+                if (((sr - 20) < r) && (r < sr))
+                    return h;
+                return -1;
+            };
+
+            for (var y = 0; y < screen.height; y++) {
+                for (var x = 0; x < screen.width; x++) {
+                    var h = getH(x, y);
+                    if (h >= 0)
+                        screen.setPixel(x, y, h, 1, 1, 0xff, true);
+                    else
+                        screen.setPixel(x, y, 0xff, 0xff, 0xff, 0xff);
+                }
+            }
+            drawSV(selectedH);
+            screen.unlock();
+            screen.onMouseDrag = function (x, y) {
+                var h = getH(x, y);
+                if (h >= 0) {
+                    selectedH = h;
+                    screen.lock(TmaScreen.LOCK_WITH_SCREEN);
+                    drawSV(selectedH);
+                    screen.unlock();
+                } else {
+                    var sv = getSV(x, y);
+                    if (sv) {
+                        var rgb = TmaScreen.HSV2RGB(selectedH, sv.s, sv.v);
+                        var r = ('0' + (~~rgb.r).toString(16)).substr(-2);
+                        var g = ('0' + (~~rgb.g).toString(16)).substr(-2);
+                        var b = ('0' + (~~rgb.b).toString(16)).substr(-2);
+                        var html = '#' + r + g + b;
+                        document.getElementById('show').textContent = html;
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body>
+<pre id="show">#000000</pre>
+</body>
+</html>
