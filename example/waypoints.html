@@ -1,0 +1,105 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script>
+        tma.onload = function () {
+            // All libraries are loaded asynchronously.
+            var screen = new TmaScreen(320, 320);
+            screen.attachTo(TmaScreen.BODY);
+            screen.afterimage("rgba(0, 0, 0, 0.5)");
+            screen.blur(0.1, 0.8, 1.05, 0, 0, false);
+
+            function Particle () { TmaParticle.apply(this, arguments); }
+            Particle.prototype = new TmaParticle(null, 0);
+            Particle.prototype.constructor = Particle;
+
+            var container = new TmaParticle.Container(Particle);
+
+            var waypoints = [];
+            for (var points = 0; points < 8; points++)
+                waypoints.push({
+                    x: Math.random() * screen.width,
+                    y: Math.random() * screen.height,
+                    vx: Math.random() * 2 - 1,
+                    vy: Math.random() * 2 - 1
+                });
+
+            Particle.emit = function () {
+                container.add();
+            };
+
+            Particle.prototype.initialize = function () {
+                this.x = Math.random() * 16;
+                this.y = Math.random() * 16;
+                this.ox = this.x;
+                this.oy = this.y;
+                this.vx = 0;
+                this.vy = 0;
+                this.h = 0;
+                this.s = 1 - Math.random() / 4;
+                this.v = Math.random();
+                this.target = 0;
+            };
+
+            Particle.prototype.update = function () {
+                var waypoint = waypoints[this.target];
+                var dx = waypoints[this.target].x - this.x;
+                var dy = waypoints[this.target].y - this.y;
+                if (dx * dx + dy * dy < 1024) {
+                    this.target++;
+                    if (this.target == waypoints.length)
+                        return false;
+                    this.vx += Math.random() * 2 - 1;
+                    this.vy += Math.random() * 2 - 1;
+                }
+                this.vx += dx / 512;
+                this.vy += dy / 512;
+                this.vx *= 0.97;
+                this.vy *= 0.97;
+                this.ox = this.x;
+                this.oy = this.y;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.h = (this.h + 1) % 360;
+                if (this.x < 0 || screen.width <= this.x ||
+                        this.y < 0 || screen.height <= this.y)
+                    return true;
+                screen.drawLine(
+                        ~~this.ox, ~~this.oy, ~~this.x, ~~this.y,
+                        ~~this.h, this.s, this.v, 0xff, true);
+                return true;
+            };
+            var data = screen.lock().data;
+            for (var i = 0; i < screen.width * screen.height * 4; i++) {
+                if (3 == (i % 4))
+                    data[i] = 0xff;
+                else
+                    data[i] = 0;
+            }
+            screen.unlock();
+
+            function main () {
+                for (var i = 0; i < 16; i++)
+                    Particle.emit();
+                for (var way = 0; way < waypoints.length; way++) {
+                    var waypoint = waypoints[way];
+                    waypoint.x += waypoint.vx;
+                    waypoint.y += waypoint.vy;
+                    if (((waypoint.x > screen.width) && (waypoint.vx > 0)) ||
+                            ((waypoint.x < 0) && (waypoint.vx < 0)))
+                        waypoint.vx = -waypoint.vx;
+                    if (((waypoint.y > screen.height) && (waypoint.vy > 0)) ||
+                            ((waypoint.y < 0) && (waypoint.vy < 0)))
+                        waypoint.vy = -waypoint.vy;
+                }
+                var data = screen.lock(TmaScreen.LOCK_WITH_SCREEN).data;
+                var size = screen.width * screen.height * 4;
+                container.update();
+                screen.unlock();
+            }
+
+            setInterval(main, 20);
+        };
+    </script>
+</head>
+</html>
