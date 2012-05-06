@@ -27,7 +27,13 @@
             };
 
             Snow.prototype.initialize = function (x, vy, s, v) {
-                this.y = 0;
+                // x = screen.width / 2 + R cos(w)
+                // y = R (1 - sin(w))
+                // R = screen.height * 2
+                // w = acos((x - screen.width / 2) / R)
+                var r = screen.height * 1;
+                var w = Math.acos((x - screen.width / 2) / r);
+                this.y = r * (1 - Math.sin(w)) + Math.random() * 16;
                 this.x = x;
                 this.vy = vy;
                 this.h = 0;
@@ -41,9 +47,9 @@
                 this.y += this.vy;
                 if (this.y >= screen.height)
                     return false;
-                this.h = (this.h + 1) % 360;
-                screen.setPixelHSV(
-                        ~~this.x, ~~this.y, this.h, this.s, this.v, 0xff);
+                this.h = (this.h + 2) % 360;
+                screen.setPixel(~~this.x, ~~this.y, this.h, this.s, this.v,
+                        0xff, true);
                 return true;
             };
 

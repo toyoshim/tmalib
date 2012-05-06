@@ -18,15 +18,19 @@
             Particle.prototype.initialize = function (x, y, r, b) {
                 this.x = x;
                 this.y = y;
-                this.r = r;
-                this.b = b;
+                var hsv = TmaScreen.RGB2HSV(r, 0xff, b);
+                this.h = hsv.h;
+                this.s = hsv.s;
+                this.v = hsv.v;
             };
 
             Particle.prototype.update = function () {
                 this.x -= 2;
                 if (this.x < 0)
                     return false;
-                screen.setPixel(this.x, this.y, this.r, 0xff, this.b, 0xff);
+                this.h = (this.h + 2) % 360;
+                screen.setPixel(this.x, this.y, this.h, this.s, this.v, 0xff,
+                        true);
                 return true;
             };
 

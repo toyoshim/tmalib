@@ -216,66 +216,21 @@ Tma3DScreen.prototype.createElementBuffer = function (array) {
  */
 Tma3DScreen.prototype.createImage = function (width, height) {
     var image = this.context.createImageData(width, height);
-    image.setPixel = function (x, y, r, g, b, a) {
+    image.setPixel = function (x, y, l, m, n, a, hsv) {
         var offset = (y * this.width + x) * 4;
         var data = this.data;
-        data[offset + 0] = r;
-        data[offset + 1] = g;
-        data[offset + 2] = b;
-        data[offset + 3] = a;
-    };
-    image.setPixelHSV = function (x, y, h, s, v, a) {
-        var offset = (y * this.width + x) * 4;
-        var data = this.data;
-        v = v * 255;
-        var iv = ~~v;
-        var r = iv;
-        var g = iv;
-        var b = iv;
-        if (0 != s) {
-            var f = h / 60;
-            var i = ~~f;
-            f -= i;
-            var m = ~~(v * (1 - s));
-            var n = ~~(v * (1 - s * f));
-            var k = ~~(v * (1 - s * (1 - f)));
-            switch (i) {
-                case 0:
-                    r = v;
-                    g = k;
-                    b = m;
-                    break;
-                case 1:
-                    r = n;
-                    g = v;
-                    b = m;
-                    break;
-                case 2:
-                    r = m;
-                    g = v;
-                    b = k;
-                    break;
-                case 3:
-                    r = m;
-                    g = n;
-                    b = v;
-                    break;
-                case 4:
-                    r = k;
-                    g = m;
-                    b = v;
-                    break;
-                case 5:
-                    r = v;
-                    g = m;
-                    b = n;
-                    break;
-            }
+        if (hsv) {
+            var rgb = TmaScreen.HSV2RGB(l, m, n);
+            data[offset + 0] = rgb.r;
+            data[offset + 1] = rgb.g;
+            data[offset + 2] = rgb.b;
+            data[offset + 3] = a;
+        } else {
+            data[offset + 0] = l;
+            data[offset + 1] = m;
+            data[offset + 2] = n;
+            data[offset + 3] = a;
         }
-        data[offset + 0] = r;
-        data[offset + 1] = g;
-        data[offset + 2] = b;
-        data[offset + 3] = a;
     };
     return image;
 };

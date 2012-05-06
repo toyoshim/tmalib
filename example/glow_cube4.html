@@ -153,8 +153,8 @@ tma.onload = function () {
         if (this.x < 0 || image.width <= this.x ||
                 this.y < 0 || image.height <= this.y)
             return false;
-        image.setPixelHSV(
-                ~~this.x, ~~this.y, this.h, this.s, this.v, 0x77);
+        image.setPixel(
+                ~~this.x, ~~this.y, this.h, this.s, this.v, 0x77, true);
         return true;
     };
 

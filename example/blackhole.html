@@ -43,8 +43,8 @@
                 if (this.x < 0 || screen.width <= this.x ||
                         this.y < 0 || screen.height <= this.y)
                     return false;
-                screen.setPixelHSV(
-                        ~~this.x, ~~this.y, this.h, this.s, this.v, 0xff);
+                screen.setPixel(~~this.x, ~~this.y, this.h, this.s, this.v,
+                        0xff, true);
                 return true;
             };
 
