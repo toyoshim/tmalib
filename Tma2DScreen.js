@@ -19,13 +19,15 @@ function Tma2DScreen (width, height) {
     this.canvas.height = height;
     this.canvas.onmousemove = this._onmousemove.bind(this);
     this.canvas.onmouseout = this._onmouseout.bind(this);
+    this.canvas.onmousedown = this._onmousedown.bind(this);
+    this.canvas.onmouseup = this._onmouseup.bind(this);
     this.context = this.canvas.getContext("2d");
     this._image = this.context.getImageData(0, 0, this.width, this.height);
     this._offscreenCanvas = document.createElement("canvas");
     this._offscreenCanvas.width = width;
     this._offscreenCanvas.height = height;
     this._offscreenContext = this._offscreenCanvas.getContext("2d");
-    this._offscreenImage = this.createImageData();
+    this._offscreenImage = this.createImageData(width, height);
     this._afterimage = 0;
     this._blurCanvas = document.createElement("canvas");
     this._blurCanvas.width = width;
@@ -41,6 +43,7 @@ function Tma2DScreen (width, height) {
     this._mouse = false;
     this._mouseX = 0;
     this._mouseY = 0;
+    this._mousePressed = false;
 }
 
 /**
@@ -62,13 +65,16 @@ Tma2DScreen.prototype.detachFrom = function (element) {
 
 /**
  * Creates ImageData object with current screen size.
+ * @param width Image width
+ * @param height Image height
+ * @return Image object.
  */
-Tma2DScreen.prototype.createImageData = function () {
-    return this.context.createImageData(this.width, this.height);
+Tma2DScreen.prototype.createImageData = function (width, height) {
+    return this.context.createImageData(width, height);
 };
 
 /**
- * Sets pixel data to specified point by RGB color, and alpha blending
+ * Sets pixel data to specified point by specified color, and alpha blending
  * parameters. This operation is applied to locked image data.
  * @param x X position to set pixel
  * @param y Y position to set pixel
@@ -111,7 +117,80 @@ Tma2DScreen.prototype.addPixel = function (x, y, r, g, b, a) {
     data[offset + 0] += r;
     data[offset + 1] += g;
     data[offset + 2] += b;
-    data[offset + 3] += a;
+    data[offset + 3] = a;
+};
+
+/**
+ * Draw a line at specified position by specified color, and alpha blending
+ * parameters. This operation is applied to locked image data.
+ * @param x1 Source X position to draw line
+ * @param y1 Source Y position to draw line
+ * @param x2 Destination X position to draw line
+ * @param y2 Destination Y position to draw line
+ * @param l Red (from 0 to 255) or H (from 0.0 to 360.0)
+ * @param m Green (from 0 to 255) or S (from 0.0 to 1.0)
+ * @param n Blue (from 0 to 255) or V (from 0.0 to 1.0)
+ * @param a Alpha (from 0 to 255)
+ * @param hsv True if specified l, m, n parameters are in HSV format.
+ * @param blend Add to original pixel when |blend| is true, otherwise replace
+ */
+Tma2DScreen.prototype.drawLine =
+        function (x1, y1, x2, y2, l, m, n, a, hsv, blend) {
+    var func = blend ?
+        function (s, d) {
+            return s + d;
+        } :
+        function (s, d) {
+            return d;
+        };
+    var offset = (y1 * this.width + x1) * 4;
+    var data = this._image.data;
+    var r = l;
+    var g = m;
+    var b = n;
+    if (hsv) {
+        var rgb = TmaScreen.HSV2RGB(l, m, n);
+        r = rgb.r;
+        g = rgb.g;
+        b = rgb.b;
+    }
+    var dx = x2 - x1;
+    var dy = y2 - y1;
+    var ax = (dx > 0) ? dx : -dx;
+    var ay = (dy > 0) ? dy : -dy;
+    if (ax < ay) {
+        // line by line
+        var direction = (dy > 0) ? 1 : -1;
+        var diff = dx / dy;
+        var lineBytes = (dy > 0) ? this.width * 4 : -this.width * 4;
+        var rowBytes = 4;
+        for (var y = y1; ; y += direction) {
+            var position = offset + ~~(diff * (y - y1)) * rowBytes;
+            data[position + 0] = func(data[position + 0], r);
+            data[position + 1] = func(data[position + 1], g);
+            data[position + 2] = func(data[position + 2], b);
+            data[position + 3] = a;
+            if (y == y2)
+                break;
+            offset += lineBytes;
+        }
+    } else {
+        // row by row
+        direction = (dx > 0) ? 1 : -1;
+        diff = dy / dx;
+        lineBytes = this.width * 4;
+        rowBytes = (dx > 0) ? 4 : -4;
+        for (var x = x1; ; x += direction) {
+            position = offset + ~~(diff * (x - x1)) * lineBytes;
+            data[position + 0] = func(data[position + 0], r);
+            data[position + 1] = func(data[position + 1], g);
+            data[position + 2] = func(data[position + 2], b);
+            data[position + 3] = a;
+            if (x == x2)
+                break;
+            offset += rowBytes;
+        }
+    }
 };
 
 /**
@@ -275,6 +354,8 @@ Tma2DScreen.prototype._onmousemove = function (e) {
     var rect = e.target.getBoundingClientRect();
     this._mouseX = e.clientX - rect.left;
     this._mouseY = e.clientY - rect.top;
+    if (this._mousePressed)
+        this.onMouseDrag(this._mouseX, this._mouseY);
 };
 
 /**
@@ -283,6 +364,25 @@ Tma2DScreen.prototype._onmousemove = function (e) {
  */
 Tma2DScreen.prototype._onmouseout = function (e) {
     this._mouse = false;
+};
+
+Tma2DScreen.prototype._onmousedown = function (e) {
+    var rect = e.target.getBoundingClientRect();
+    this._mouseX = e.clientX - rect.left;
+    this._mouseY = e.clientY - rect.top;
+    this._mousePressed = true;
+    this.onMouseDrag(this._mouseX, this._mouseY);
+};
+
+Tma2DScreen.prototype._onmouseup = function (e) {
+    var rect = e.target.getBoundingClientRect();
+    this._mouseX = e.clientX - rect.left;
+    this._mouseY = e.clientY - rect.top;
+    this._mousePressed = false;
+    this.onMouseDrag(this._mouseX, this._mouseY);
+};
+
+Tma2DScreen.prototype.onMouseDrag = function (x, y) {
 };
 
 // node.js compatible export.

@@ -87,10 +87,9 @@ TmaScreen.RGB2HSV = function (r, g, b) {
 TmaScreen.HSV2RGB = function (h, s, v) {
     v = v * 255;
     var iv = ~~v;
-    var r = iv;
-    var g = iv;
-    var b = iv;
-    if (0 != s) {
+    if (0 == s) {
+        return { r: iv, g: iv, b: iv };
+    } else {
         var f = h / 60;
         var i = ~~f;
         f -= i;
