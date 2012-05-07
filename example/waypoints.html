@@ -7,7 +7,7 @@
             var screen = new TmaScreen(320, 320);
             screen.attachTo(TmaScreen.BODY);
             screen.afterimage("rgba(0, 0, 0, 0.5)");
-            screen.blur(0.1, 0.8, 1.0, 0, 0, false);
+            screen.blur(0.5, 0.8, 1.0, 0, 0, false);
 
             function Particle () { TmaParticle.apply(this, arguments); }
             Particle.prototype = new TmaParticle(null, 0);
@@ -37,7 +37,7 @@
                 this.vy = 0;
                 this.h = h;
                 this.s = 1 - Math.random() / 4;
-                this.v = Math.random();
+                this.v = Math.random() / 2;
                 this.target = 0;
             };
 
@@ -103,4 +103,7 @@
         };
     </script>
 </head>
+<body>
+    <img src="data/waypoints.png" style="display: none;">
+</body>
 </html>
