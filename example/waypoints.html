@@ -39,15 +39,17 @@
                 this.s = 1 - Math.random() / 4;
                 this.v = Math.random() / 2;
                 this.target = 0;
+                this.screen = screen;
+                this.waypoints = waypoints;
             };
 
             Particle.prototype.update = function () {
-                var waypoint = waypoints[this.target];
-                var dx = waypoints[this.target].x - this.x;
-                var dy = waypoints[this.target].y - this.y;
+                var waypoint = this.waypoints[this.target];
+                var dx = this.waypoints[this.target].x - this.x;
+                var dy = this.waypoints[this.target].y - this.y;
                 if (dx * dx + dy * dy < 1024) {
                     this.target++;
-                    if (this.target == waypoints.length)
+                    if (this.target == this.waypoints.length)
                         return false;
                     this.vx += Math.random() * 2 - 1;
                     this.vy += Math.random() * 2 - 1;
@@ -60,10 +62,10 @@
                 this.oy = this.y;
                 this.x += this.vx;
                 this.y += this.vy;
-                if (this.x < 0 || screen.width <= this.x ||
-                        this.y < 0 || screen.height <= this.y)
+                if (this.x < 0 || this.screen.width <= this.x ||
+                        this.y < 0 || this.screen.height <= this.y)
                     return true;
-                screen.drawLine(
+                this.screen.drawLine(
                         ~~this.ox, ~~this.oy, ~~this.x, ~~this.y,
                         ~~this.h, this.s, this.v, 0xff, true, true);
                 return true;
@@ -79,24 +81,26 @@
 
             var h = 0;
             function main () {
+                var _screen = screen;
+                var _waypoints = waypoints;
                 for (var i = 0; i < 8; i++)
                     Particle.emit(h);
                 h = (h + 1) % 360;
-                for (var way = 0; way < waypoints.length; way++) {
-                    var waypoint = waypoints[way];
+                var length = _waypoints.length;
+                for (var way = 0; way < length; way++) {
+                    var waypoint = _waypoints[way];
                     waypoint.x += waypoint.vx;
                     waypoint.y += waypoint.vy;
-                    if (((waypoint.x > screen.width) && (waypoint.vx > 0)) ||
+                    if (((waypoint.x > _screen.width) && (waypoint.vx > 0)) ||
                             ((waypoint.x < 0) && (waypoint.vx < 0)))
                         waypoint.vx = -waypoint.vx;
-                    if (((waypoint.y > screen.height) && (waypoint.vy > 0)) ||
+                    if (((waypoint.y > _screen.height) && (waypoint.vy > 0)) ||
                             ((waypoint.y < 0) && (waypoint.vy < 0)))
                         waypoint.vy = -waypoint.vy;
                 }
-                var data = screen.lock(TmaScreen.LOCK_WITH_SCREEN).data;
-                var size = screen.width * screen.height * 4;
+                _screen.lock(TmaScreen.LOCK_WITH_SCREEN);
                 container.update();
-                screen.unlock();
+                _screen.unlock();
             }
 
             setInterval(main, 20);

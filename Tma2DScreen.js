@@ -136,13 +136,6 @@ Tma2DScreen.prototype.addPixel = function (x, y, r, g, b, a) {
  */
 Tma2DScreen.prototype.drawLine =
         function (x1, y1, x2, y2, l, m, n, a, hsv, blend) {
-    var func = blend ?
-        function (s, d) {
-            return s + d;
-        } :
-        function (s, d) {
-            return d;
-        };
     var offset = (y1 * this.width + x1) * 4;
     var data = this._image.data;
     var r = l;
@@ -164,15 +157,28 @@ Tma2DScreen.prototype.drawLine =
         var diff = dx / dy;
         var lineBytes = (dy > 0) ? this.width * 4 : -this.width * 4;
         var rowBytes = 4;
-        for (var y = y1; ; y += direction) {
-            var position = offset + ~~(diff * (y - y1)) * rowBytes;
-            data[position + 0] = func(data[position + 0], r);
-            data[position + 1] = func(data[position + 1], g);
-            data[position + 2] = func(data[position + 2], b);
-            data[position + 3] = a;
-            if (y == y2)
-                break;
-            offset += lineBytes;
+        if (blend) {
+            for (var y = y1; ; y += direction) {
+                var position = offset + ~~(diff * (y - y1)) * rowBytes;
+                data[position + 0] += r;
+                data[position + 1] += g;
+                data[position + 2] += b;
+                data[position + 3] = a;
+                if (y == y2)
+                    break;
+                offset += lineBytes;
+            }
+        } else {
+            for (var y = y1; ; y += direction) {
+                var position = offset + ~~(diff * (y - y1)) * rowBytes;
+                data[position + 0] = r;
+                data[position + 1] = g;
+                data[position + 2] = b;
+                data[position + 3] = a;
+                if (y == y2)
+                    break;
+                offset += lineBytes;
+            }
         }
     } else {
         // row by row
@@ -180,15 +186,28 @@ Tma2DScreen.prototype.drawLine =
         diff = dy / dx;
         lineBytes = this.width * 4;
         rowBytes = (dx > 0) ? 4 : -4;
-        for (var x = x1; ; x += direction) {
-            position = offset + ~~(diff * (x - x1)) * lineBytes;
-            data[position + 0] = func(data[position + 0], r);
-            data[position + 1] = func(data[position + 1], g);
-            data[position + 2] = func(data[position + 2], b);
-            data[position + 3] = a;
-            if (x == x2)
-                break;
-            offset += rowBytes;
+        if (blend) {
+            for (var x = x1; ; x += direction) {
+                position = offset + ~~(diff * (x - x1)) * lineBytes;
+                data[position + 0] += r;
+                data[position + 1] += g;
+                data[position + 2] += b;
+                data[position + 3] = a;
+                if (x == x2)
+                    break;
+                offset += rowBytes;
+            }
+        } else {
+            for (var x = x1; ; x += direction) {
+                position = offset + ~~(diff * (x - x1)) * lineBytes;
+                data[position + 0] = r;
+                data[position + 1] = g;
+                data[position + 2] = b;
+                data[position + 3] = a;
+                if (x == x2)
+                    break;
+                offset += rowBytes;
+            }
         }
     }
 };
