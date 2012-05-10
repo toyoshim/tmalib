@@ -104,20 +104,29 @@ Tma2DScreen.prototype.setPixel = function (x, y, l, m, n, a, hsv) {
 /**
  * Composites pixel data to specified point, color, and alpha blending
  * parameters. This operation is applied to locked image data.
- * @param x X position to set pixel
- * @param y Y position to set pixel
- * @param r Red (from 0 to 255)
- * @param g Green (from 0 to 255)
- * @param b Blue (from 0 to 255)
+ * @param x X position to add pixel
+ * @param y Y position to add pixel
+ * @param l Red (from 0 to 255) or H (from 0.0 to 360.0)
+ * @param m Green (from 0 to 255) or S (from 0.0 to 1.0)
+ * @param n Blue (from 0 to 255) or V (from 0.0 to 1.0)
  * @param a Alpha (from 0 to 255)
+ * @param hsv True if specified l, m, n parameters are in HSV format.
  */
-Tma2DScreen.prototype.addPixel = function (x, y, r, g, b, a) {
+Tma2DScreen.prototype.addPixel = function (x, y, l, m, n, a, hsv) {
     var offset = (y * this.width + x) * 4;
     var data = this._image.data;
-    data[offset + 0] += r;
-    data[offset + 1] += g;
-    data[offset + 2] += b;
-    data[offset + 3] = a;
+    if (hsv) {
+        var rgb = TmaScreen.HSV2RGB(l, m, n);
+        data[offset + 0] += rgb.r;
+        data[offset + 1] += rgb.g;
+        data[offset + 2] += rgb.b;
+        data[offset + 3] = a;
+    } else {
+        data[offset + 0] += l;
+        data[offset + 1] += m;
+        data[offset + 2] += n;
+        data[offset + 3] = a;
+    }
 };
 
 /**
