@@ -15,42 +15,39 @@
             screen.sin = Math.sin;
             screen.cos = Math.cos;
             screen.update = function () {
+                var x = this.x;
+                var y = this.y;
+                var z = this.z;
+                var h = this.h;
+                var w = this.w;
                 for (var i = 0; i < 10000; i++) {
-                    var x = this.x;
-                    var y = this.y;
-                    var z = this.z;
                     var absz = (z < 0)? -z: z;
                     if (absz < 0.00001)
                         z = 0.00001;
                     var vx = -10 * x + 10 * y;
                     var vy = 28 * x - y - x * z;
                     var vz = x * y - 8 / 3 * z;
-                    this.x += vx / 1000;
-                    this.y += vy / 1000;
-                    this.z += vz / 1000;
+                    x += vx / 1000;
+                    y += vy / 1000;
+                    z += vz / 1000;
                     var scale = 0.15;
-                    var sz = 1 + this.z / 1000;
-                    this.w += 0.00001;
-                    var sin = this.sin(this.w);
-                    var cos = this.cos(this.w);
-                    var rx = this.x * cos - this.y * sin;
-                    var ry = this.x * sin + this.y * cos;
-                    var sx = ~~((160 + rx / scale) / sz) % 320;
-                    var sy = ~~((160 + ry * cos / scale) / sz) % 320;
-                    this.h += 0.0005;
-                    var h = ~~this.h % 360;
-                    this.addPixel(sx, sy, h, 1, 0.05, 0xff, true);
+                    var sz = 1 + z / 1000;
+                    w += 0.00001;
+                    var sin = this.sin(w);
+                    var cos = this.cos(w);
+                    var rx = x * cos - y * sin;
+                    var ry = x * sin + y * cos;
+                    var sx = (((160 + rx / scale) / sz) >> 0) % 320;
+                    var sy = (((160 + ry * cos / scale) / sz) >> 0) % 320;
+                    h += 0.0005;
+                    this.addPixel(sx, sy, (h % 360) >> 0, 1, 0.05, 0xff, true);
                 }
+                this.x = x;
+                this.y = y;
+                this.z = z;
+                this.h = h;
+                this.w = w;
             };
-
-            var data = screen.lock().data;
-            for (var i = 0; i < screen.width * screen.height * 4; i++) {
-                if (3 == (i % 4))
-                    data[i] = 0xff;
-                else
-                    data[i] = 0;
-            }
-            screen.unlock();
 
             function main () {
                 var _screen = screen;
