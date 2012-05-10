@@ -1,0 +1,66 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script>
+        tma.onload = function () {
+            var screen = new TmaScreen(320, 320);
+            screen.attachTo(TmaScreen.BODY);
+            screen.x = 500 * Math.random() - 250;
+            screen.y = 500 * Math.random() - 250;
+            screen.z = 500 * Math.random() - 250;
+            screen.h = 0;
+            screen.w = 0;
+            screen.afterimage("rgba(0, 0, 0, 0.5)");
+            screen.blur(1, 0.95, 1.1, 0, 0, false);
+            screen.sin = Math.sin;
+            screen.cos = Math.cos;
+            screen.update = function () {
+                for (var i = 0; i < 10000; i++) {
+                    var x = this.x;
+                    var y = this.y;
+                    var z = this.z;
+                    var absz = (z < 0)? -z: z;
+                    if (absz < 0.00001)
+                        z = 0.00001;
+                    var vx = -10 * x + 10 * y;
+                    var vy = 28 * x - y - x * z;
+                    var vz = x * y - 8 / 3 * z;
+                    this.x += vx / 1000;
+                    this.y += vy / 1000;
+                    this.z += vz / 1000;
+                    var scale = 0.15;
+                    var sz = 1 + this.z / 1000;
+                    this.w += 0.00001;
+                    var sin = this.sin(this.w);
+                    var cos = this.cos(this.w);
+                    var rx = this.x * cos - this.y * sin;
+                    var ry = this.x * sin + this.y * cos;
+                    var sx = ~~((160 + rx / scale) / sz) % 320;
+                    var sy = ~~((160 + ry * cos / scale) / sz) % 320;
+                    this.h += 0.0005;
+                    var h = ~~this.h % 360;
+                    this.addPixel(sx, sy, h, 1, 0.05, 0xff, true);
+                }
+            };
+
+            var data = screen.lock().data;
+            for (var i = 0; i < screen.width * screen.height * 4; i++) {
+                if (3 == (i % 4))
+                    data[i] = 0xff;
+                else
+                    data[i] = 0;
+            }
+            screen.unlock();
+
+            function main () {
+                var _screen = screen;
+                _screen.lock(TmaScreen.LOCK_WITH_SCREEN);
+                _screen.update();
+                _screen.unlock();
+            }
+
+            setInterval(main, 20);
+        };
+    </script>
+</head>
+</html>
