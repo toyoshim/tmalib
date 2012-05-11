@@ -1,0 +1,67 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script>
+        tma.onload = function () {
+            var screen = new TmaScreen(320, 320);
+            screen.attachTo(TmaScreen.BODY);
+            screen.x = 16 * Math.random() - 8;
+            screen.y = 16 * Math.random() - 8;
+            screen.z = 16 * Math.random() - 8;
+            screen.h = 0;
+            screen.w = 0;
+            screen.fill("rgba(0, 0, 0, 1)");
+            screen.afterimage("rgba(0, 0, 0, 0.35)");
+            screen.blur(0.25, 0.45, 1.001, 0, 0, false);
+            screen.sin = Math.sin;
+            screen.cos = Math.cos;
+            screen.update = function () {
+                var x = this.x;
+                var y = this.y;
+                var z = this.z;
+                var h = this.h;
+                var w = this.w;
+                for (var i = 0; i < 10000; i++) {
+                    var a = 0.2;  // 0.01 < a < 0.3
+                    var b = 119;  // 0.001 < b < 100
+                    var c = 79;  // 5 < c < 100
+                    var vx = 0 - y - z;
+                    var vy = x + a * y;
+                    var vz = b + z * (x - c);
+                    x += vx / 100;
+                    y += vy / 100;
+                    z += vz / 100;
+                    var scale = 0.9;
+                    var sz = 1 + z / 100;
+                    w += 573;
+                    var sin = this.sin(w);
+                    var cos = this.cos(w);
+                    var rx = x * cos - y * sin;
+                    var ry = x * sin + y * cos;
+                    var sx = (((160 + rx / scale) / sz) >> 0) % 320;
+                    var sy = (((160 + ry * cos / scale) / sz) >> 0) % 320;
+                    h += 0.05;
+                    this.addPixel(sx, sy, (h % 360) >> 0, 1, 0.5, 0xff, true);
+                }
+                this.x = x;
+                this.y = y;
+                this.z = z;
+                this.h = h;
+                this.w = w;
+            };
+
+            function main () {
+                var _screen = screen;
+                _screen.lock(TmaScreen.LOCK_WITH_SCREEN);
+                _screen.update();
+                _screen.unlock();
+            }
+
+            setInterval(main, 20);
+        };
+    </script>
+</head>
+<body>
+<img src="data/rossler.png" style="display: none;">
+</body>
+</html>
