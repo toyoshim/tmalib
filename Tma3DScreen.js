@@ -216,22 +216,9 @@ Tma3DScreen.prototype.createElementBuffer = function (array) {
  */
 Tma3DScreen.prototype.createImage = function (width, height) {
     var image = this.context.createImageData(width, height);
-    image.setPixel = function (x, y, l, m, n, a, hsv) {
-        var offset = (y * this.width + x) * 4;
-        var data = this.data;
-        if (hsv) {
-            var rgb = TmaScreen.HSV2RGB(l, m, n);
-            data[offset + 0] = rgb.r;
-            data[offset + 1] = rgb.g;
-            data[offset + 2] = rgb.b;
-            data[offset + 3] = a;
-        } else {
-            data[offset + 0] = l;
-            data[offset + 1] = m;
-            data[offset + 2] = n;
-            data[offset + 3] = a;
-        }
-    };
+    image.setPixel = TmaScreen.prototype.setPixel;
+    image.addPixel = TmaScreen.prototype.addPixel;
+    image.drawLine = TmaScreen.prototype.drawLine;
     return image;
 };
 

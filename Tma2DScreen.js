@@ -23,6 +23,7 @@ function Tma2DScreen (width, height) {
     this.canvas.onmouseup = this._onmouseup.bind(this);
     this.context = this.canvas.getContext("2d");
     this._image = this.context.getImageData(0, 0, this.width, this.height);
+    this.data = this._image.data;
     this._offscreenCanvas = document.createElement("canvas");
     this._offscreenCanvas.width = width;
     this._offscreenCanvas.height = height;
@@ -84,22 +85,7 @@ Tma2DScreen.prototype.createImageData = function (width, height) {
  * @param a Alpha (from 0 to 255)
  * @param hsv True if specified l, m, n parameters are in HSV format.
  */
-Tma2DScreen.prototype.setPixel = function (x, y, l, m, n, a, hsv) {
-    var offset = (y * this.width + x) * 4;
-    var data = this._image.data;
-    if (hsv) {
-        var rgb = TmaScreen.HSV2RGB(l, m, n);
-        data[offset + 0] = rgb.r;
-        data[offset + 1] = rgb.g;
-        data[offset + 2] = rgb.b;
-        data[offset + 3] = a;
-    } else {
-        data[offset + 0] = l;
-        data[offset + 1] = m;
-        data[offset + 2] = n;
-        data[offset + 3] = a;
-    }
-};
+Tma2DScreen.prototype.setPixel = TmaScreen.prototype.setPixel;
 
 /**
  * Composites pixel data to specified point, color, and alpha blending
@@ -112,22 +98,7 @@ Tma2DScreen.prototype.setPixel = function (x, y, l, m, n, a, hsv) {
  * @param a Alpha (from 0 to 255)
  * @param hsv True if specified l, m, n parameters are in HSV format.
  */
-Tma2DScreen.prototype.addPixel = function (x, y, l, m, n, a, hsv) {
-    var offset = (y * this.width + x) * 4;
-    var data = this._image.data;
-    if (hsv) {
-        var rgb = TmaScreen.HSV2RGB(l, m, n);
-        data[offset + 0] += rgb.r;
-        data[offset + 1] += rgb.g;
-        data[offset + 2] += rgb.b;
-        data[offset + 3] = a;
-    } else {
-        data[offset + 0] += l;
-        data[offset + 1] += m;
-        data[offset + 2] += n;
-        data[offset + 3] = a;
-    }
-};
+Tma2DScreen.prototype.addPixel = TmaScreen.prototype.addPixel;
 
 /**
  * Draw a line at specified position by specified color, and alpha blending
@@ -143,83 +114,7 @@ Tma2DScreen.prototype.addPixel = function (x, y, l, m, n, a, hsv) {
  * @param hsv True if specified l, m, n parameters are in HSV format.
  * @param blend Add to original pixel when |blend| is true, otherwise replace
  */
-Tma2DScreen.prototype.drawLine =
-        function (x1, y1, x2, y2, l, m, n, a, hsv, blend) {
-    var offset = (y1 * this.width + x1) * 4;
-    var data = this._image.data;
-    var r = l;
-    var g = m;
-    var b = n;
-    if (hsv) {
-        var rgb = TmaScreen.HSV2RGB(l, m, n);
-        r = rgb.r;
-        g = rgb.g;
-        b = rgb.b;
-    }
-    var dx = x2 - x1;
-    var dy = y2 - y1;
-    var ax = (dx > 0) ? dx : -dx;
-    var ay = (dy > 0) ? dy : -dy;
-    if (ax < ay) {
-        // line by line
-        var direction = (dy > 0) ? 1 : -1;
-        var diff = dx / dy;
-        var lineBytes = (dy > 0) ? this.width * 4 : -this.width * 4;
-        var rowBytes = 4;
-        if (blend) {
-            for (var y = y1; ; y += direction) {
-                var position = offset + ~~(diff * (y - y1)) * rowBytes;
-                data[position + 0] += r;
-                data[position + 1] += g;
-                data[position + 2] += b;
-                data[position + 3] = a;
-                if (y == y2)
-                    break;
-                offset += lineBytes;
-            }
-        } else {
-            for (var y = y1; ; y += direction) {
-                var position = offset + ~~(diff * (y - y1)) * rowBytes;
-                data[position + 0] = r;
-                data[position + 1] = g;
-                data[position + 2] = b;
-                data[position + 3] = a;
-                if (y == y2)
-                    break;
-                offset += lineBytes;
-            }
-        }
-    } else {
-        // row by row
-        direction = (dx > 0) ? 1 : -1;
-        diff = dy / dx;
-        lineBytes = this.width * 4;
-        rowBytes = (dx > 0) ? 4 : -4;
-        if (blend) {
-            for (var x = x1; ; x += direction) {
-                position = offset + ~~(diff * (x - x1)) * lineBytes;
-                data[position + 0] += r;
-                data[position + 1] += g;
-                data[position + 2] += b;
-                data[position + 3] = a;
-                if (x == x2)
-                    break;
-                offset += rowBytes;
-            }
-        } else {
-            for (var x = x1; ; x += direction) {
-                position = offset + ~~(diff * (x - x1)) * lineBytes;
-                data[position + 0] = r;
-                data[position + 1] = g;
-                data[position + 2] = b;
-                data[position + 3] = a;
-                if (x == x2)
-                    break;
-                offset += rowBytes;
-            }
-        }
-    }
-};
+Tma2DScreen.prototype.drawLine = TmaScreen.prototype.drawLine;
 
 /**
  * Locks screen to get ImageData object to update screen. If |method| is
@@ -233,6 +128,7 @@ Tma2DScreen.prototype.lock = function (method) {
         this._image = this.context.getImageData(0, 0, this.width, this.height);
     else
         this._image = this._offscreenImage;
+    this.data = this._image.data;
     return this._image;
 };
 

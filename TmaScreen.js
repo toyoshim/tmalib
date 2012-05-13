@@ -113,5 +113,153 @@ TmaScreen.HSV2RGB = function (h, s, v) {
     }
 };
 
+/**
+ * Sets pixel data to specified point by specified color, and alpha blending
+ * parameters. This operation is applied to locked image data.
+ * @param x X position to set pixel
+ * @param y Y position to set pixel
+ * @param l Red (from 0 to 255) or H (from 0.0 to 360.0)
+ * @param m Green (from 0 to 255) or S (from 0.0 to 1.0)
+ * @param n Blue (from 0 to 255) or V (from 0.0 to 1.0)
+ * @param a Alpha (from 0 to 255)
+ * @param hsv True if specified l, m, n parameters are in HSV format.
+ */
+TmaScreen.prototype.setPixel = function (x, y, l, m, n, a, hsv) {
+    var offset = (y * this.width + x) * 4;
+    var data = this.data;
+    if (hsv) {
+        var rgb = TmaScreen.HSV2RGB(l, m, n);
+        data[offset + 0] = rgb.r;
+        data[offset + 1] = rgb.g;
+        data[offset + 2] = rgb.b;
+        data[offset + 3] = a;
+    } else {
+        data[offset + 0] = l;
+        data[offset + 1] = m;
+        data[offset + 2] = n;
+        data[offset + 3] = a;
+    }
+};
+
+/**
+ * Composites pixel data to specified point, color, and alpha blending
+ * parameters. This operation is applied to locked image data.
+ * @param x X position to add pixel
+ * @param y Y position to add pixel
+ * @param l Red (from 0 to 255) or H (from 0.0 to 360.0)
+ * @param m Green (from 0 to 255) or S (from 0.0 to 1.0)
+ * @param n Blue (from 0 to 255) or V (from 0.0 to 1.0)
+ * @param a Alpha (from 0 to 255)
+ * @param hsv True if specified l, m, n parameters are in HSV format.
+ */
+TmaScreen.prototype.addPixel = function (x, y, l, m, n, a, hsv) {
+    var offset = (y * this.width + x) * 4;
+    var data = this.data;
+    if (hsv) {
+        var rgb = TmaScreen.HSV2RGB(l, m, n);
+        data[offset + 0] += rgb.r;
+        data[offset + 1] += rgb.g;
+        data[offset + 2] += rgb.b;
+        data[offset + 3] = a;
+    } else {
+        data[offset + 0] += l;
+        data[offset + 1] += m;
+        data[offset + 2] += n;
+        data[offset + 3] = a;
+    }
+};
+
+/**
+ * Draw a line at specified position by specified color, and alpha blending
+ * parameters. This operation is applied to locked image data.
+ * @param x1 Source X position to draw line
+ * @param y1 Source Y position to draw line
+ * @param x2 Destination X position to draw line
+ * @param y2 Destination Y position to draw line
+ * @param l Red (from 0 to 255) or H (from 0.0 to 360.0)
+ * @param m Green (from 0 to 255) or S (from 0.0 to 1.0)
+ * @param n Blue (from 0 to 255) or V (from 0.0 to 1.0)
+ * @param a Alpha (from 0 to 255)
+ * @param hsv True if specified l, m, n parameters are in HSV format.
+ * @param blend Add to original pixel when |blend| is true, otherwise replace
+ */
+TmaScreen.prototype.drawLine =
+        function (x1, y1, x2, y2, l, m, n, a, hsv, blend) {
+    var offset = (y1 * this.width + x1) * 4;
+    var data = this.data;
+    var r = l;
+    var g = m;
+    var b = n;
+    if (hsv) {
+        var rgb = TmaScreen.HSV2RGB(l, m, n);
+        r = rgb.r;
+        g = rgb.g;
+        b = rgb.b;
+    }
+    var dx = x2 - x1;
+    var dy = y2 - y1;
+    var ax = (dx > 0) ? dx : -dx;
+    var ay = (dy > 0) ? dy : -dy;
+    if (ax < ay) {
+        // line by line
+        var direction = (dy > 0) ? 1 : -1;
+        var diff = dx / dy;
+        var lineBytes = (dy > 0) ? this.width * 4 : -this.width * 4;
+        var rowBytes = 4;
+        if (blend) {
+            for (var y = y1; ; y += direction) {
+                var position = offset + ~~(diff * (y - y1)) * rowBytes;
+                data[position + 0] += r;
+                data[position + 1] += g;
+                data[position + 2] += b;
+                data[position + 3] = a;
+                if (y == y2)
+                    break;
+                offset += lineBytes;
+            }
+        } else {
+            for (y = y1; ; y += direction) {
+                position = offset + ~~(diff * (y - y1)) * rowBytes;
+                data[position + 0] = r;
+                data[position + 1] = g;
+                data[position + 2] = b;
+                data[position + 3] = a;
+                if (y == y2)
+                    break;
+                offset += lineBytes;
+            }
+        }
+    } else {
+        // row by row
+        direction = (dx > 0) ? 1 : -1;
+        diff = dy / dx;
+        lineBytes = this.width * 4;
+        rowBytes = (dx > 0) ? 4 : -4;
+        if (blend) {
+            for (var x = x1; ; x += direction) {
+                position = offset + ~~(diff * (x - x1)) * lineBytes;
+                data[position + 0] += r;
+                data[position + 1] += g;
+                data[position + 2] += b;
+                data[position + 3] = a;
+                if (x == x2)
+                    break;
+                offset += rowBytes;
+            }
+        } else {
+            for (x = x1; ; x += direction) {
+                position = offset + ~~(diff * (x - x1)) * lineBytes;
+                data[position + 0] = r;
+                data[position + 1] = g;
+                data[position + 2] = b;
+                data[position + 3] = a;
+                if (x == x2)
+                    break;
+                offset += rowBytes;
+            }
+        }
+    }
+};
+
 // node.js compatible export.
 exports.TmaScreen = TmaScreen;

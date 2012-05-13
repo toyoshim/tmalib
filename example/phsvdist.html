@@ -22,7 +22,7 @@
                 var z = this.z;
                 var h = this.h;
                 var w = this.w;
-                var a = 0.2 + fft[768] / 1000
+                var a = 0.2 + fft[768] / 1000;
                 var b = 100 + fft[512];
                 var c = 50 + fft[0] / 10;
                 for (var i = 0; i < 10000; i++) {
@@ -112,7 +112,7 @@
 
             function main () {
                 var _screen = screen;
-                screen.analyser.getByteFrequencyData(_screen.fft);
+                _screen.analyser.getByteFrequencyData(_screen.fft);
                 _screen.lock(TmaScreen.LOCK_WITH_SCREEN);
                 _screen.update(_screen.fft);
                 container.update(_screen.fft);
