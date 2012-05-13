@@ -98,11 +98,13 @@ TmaParticle.Container.prototype.remove = function (offset) {
 
 /**
  * Calls |update()| for all registered |TmaParticle| objects, and removes the
- * objects which returns false virtually.
+ * objects which returns false virtually. All arguments will be passed into
+ * each particle's |update()|.
+ * @param arguments arbitrary arguments which will be passed into particles.
  */
 TmaParticle.Container.prototype.update = function () {
     for (var i = 0; i < this.length; ) {
-        if (this._particles[i].update())
+        if (this._particles[i].update.apply(this._particles[i], arguments))
             i++;
         else
             this.remove(i);

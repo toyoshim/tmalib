@@ -1,0 +1,125 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script>
+        tma.onload = function () {
+            var screen = new TmaScreen(640, 480);
+//            var screen = new TmaScreen(window.screen.width, window.screen.height);
+            screen.attachTo(TmaScreen.BODY);
+            screen.fill(0, 0, 0, 0xff);
+            screen.afterimage("rgba(0, 0, 0, 0.3)");
+            screen.blur(0.5, 0.3, 1.01, 0, 0, false);
+            screen.x = 16 * Math.random() - 8;
+            screen.y = 16 * Math.random() - 8;
+            screen.z = 16 * Math.random() - 8;
+            screen.h = 0;
+            screen.w = 0;
+            screen.sin = Math.sin;
+            screen.cos = Math.cos;
+            screen.update = function (fft) {
+                var x = this.x;
+                var y = this.y;
+                var z = this.z;
+                var h = this.h;
+                var w = this.w;
+                var a = 0.2 + fft[768] / 1000
+                var b = 100 + fft[512];
+                var c = 50 + fft[0] / 10;
+                for (var i = 0; i < 10000; i++) {
+                    var vx = 0 - y - z;
+                    var vy = x + a * y;
+                    var vz = b + z * (x - c);
+                    x += vx / 100;
+                    y += vy / 100;
+                    z += vz / 100;
+                    var scale = 0.2;
+                    w += 1;
+                    var sin = this.sin(w);
+                    var cos = this.cos(w);
+                    var rx = x * cos - y * sin;
+                    var ry = x * sin + y * cos;
+                    var sx = ~~(this.width / 2 + rx / scale);
+                    var sy = ~~(this.height / 2 + ry / scale);
+                    h += 0.00005;
+                    this.addPixel((sx + this.width) % this.width,
+                            (sy + this.height) % this.height,
+                            (h % 360) >> 0, 1, 0.5, 0xff, true);
+                    sx = (this.width >> 2) + (sx >> 1);
+                    sy = (this.height >> 2) + (sy >> 1);
+                    this.addPixel(sx % this.width, sy % this.height,
+                            (h % 360) >> 0, 1, 0.5, 0xff, true);
+                    sx = (this.width >> 2) + (sx >> 1);
+                    sy = (this.height >> 2) + (sy >> 1);
+                    this.addPixel(sx % this.width, sy % this.height,
+                            (h % 360) >> 0, 1, 0.5, 0xff, true);
+                }
+                this.x = x;
+                this.y = y;
+                this.z = z;
+                this.h = h;
+                this.w = w;
+            };
+
+            function Particle () { TmaParticle.apply(this, arguments); }
+            Particle.prototype = new TmaParticle(null, 0);
+            Particle.prototype.constructor = Particle;
+
+            Particle.prototype.initialize = function () {
+                this.screen = screen;
+                var random = Math.random;
+                this.x = random() * this.screen.width;
+                this.y = random() * this.screen.height;
+                this.cx = ~~(this.screen.width / 2);
+                this.cy = ~~(this.screen.height / 2);
+                this.h = 360 * random();
+                this.hv = 10 * random();
+                this.s = 1 - random() / 4;
+                this.v = random();
+            };
+
+            Particle.prototype.update = function (fft) {
+                this.h = (this.h + this.hv) % 360;
+                var n = (~~this.h * 3 + 360) % 1080;
+                if (fft[n] > this.s * 256)
+                this.screen.drawLine(~~this.x, ~~this.y, this.cx, this.cy,
+                        this.h, this.s, this.v, 0xff, true, true);
+                return true;
+            };
+
+            var container = new TmaParticle.Container(Particle);
+            for (var i = 0; i < 10000; i++)
+                container.add();
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'data/phsvdist.mp3');
+            xhr.responseType = 'arraybuffer';
+            xhr.onload = function () {
+                var context = new webkitAudioContext();
+                context.decodeAudioData(this.response, function(buffer) {
+                    screen.analyser = context.createAnalyser();
+                    screen.fft = new Uint8Array(
+                            screen.analyser.frequencyBinCount);
+                    var source = context.createBufferSource();
+                    source.buffer = buffer;
+                    source.loop = true;
+                    source.connect(screen.analyser);
+                    screen.analyser.connect(context.destination);
+                    source.noteOn(0);
+                    setInterval(main, 10);
+                });
+            };
+            xhr.send();
+
+            function main () {
+                var _screen = screen;
+                screen.analyser.getByteFrequencyData(_screen.fft);
+                _screen.lock(TmaScreen.LOCK_WITH_SCREEN);
+                _screen.update(_screen.fft);
+                container.update(_screen.fft);
+                _screen.unlock();
+            }
+        };
+    </script>
+</head>
+<body bgcolor="#000000"></body>
+</html>
