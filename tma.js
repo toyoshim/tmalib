@@ -15,7 +15,7 @@ function tma () {
  * Private prototype variables.
  */
 // Holds head tag element.
-tma._head = document.getElementsByTagName("head")[0];
+tma._head = document.getElementsByTagName('head')[0];
 // Holds base path for this JavaScript.
 tma._base = "";
 // Holds loaded scripts' data.
@@ -47,7 +47,7 @@ tma.error = function () {
  * @param callback callback to be invoked when the JavaScript is loaded
  */
 tma.load = function (src, callback) {
-    var script = document.createElement("script");
+    var script = document.createElement('script');
     script.onload = callback;
     script.src = src;
     tma._head.appendChild(script);
@@ -82,17 +82,13 @@ tma.reload = function (callback) {
  * @param callback callback to be invoked when the JavaScript is loaded
  */
 tma._load = function (srcs, callback) {
-    var invoker;
-    if (callback) {
-        var done = 0;
-        invoker = function () {
-            done++;
-            if (srcs.length == done)
-                callback();
-        }
-    }
-    for (var i = 0; i < srcs.length; i++)
-        tma.load(this._base + srcs[i], invoker);
+    var src = srcs.shift();
+    tma.load(this._base + src, function () {
+        if (srcs.length != 0)
+            tma._load(srcs, callback);
+        else
+            callback();
+    });
 };
 
 /**
@@ -101,7 +97,7 @@ tma._load = function (srcs, callback) {
 var exports = {};
 var global = window;
 (function() {
-    var scripts = document.getElementsByTagName("script");
+    var scripts = document.getElementsByTagName('script');
     for (var i = 0; i < scripts.length; i++) {
         var match = scripts[i].src.match(/(^|.*\/)tma\.js$/);
         if (match) {
@@ -110,11 +106,11 @@ var global = window;
         }
     }
     var libs = [
-        "TmaScreen.js",
-        "Tma2DScreen.js",
-        "Tma3DScreen.js",
-        "TmaParticle.js",
-        "TmaMotionBvh.js"
+        'TmaScreen.js',
+        'Tma2DScreen.js',
+        'Tma3DScreen.js',
+        'TmaParticle.js',
+        'TmaMotionBvh.js'
     ];
     tma._load(libs, function () {
         tma.ready = true;
