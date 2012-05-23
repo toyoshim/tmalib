@@ -8,8 +8,7 @@
  * This prototype provides base functions.
  * @author Takashi Toyoshima <toyoshim@gmail.com>
  */
-function tma () {
-}
+tma = {};
 
 /**
  * Private prototype variables.
@@ -33,6 +32,9 @@ tma.extlibs = [];
  */
 tma.log = function () {
     console.log.apply(console, arguments);
+};
+tma.info = function () {
+    console.info.apply(console, arguments);
 };
 tma.warn = function () {
     console.warn.apply(console, arguments);
@@ -110,7 +112,8 @@ var global = window;
         'Tma2DScreen.js',
         'Tma3DScreen.js',
         'TmaParticle.js',
-        'TmaMotionBvh.js'
+        'TmaMotionBvh.js',
+        'TmaModelPs2Ico.js'
     ];
     tma._load(libs, function () {
         tma.ready = true;
