@@ -1,0 +1,73 @@
+<html>
+<head>
+<script src="../tma.js"></script>
+<script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    void main() {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        gl_PointSize = 2.0;
+    }
+</script>
+<script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+    void main() {
+        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+    }
+</script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js' ];
+tma.onload = function () {
+    var screen = new TmaScreen(window.document.width, window.document.height,
+    TmaScreen.MODE_3D);
+    screen.attachTo(TmaScreen.BODY);
+
+    // Initialize program with shaders.
+    var program = screen.createProgram('shader-vs', 'shader-fs');
+
+    // Initialize matrices.
+    var pMatrix = mat4.create();
+    var mvMatrix = mat4.create();
+    mat4.perspective(45, screen.width / screen.height, 0.1, 1000.0, pMatrix);
+    mat4.identity(mvMatrix);
+    program.setUniform('uPMatrix', pMatrix);
+
+    var r = 0;
+    var mvMatrixBase = mat4.create(mvMatrix);
+
+    // Model data.
+    var vertices;
+
+    // Load model data.
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'data/CDIMAGE04060.BIN');
+    xhr.responseType = 'arraybuffer';
+    xhr.onload = function () {
+        var ico = new TmaModelPs2Ico();
+        ico.load(this.response);
+        var shape = ico.getVertices(0);
+        vertices = screen.createBuffer(shape);
+        vertices.items = shape.length / 3;
+        setInterval(main, 10);
+    };
+    xhr.send();
+
+    // Periodical rendering.
+    function main () {
+        // Draw
+        mat4.set(mvMatrixBase, mvMatrix);
+        mat4.translate(mvMatrix, [0.0, 0.0, -50.0]);
+        mat4.rotate(mvMatrix, r, [1.0, 0.5, 1]);
+        program.setAttributeArray('aVertexPosition', vertices, 0, 3, 0);
+        program.setUniform('uMVMatrix', mvMatrix);
+        program.drawArrays(Tma3DScreen.MODE_POINTS, 0, vertices.items);
+
+        // Apply Animation.
+        r += 0.002;
+    }
+};
+</script>
+</head>
+</body>
+</html>

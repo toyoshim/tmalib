@@ -8,7 +8,10 @@ tma.log("==== Start Ps2IcoTest ====");
 
 var examples = [
     "data/CDIMAGE04060.BIN",
-//    "data/CDIMAGE05513.BIN"
+    "data/CDIMAGE05513.BIN",
+    "data/CDIMAGE05518.BIN",
+    "data/CDIMAGE05519.BIN",
+    "data/CDIMAGE05520.BIN"
 ];
 
 for (var id = 0; id < examples.length; id++) {

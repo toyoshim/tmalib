@@ -215,23 +215,6 @@ Tma2DScreen.prototype.applyEffects = function () {
 };
 
 /**
- * Gets mouse information.
- * @return an object containing
- *      over: true if mouse is currently over this screen
- *      x: mouse x position if |over| is true
- *      y: mouse y position if |over| is true
- */
-Tma2DScreen.prototype.mouse = function () {
-    if (!this._mouse)
-        return { over: this._mouse };
-    return {
-        over: this._mouse,
-        x: this._mouseX,
-        y: this._mouseY
-    };
-};
-
-/**
  * Private implementation to apply afterimage effect.
  */
 Tma2DScreen.prototype._applyAfterimage = function () {
@@ -270,6 +253,23 @@ Tma2DScreen.prototype._applyBlur = function () {
 };
 
 /**
+ * Gets mouse information.
+ * @return an object containing
+ *      over: true if mouse is currently over this screen
+ *      x: mouse x position if |over| is true
+ *      y: mouse y position if |over| is true
+ */
+Tma2DScreen.prototype.mouse = function () {
+    if (!this._mouse)
+        return { over: this._mouse };
+    return {
+        over: this._mouse,
+        x: this._mouseX,
+        y: this._mouseY
+    };
+};
+
+/**
  * Private implementation to update mouse state.
  * @param e DOM MouseEvent
  */
@@ -295,6 +295,7 @@ Tma2DScreen.prototype._onmousedown = function (e) {
     this._mouseX = e.clientX - rect.left;
     this._mouseY = e.clientY - rect.top;
     this._mousePressed = true;
+    this.onMouseDown(this._mouseX, this._mouseY);
     this.onMouseDrag(this._mouseX, this._mouseY);
 };
 
@@ -304,9 +305,16 @@ Tma2DScreen.prototype._onmouseup = function (e) {
     this._mouseY = e.clientY - rect.top;
     this._mousePressed = false;
     this.onMouseDrag(this._mouseX, this._mouseY);
+    this.onMouseUp(this._mouseX, this._mouseY);
+};
+
+Tma2DScreen.prototype.onMouseDown = function (x, y) {
 };
 
 Tma2DScreen.prototype.onMouseDrag = function (x, y) {
+};
+
+Tma2DScreen.prototype.onMouseUp = function (x, y) {
 };
 
 // node.js compatible export.

@@ -9,6 +9,10 @@
  * @author Takashi Toyoshima <toyoshim@gmail.com>
  */
 function TmaModelPs2Ico() {
+    this.shapes = 0;
+    this._vertices = null;
+    this._coord = null;
+    this._texture = null;
 }
 
 /**
@@ -40,6 +44,7 @@ TmaModelPs2Ico.prototype.load = function (data) {
     }
     tma.info('PS2ICO: version 1.00');
     var nbsp = view.getUint32(TmaModelPs2Ico._OFFSET_NBSP, true);
+    this.shapes = nbsp;
     tma.info('PS2ICO: shapes ' + nbsp);
     var attrib = view.getUint32(TmaModelPs2Ico._OFFSET_ATTRIB, true);
     tma.info('PS2ICO: attributes ' + attrib.toString(16));
@@ -54,20 +59,30 @@ TmaModelPs2Ico.prototype.load = function (data) {
 
     // Model vertices
     var offset = TmaModelPs2Ico._OFFSET_VTX;
+    this._vertices = new Array(nbsp);
+    for (var shape = 0; shape < nbsp; ++shape)
+        this._vertices[shape] = new Array(nbvtx * 3);
+    this._coord = new Array(nbvtx * 2);
     for (var i = 0; i < nbvtx; ++i) {
-        // TODO: Handle minor vertices.
-        var vx = view.getInt16(offset + 0, true) / 1024;
-        var vy = view.getInt16(offset + 2, true) / 1024;
-        var vz = view.getInt16(offset + 4, true) / 1024;
-        offset += 8 * nbsp;
+        for (shape = 0; shape < nbsp; ++shape) {
+            var vx = view.getInt16(offset + 0, true) / 1024;
+            var vy = -view.getInt16(offset + 2, true) / 1024;
+            var vz = -view.getInt16(offset + 4, true) / 1024;
+            this._vertices[shape][i * 3 + 0] = vx;
+            this._vertices[shape][i * 3 + 1] = vy;
+            this._vertices[shape][i * 3 + 2] = vz;
+            offset += 8;
+        }
 
         var nx = view.getInt16(offset + 0, true) / 4096;
         var ny = view.getInt16(offset + 2, true) / 4096;
         var nz = view.getInt16(offset + 4, true) / 4096;
         offset += 8;
 
-        var sx = view.getInt16(offset + 0, true) / 16;
-        var sy = 256 - view.getInt16(offset + 2, true) / 16;
+        var sx = view.getInt16(offset + 0, true) / 4096;
+        var sy = view.getInt16(offset + 2, true) / 4096;
+        this._coord[i * 2 + 0] = sx;
+        this._coord[i * 2 + 1] = 1 - sy;
         offset += 4;
 
         var color = view.getUint32(offset, false);  // RGBA
@@ -96,7 +111,14 @@ TmaModelPs2Ico.prototype.load = function (data) {
     for (i = 0; i < nbksp; ++i) {
         var kspid = view.getUint32(offset + 0, true);
         var nbkf = view.getUint32(offset + 4, true);
-        offset += 8 + 8 * nbkf;
+        offset += 8;
+        tma.info('PS2ICO: animation ' + kspid + ',' + nbkf);
+        for (var key = 0; key < nbkf; ++key) {
+            var frame = view.getFloat32(offset + 0, true);
+            var weight = view.getFloat32(offset + 4, true);
+            tma.info('PS2ICO: > ' + frame + ',' + weight);
+            offset += 8;
+        }
     }
 
     // Texture section
@@ -104,7 +126,41 @@ TmaModelPs2Ico.prototype.load = function (data) {
         tma.error('PS2ICO: texture data size is wrong')
         return false;
     }
+    this._texture = new Array(128 * 128 * 4);
+    for (i = 0; i < this._texture.length; i += 4) {
+        var psmct16 = view.getUint16(offset, true);
+        offset += 2;
+        this._texture[i + 0] = ((psmct16 >>  0) & 0x1f) << 3;
+        this._texture[i + 1] = ((psmct16 >>  5) & 0x1f) << 3;
+        this._texture[i + 2] = ((psmct16 >> 10) & 0x1f) << 3;
+        this._texture[i + 3] = 0xff;
+    }
     return true;
+};
+
+/**
+ * Gets model's vertices array of a shape.
+ * @param shape shape number
+ * @return model's vertices in Array
+ */
+TmaModelPs2Ico.prototype.getVertices = function (shape) {
+    return this._vertices[shape];
+};
+
+/**
+ * Get texture coord. Address is normalized from 0.0 to 1.0.
+ * @return texture coord in Array.
+ */
+TmaModelPs2Ico.prototype.getCoords = function () {
+    return this._coord;
+};
+
+/**
+ * Gets texture data. Texture image is always 128 x 128 in RGBA.
+ * @return texture data in Array
+ */
+TmaModelPs2Ico.prototype.getTexture = function () {
+    return this._texture;
 };
 
 // node.js compatible export.

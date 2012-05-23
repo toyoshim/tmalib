@@ -19,6 +19,8 @@ function Tma3DScreen (width, height) {
     this.canvas.height = height;
     this.canvas.onmousemove = this._onmousemove.bind(this);
     this.canvas.onmouseout = this._onmouseout.bind(this);
+    this.canvas.onmousedown = this._onmousedown.bind(this);
+    this.canvas.onmouseup = this._onmouseup.bind(this);
     this.context = document.createElement("canvas").getContext("2d");
     this.gl = this.canvas.getContext("webkit-3d");
     if (!this.gl)
@@ -40,6 +42,10 @@ function Tma3DScreen (width, height) {
             this.gl.getParameter(this.gl.MAX_VERTEX_ATTRIBS));
 
     if (!Tma3DScreen._MODE_INITIALIZED) {
+        Tma3DScreen.MODE_POINTS = this.gl.POINTS;
+        Tma3DScreen.MODE_LINES = this.gl.LINES;
+        Tma3DScreen.MODE_LINE_LOOP = this.gl.LINE_LOOP;
+        Tma3DScreen.MODE_LINE_STRIP = this.gl.LINE_STRIP;
         Tma3DScreen.MODE_TRIANGLES = this.gl.TRIANGLES;
         Tma3DScreen.MODE_TRIANGLE_STRIP = this.gl.TRIANGLE_STRIP;
         Tma3DScreen.MODE_TRIANGLE_FAN = this.gl.TRIANGLE_FAN;
@@ -58,11 +64,15 @@ Tma3DScreen.VERTEX_SHADER = 1;
 Tma3DScreen.FRAGMENT_SHADER = 2;
 // Draw modes.
 Tma3DScreen._MODE_INITIALIZED = false;
-Tma3DScreen.MODE_TRIANGLES = 0;
-Tma3DScreen.MODE_TRIANGLE_STRIP = 0;
-Tma3DScreen.MODE_TRIANGLE_FAN = 0;
-Tma3DScreen.FILTER_NEAREST = 0;
-Tma3DScreen.FILTER_LINEAR = 0;
+Tma3DScreen.MODE_POINTS = 0;
+Tma3DScreen.MODE_LINES = 1;
+Tma3DScreen.MODE_LINE_LOOP = 2;
+Tma3DScreen.MODE_LINE_STRIP = 3;
+Tma3DScreen.MODE_TRIANGLES = 4;
+Tma3DScreen.MODE_TRIANGLE_STRIP = 5;
+Tma3DScreen.MODE_TRIANGLE_FAN = 6;
+Tma3DScreen.FILTER_NEAREST = 0x2600;
+Tma3DScreen.FILTER_LINEAR = 0x2601;
 
 /**
  * Attaches to a DOMElement. TmaScreen.BODY is useful predefined DOMElement
@@ -213,9 +223,16 @@ Tma3DScreen.prototype.createElementBuffer = function (array) {
  * Create ImageData for texture.
  * @param width texture width
  * @param height texture height
+ * @param data texture data
  */
-Tma3DScreen.prototype.createImage = function (width, height) {
+Tma3DScreen.prototype.createImage = function (width, height, data) {
     var image = this.context.createImageData(width, height);
+    if (data) {
+        var dst = image.data;
+        var size = width * height * 4;
+        for (var i = 0; i < size; ++i)
+            dst[i] = data[i];
+    }
     image.setPixel = TmaScreen.prototype.setPixel;
     image.addPixel = TmaScreen.prototype.addPixel;
     image.drawLine = TmaScreen.prototype.drawLine;
@@ -404,6 +421,8 @@ Tma3DScreen.prototype._onmousemove = function (e) {
     var rect = e.target.getBoundingClientRect();
     this._mouseX = e.clientX - rect.left;
     this._mouseY = e.clientY - rect.top;
+    if (this._mousePressed)
+        this.onMouseDrag(this._mouseX, this._mouseY);
 };
 
 /**
@@ -412,6 +431,34 @@ Tma3DScreen.prototype._onmousemove = function (e) {
  */
 Tma3DScreen.prototype._onmouseout = function (e) {
     this._mouse = false;
+};
+
+// TODO: Move following functions to TmaScreen.
+Tma3DScreen.prototype._onmousedown = function (e) {
+    var rect = e.target.getBoundingClientRect();
+    this._mouseX = e.clientX - rect.left;
+    this._mouseY = e.clientY - rect.top;
+    this._mousePressed = true;
+    this.onMouseDown(this._mouseX, this._mouseY);
+    this.onMouseDrag(this._mouseX, this._mouseY);
+};
+
+Tma3DScreen.prototype._onmouseup = function (e) {
+    var rect = e.target.getBoundingClientRect();
+    this._mouseX = e.clientX - rect.left;
+    this._mouseY = e.clientY - rect.top;
+    this._mousePressed = false;
+    this.onMouseDrag(this._mouseX, this._mouseY);
+    this.onMouseUp(this._mouseX, this._mouseY);
+};
+
+Tma3DScreen.prototype.onMouseDown = function (x, y) {
+};
+
+Tma3DScreen.prototype.onMouseDrag = function (x, y) {
+};
+
+Tma3DScreen.prototype.onMouseUp = function (x, y) {
 };
 
 // node.js compatible export.

@@ -1,0 +1,28 @@
+<html>
+<head>
+<script src="../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js' ];
+tma.onload = function () {
+    var screen = new TmaScreen(128, 128);
+    screen.attachTo(TmaScreen.BODY);
+
+    // Load model data.
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'data/CDIMAGE04060.BIN');
+    xhr.responseType = 'arraybuffer';
+    xhr.onload = function () {
+        var ico = new TmaModelPs2Ico();
+        ico.load(this.response);
+        var texture = ico.getTexture();
+        var data = screen.lock().data;
+        for (var i = 0; i < data.byteLength; ++i)
+            data[i] = texture[i];
+        screen.unlock();
+    };
+    xhr.send();
+};
+</script>
+</head>
+</body>
+</html>
