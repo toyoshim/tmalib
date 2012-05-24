@@ -256,6 +256,10 @@ Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
         this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, filter);
     this.gl.texParameteri(
         this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, filter);
+    this.gl.texParameteri(
+        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(
+        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
     texture._flip = flip;
     texture._owner = this;
     texture.update = function (image) {
@@ -308,7 +312,9 @@ Tma3DScreen.prototype.setAttributeArray =
  */
 Tma3DScreen.prototype.setUniform = function (program, index, array) {
     this.gl.useProgram(program);
-    if (3 == array.length)
+    if (1 == array.length)
+        this.gl.uniform1fv(index, array);
+    else if (3 == array.length)
         this.gl.uniform3fv(index, array);
     else if (4 == array.length)
         this.gl.uniformMatrix2fv(index, false, array);

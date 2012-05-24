@@ -10,9 +10,11 @@
  */
 function TmaModelPs2Ico() {
     this.shapes = 0;
+    this.frames = 0;
     this._vertices = null;
     this._coord = null;
     this._texture = null;
+    this._weights = null;
 }
 
 /**
@@ -107,18 +109,43 @@ TmaModelPs2Ico.prototype.load = function (data) {
     tma.info('PS2ICO: speed ' + playSpeed);
     tma.info('PS2ICO: offset ' + playOffset);
     tma.info('PS2ICO: nbksp ' + nbksp);
+    this.frames = nbframe;
+    this._weights = new Array(nbframe);
+    for (i = 0; i < nbframe; ++i)
+        this._weights[i] = new Array(nbksp);
     offset += 16;
     for (i = 0; i < nbksp; ++i) {
         var kspid = view.getUint32(offset + 0, true);
         var nbkf = view.getUint32(offset + 4, true);
         offset += 8;
-        tma.info('PS2ICO: animation ' + kspid + ',' + nbkf);
+        tma.info('PS2ICO: animation ' + kspid);
+        var previousFrame = 0;
+        var previousWeight = 0;
         for (var key = 0; key < nbkf; ++key) {
             var frame = view.getFloat32(offset + 0, true);
             var weight = view.getFloat32(offset + 4, true);
+            var distance = frame - previousFrame;
+            if (distance == 0) {
+                previousFrame = frame;
+                previousWeight = weight;
+            } else {
+                var diff = weight - previousWeight;
+                var step = diff / distance;
+                for (var currentFrame = previousFrame; currentFrame < frame;
+                        ++currentFrame) {
+                    this._weights[currentFrame][i] = previousWeight;
+//                    tma.info('PS2ICO: > ... ' + currentFrame + ':' +
+//                            previousWeight);
+                    previousWeight += step;
+                }
+                previousFrame = currentFrame;
+                previousWeight = weight;
+            }
             tma.info('PS2ICO: > ' + frame + ',' + weight);
             offset += 8;
         }
+        for (; previousFrame < 60; ++previousFrame)
+            this._weights[previousFrame][i] = previousWeight;
     }
 
     // Texture section
@@ -161,6 +188,15 @@ TmaModelPs2Ico.prototype.getCoords = function () {
  */
 TmaModelPs2Ico.prototype.getTexture = function () {
     return this._texture;
+};
+
+/**
+ * Gets shape weights data for a frame.
+ * @param frame frame number from 0 to |this.frames| - 1
+ * @return weights in Array
+ */
+TmaModelPs2Ico.prototype.getWeights = function (frame) {
+    return this._weights[frame];
 };
 
 // node.js compatible export.
