@@ -113,6 +113,7 @@ var global = window;
         'Tma3DScreen.js',
         'TmaParticle.js',
         'TmaMotionBvh.js',
+        'TmaModelPly.js',
         'TmaModelPs2Ico.js'
     ];
     tma._load(libs, function () {
