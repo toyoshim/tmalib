@@ -166,6 +166,18 @@ TmaModelPs2Ico.prototype.load = function (data) {
 };
 
 /**
+ * Modifies all vertices by the specified |scale|.
+ * @param scale scale factor
+ */
+TmaModelPs2Ico.prototype.scale = function (scale) {
+    for (var shape = 0; shape < this.shapes; ++shape) {
+        var vertices = this._vertices[shape];
+        for (var i = 0; i < vertices.length; ++i)
+            vertices[i] *= scale;
+    }
+};
+
+/**
  * Gets model's vertices array of a shape.
  * @param shape shape number
  * @return model's vertices in Array
@@ -175,7 +187,7 @@ TmaModelPs2Ico.prototype.getVertices = function (shape) {
 };
 
 /**
- * Get texture coord. Address is normalized from 0.0 to 1.0.
+ * Gets texture coord. Address is normalized from 0.0 to 1.0.
  * @return texture coord in Array.
  */
 TmaModelPs2Ico.prototype.getCoords = function () {
