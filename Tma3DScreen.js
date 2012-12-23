@@ -22,9 +22,18 @@ function Tma3DScreen (width, height) {
     this.canvas.onmousedown = this._onmousedown.bind(this);
     this.canvas.onmouseup = this._onmouseup.bind(this);
     this.context = document.createElement("canvas").getContext("2d");
-    this.gl = this.canvas.getContext("webkit-3d");
-    if (!this.gl)
+    this.gl = this.canvas.getContext("webgl");
+    if (!this.gl) {
+        tma.log("WebGL: webgl is not supported. Try experimental-webgl...");
         this.gl = this.canvas.getContext("experimental-webgl");
+    }
+    if (!this.gl) {
+        tma.log("WebGL: Try webkit-3d...");
+        this.gl = this.canvas.getContext("webkit-3d");
+    }
+    if (!this.gl) {
+        tma.error("WebGL: not supported.");
+    }
     this.gl.viewport(0, 0, width, height);
     this.setAlphaMode(false);
     this._mouse = false;
