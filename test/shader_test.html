@@ -169,7 +169,6 @@ tma.onload = function () {
         var now = (Date.now() % 1000000000) / 1000.0;
         program.setUniform('elapsedTime', [ now ]);
 
-        //program.drawArrays(Tma3DScreen.MODE_POINTS, 0, ply.items);
         program.drawElements(Tma3DScreen.MODE_TRIANGLES, ply.indices, 0,
                 ply.indices.items);
         r += 0.03;
