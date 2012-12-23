@@ -21,27 +21,41 @@ function TmaModelPly() {
  * @return true if specified |data| is in valid ply format
  */
 TmaModelPly.prototype.load = function (data) {
-    var reader = new (function(arrayBuffer) {
-        this._data = new Uint8Array(arrayBuffer);
+    var reader = new (function(input) {
+        if (typeof input == "string") {
+            this._data = input;
+            this._cr = '\r';
+            this._lf = '\n';
+            this._sp = ' ';
+            this._conv = function (c) { return c; };
+        } else {
+            this._data = new Uint8Array(input);
+            this._cr = 0x0d;
+            this._lf = 0x0a;
+            this._sp = 0x20;
+            this._conv = function (c) { return String.fromCharCode(c); };
+        }
         this._offset = 0;
         this.readNextLine = function() {
             var array = [];
             var i = this._offset;
-            for (; i < this._data.byteLength; ++i) {
-                if (this._data[i] == 0x0d || this._data[i] == 0x0a)
+            for (; i < this._data.length; ++i) {
+                if (this._data[i] == this._cr || this._data[i] == this._lf)
                     break;
-                if (array[array.length - 1] != ' ' || this._data[i] != 0x20)
-                    array.push(String.fromCharCode(this._data[i]));
+                if (array[array.length - 1] != ' ' ||
+                        this._data[i] != this._sp) {
+                    array.push(this._conv(this._data[i]));
+                }
             }
-            if (array.length == 0)
+            if (array.length == 0 && i == this._data.length)
                 return null;
-            if (this._data[i] == 0x0d)
-                if (i + 1 < this._data.byteLength && this._data[i + 1] == 0x0a)
+            if (this._data[i] == this._cr)
+                if (i + 1 < this._data.length && this._data[i + 1] == this._lf)
                     ++i;
-            if (i != this._data.byteLength)
+            if (i != this._data.length)
                 i++;
             this._offset = i;
-            while (array[array.length - 1] == ' ')
+            while (array.length > 0 && array[array.length - 1] == ' ')
                 array.pop();
             return array.join('');
         };
@@ -52,8 +66,11 @@ TmaModelPly.prototype.load = function (data) {
             return line.split(' ');
         };
     })(data);
-    var magic = reader.readNextLine();
-    if (magic != 'ply') {
+    var magic;
+    do {
+        magic = reader.readNextLine();
+    } while (magic !== null && magic.length == 0);
+    if (magic === null || magic != 'ply') {
         tma.error('ply: can not find magic word \'ply\'');
         return false;
     }
@@ -105,7 +122,8 @@ TmaModelPly.prototype.load = function (data) {
                         index: element.keys++,
                         type: line[1]
                     };
-                } else if (line[1] == 'float' || line[1] == 'float32') {
+                } else if (line[1] == 'float' || line[1] == 'float32' ||
+                        line[1] == 'int' || line[1] == 'uchar') {
                     element.key[line[2]] = {
                         index: element.keys++,
                         type: line[1]
