@@ -12,6 +12,16 @@
  * @param height screen height
  */
 function TmaScreen (width, height, mode) {
+    if (width == TmaScreen.FULL_WIDTH)
+        width = Math.max(document.body.clientWidth,
+                document.body.scrollWidth,
+                document.documentElement.scrollWidth,
+                document.documentElement.clientWidth);
+    if (height == TmaScreen.FULL_HEIGHT)
+        height = Math.max(document.body.clientHeight,
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.documentElement.clientHeight);
     if (!mode || (TmaScreen.MODE_2D == mode))
         return new Tma2DScreen(width, height);
     return new Tma3DScreen(width, height);
@@ -29,6 +39,10 @@ TmaScreen.LOCK_WITH_SCREEN = 2;
 TmaScreen.MODE_2D = 1;
 // Screen for WebGL.
 TmaScreen.MODE_3D = 2;
+// Set max window width.
+TmaScreen.FULL_WIDTH = -1;
+// Set max window height.
+TmaScreen.FULL_HEIGHT = -1;
 
 /**
  * Converts a RGB color to a HSV color.
