@@ -119,8 +119,9 @@ void main() {
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js' ];
 tma.onload = function () {
-    var screen = new TmaScreen(window.document.width, window.document.height,
-    TmaScreen.MODE_3D);
+  var screen = new TmaScreen(TmaScreen.FULL_WIDTH,
+                             TmaScreen.FULL_HEIGHT,
+                             TmaScreen.MODE_3D);
     screen.attachTo(TmaScreen.BODY);
 
     // Initialize program with shaders.
