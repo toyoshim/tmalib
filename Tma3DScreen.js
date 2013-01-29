@@ -175,6 +175,14 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
         var index = this._owner.gl.getUniformLocation(this, name);
         this._owner.setUniform(this, index, array);
     };
+    programObject.setUniformVector = function (name, array) {
+        var index = this._owner.gl.getUniformLocation(this, name);
+        this._owner.setUniformVector(this, index, array);
+    };
+    programObject.setUniformMatrix = function (name, array) {
+        var index = this._owner.gl.getUniformLocation(this, name);
+        this._owner.setUniformMatrix(this, index, array);
+    };
     programObject.setTexture = function (name, texture) {
         var index = this._owner.gl.getUniformLocation(this, name);
         var id = this._textureIdMap[name];
@@ -320,12 +328,49 @@ Tma3DScreen.prototype.setAttributeArray =
  * @param array float array
  */
 Tma3DScreen.prototype.setUniform = function (program, index, array) {
+    console.log("this function is obsoleted.");
     this.gl.useProgram(program);
     if (1 == array.length)
         this.gl.uniform1fv(index, array);
     else if (3 == array.length)
         this.gl.uniform3fv(index, array);
     else if (4 == array.length)
+        this.gl.uniformMatrix2fv(index, false, array);
+    else if (9 == array.length)
+        this.gl.uniformMatrix3fv(index, false, array);
+    else if (16 == array.length)
+        this.gl.uniformMatrix4fv(index, false, array);
+    else
+        tma.error('WebGL unknown uniform matrix size: ' + array.length);
+};
+
+/**
+ * Sets a float vector to an internal buffer as a constant uniform array.
+ * @param index uniform index
+ * @param array float vector
+ */
+Tma3DScreen.prototype.setUniformVector = function (program, index, array) {
+    this.gl.useProgram(program);
+    if (1 == array.length)
+        this.gl.uniform1fv(index, array);
+    else if (2 == array.length)
+        this.gl.uniform2fv(index, array);
+    else if (3 == array.length)
+        this.gl.uniform3fv(index, array);
+    else if (4 == array.length)
+        this.gl.uniform4fv(index, array);
+    else
+        tma.error('WebGL unknown uniform vector size: ' + array.length);
+};
+
+/**
+ * Sets a float matrix to an internal buffer as a constant uniform array.
+ * @param index uniform index
+ * @param array float matrix
+ */
+Tma3DScreen.prototype.setUniformMatrix = function (program, index, array) {
+    this.gl.useProgram(program);
+    if (4 == array.length)
         this.gl.uniformMatrix2fv(index, false, array);
     else if (9 == array.length)
         this.gl.uniformMatrix3fv(index, false, array);
