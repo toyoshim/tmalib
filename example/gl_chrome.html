@@ -3,13 +3,15 @@
     <script src="../tma.js"></script>
     <script id="shader-vs" type="x-shader/x-vertex">
         attribute vec3 aVertexPosition;
+        attribute vec3 aVertexOffset;
+        attribute vec4 aColor;
         uniform mat4 uMVMatrix;
         uniform mat4 uPMatrix;
-        uniform vec4 uColor;
         varying vec4 vColor;
         void main() {
-            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-            vColor = uColor;
+            vec3 vertex = aVertexPosition + aVertexOffset;
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertex, 1.0);
+            vColor = aColor;
         }
     </script>
     <script id="shader-fs" type="x-shader/x-fragment">
@@ -28,17 +30,60 @@
             screen.attachTo(TmaScreen.BODY);
 
             // Initializes buffers.
-            var resolution = 32;
-            var circleVertices = screen.createBuffer(function (resolution) {
-                var vertices = [ 0, 0, 0 ];
-                for (var i = 0; i <= resolution; ++i) {
+            var resolution = 16;
+            var circleVertices = function (resolution) {
+                var vertices = [];
+                for (var i = 0; i < resolution; ++i) {
+                    vertices = vertices.concat([0.0, 0.0, 0.0]);
                     var w = 2.0 * Math.PI * i / resolution;
-                    vertices =
-                            vertices.concat([ Math.cos(w), Math.sin(w), 0.0 ]);
+                    vertices = vertices.concat([Math.cos(w), Math.sin(w), 0.0]);
+                    w = 2.0 * Math.PI * (i + 1) / resolution;
+                    vertices = vertices.concat([Math.cos(w), Math.sin(w), 0.0]);
                 }
                 return vertices;
-            } (resolution));
-            circleVertices.items = resolution + 2;
+            } (resolution);
+
+            var chromeVertices = screen.createBuffer(function (circle, length) {
+                var totalLength = circle.length * length;
+                var vertices = new Array(totalLength);
+                for (var i = 0; i < totalLength; i += circle.length) {
+                    for (var j = 0; j < circle.length; ++j)
+                        vertices[i + j] = circle[j];
+                }
+                return vertices;
+            } (circleVertices, data_chrome.length));
+            chromeVertices.items = resolution * 3 * data_chrome.length;
+
+            var verticeOffsets = screen.createBuffer(function (data, points) {
+                var length = data.length * 3 * points;
+                var offsets = new Array(length);
+                for (var i = 0; i < data.length; i++) {
+                    var point = data[i];
+                    var base = i * 3 * points;
+                    for (var j = 0; j < 3 * points; j += 3) {
+                        offsets[base + j + 0] = point[0];
+                        offsets[base + j + 1] = point[1];
+                        offsets[base + j + 2] = 0.0;
+                    }
+                }
+                return offsets;
+            } (data_chrome, resolution * 3));
+
+            var colors = screen.createBuffer(function (data, points) {
+                var length = data.length * 4 * points;
+                var offsets = new Array(length);
+                for (var i = 0; i < data.length; i++) {
+                    var point = data[i];
+                    var base = i * 4 * points;
+                    for (var j = 0; j < 4 * points; j += 4) {
+                        offsets[base + j + 0] = point[2];
+                        offsets[base + j + 1] = point[3];
+                        offsets[base + j + 2] = point[4];
+                        offsets[base + j + 3] = point[5];
+                    }
+                }
+                return offsets;
+            } (data_chrome, resolution * 3));
 
             // Initializes program with shaders.
             var program = screen.createProgram('shader-vs', 'shader-fs');
@@ -50,34 +95,29 @@
                     45, screen.width / screen.height, 0.1, 1000.0, pMatrix);
             mat4.translate(pMatrix, [ 0.0, 0.0, -250.0 ]);
             mat4.identity(mvMatrix);
+            program.setUniformMatrix('uMVMatrix', mvMatrix);
 
             // Initializes screen.
             screen.fillColor(0.0, 0.0, 0.0, 1.0);
 
             // Draws circle.
             program.setAttributeArray(
-                    'aVertexPosition', circleVertices, 0, 3, 0);
+                    'aVertexPosition', chromeVertices, 0, 3, 0);
+            program.setAttributeArray(
+                    'aVertexOffset', verticeOffsets, 0, 3, 0);
+            program.setAttributeArray(
+                    'aColor', colors, 0, 4, 0);
             setInterval(function () {
                 var mat = mat4;
                 var prg = program;
                 mat.rotate(pMatrix, 0.05, [ 0.1, 0.2, 0.0 ]);
                 prg.setUniformMatrix('uPMatrix', pMatrix);
                 screen.fillColor(0.0, 0.0, 0.0, 1.0);
-                var data = data_chrome;
-                var length = data.length;
-                var mv = mvMatrix;
-                var fan = Tma3DScreen.MODE_TRIANGLE_FAN;
-                var items = circleVertices.items;
-                for (var i = 0; i < length; ++i) {
-                    var m = mat.create(mv);
-                    var p = data[i];
-                    mat.translate(m, [p[0], p[1], 0.0]);
-                    prg.setUniformMatrix('uMVMatrix', m);
-                    prg.setUniformVector('uColor', [p[2], p[3], p[4], p[5]]);
-                    prg.drawArrays(fan, 0, items);
-                }
+                prg.drawArrays(Tma3DScreen.MODE_TRIANGLES,
+                               0,
+                               chromeVertices.items);
                 screen.flush();
-            }, 20);
+            }, 10);
         };
     </script>
 </head>
