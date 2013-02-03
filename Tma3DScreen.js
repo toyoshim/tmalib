@@ -237,6 +237,48 @@ Tma3DScreen.prototype.createElementBuffer = function (array) {
 };
 
 /**
+ * Create an frame buffer for offscreen rendering.
+ * @width offscreen width
+ * @height offscreen height
+ * @return created frame buffer object
+ */
+Tma3DScreen.prototype.createFrameBuffer = function (width, height) {
+    var buffer = this.gl.createFramebuffer();
+    buffer.width = width;
+    buffer.height = height;
+    buffer._owner = this;
+    buffer.texture = null;
+    buffer.renderbuffer = null;
+    buffer.bind = function () {
+        var gl = this._owner.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this);
+        if (!this.texture) {
+            this.texture = gl.createTexture(); }{
+            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,
+                    gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,
+                    gl.CLAMP_TO_EDGE);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height,
+                    0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                    gl.TEXTURE_2D, this.texture, 0);
+        }
+        if (!this.renderbuffer) {
+            this.renderbuffer = gl.createRenderbuffer(); }{
+            gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderbuffer);
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16,
+                    this.width, this.height);
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
+                    gl.RENDERBUFFER, this.renderbuffer);
+        }
+    };
+    return buffer;
+};
+
+/**
  * Create ImageData for texture.
  * @param width texture width
  * @param height texture height
@@ -288,6 +330,12 @@ Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
     return texture;
 };
 
+/**
+ * Reset framebuffer to default screen buffer.
+ */
+Tma3DScreen.prototype.bind = function () {
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+};
 /**
  * Sets a float array to an internal buffer as a constant attribute array.
  * @param index attribute index
@@ -388,6 +436,7 @@ Tma3DScreen.prototype.setUniformMatrix = function (program, index, array) {
  * @param texture texture object
  */
 Tma3DScreen.prototype.setTexture = function (program, index, id, texture) {
+    this.gl.useProgram(program);
     this.gl.activeTexture(this.gl.TEXTURE0 + id);
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     this.gl.uniform1i(index, id);

@@ -1,7 +1,7 @@
 <html>
 <head>
     <script src="../tma.js"></script>
-    <script id="shader-vs" type="x-shader/x-vertex">
+    <script id="shader-v0" type="x-shader/x-vertex">
         attribute vec3 aVertexPosition;
         attribute vec3 aVertexOffset;
         attribute vec4 aColor;
@@ -14,19 +14,46 @@
             vColor = aColor;
         }
     </script>
-    <script id="shader-fs" type="x-shader/x-fragment">
+    <script id="shader-f0" type="x-shader/x-fragment">
         precision mediump float;
         varying vec4 vColor;
         void main() {
             gl_FragColor = vColor;
         }
     </script>
+    <script id="shader-v1" type="x-shader/x-vertex">
+        attribute vec2 aCoord;
+        varying vec2 vCoord;
+        void main() {
+            vec2 position = vec2(aCoord.x * 2.0 - 1.0, aCoord.y * 2.0 - 1.0);
+            gl_Position = vec4(position, 0.0, 1.0);
+            vCoord = aCoord;
+        }
+    </script>
+    <script id="shader-f1" type="x-shader/x-fragment">
+        precision mediump float;
+        uniform sampler2D uTexture;
+        varying vec2 vCoord;
+        void main() {
+            vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+            for (int dy = -4; dy <= 4; dy++) {
+                for (int dx = -4; dx <= 4; dx++) {
+                    float x = vCoord.x + float(dx) / 500.0;
+                    float y = vCoord.y + float(dy) / 500.0;
+                    vec4 c = texture2D(uTexture, vec2(x, y));
+                    color += c / (1.0 + sqrt(pow(float(dx), 4.0) + pow(float(dy), 4.0)));
+                }
+            }
+            float x = vCoord.x - mod(vCoord.x, 0.01);
+            float y = vCoord.y - mod(vCoord.y, 0.01);
+            color += texture2D(uTexture, vec2(x, y)) * 0.3;
+            gl_FragColor = color;
+        }
+    </script>
     <script>
         tma.extlibs = [ 'ext/gl-matrix.js', 'example/data/data_chrome.js' ];
         tma.onload = function () {
-            var screen = new TmaScreen(TmaScreen.FULL_WIDTH,
-                                       TmaScreen.FULL_HEIGHT,
-                                       TmaScreen.MODE_3D);
+            var screen = new TmaScreen(512, 512, TmaScreen.MODE_3D);
             screen.attachTo(TmaScreen.BODY);
 
             // Initializes buffers.
@@ -85,8 +112,14 @@
                 return offsets;
             } (data_chrome, resolution * 3));
 
+            var coords = screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
+
+            // Initialize offscreen buffer.
+            var fbo = screen.createFrameBuffer(screen.width, screen.height);
+
             // Initializes program with shaders.
-            var program = screen.createProgram('shader-vs', 'shader-fs');
+            var renderer = screen.createProgram('shader-v0', 'shader-f0');
+            var effector = screen.createProgram('shader-v1', 'shader-f1');
 
             // Initializes matrices.
             var pMatrix = mat4.create();
@@ -95,27 +128,26 @@
                     45, screen.width / screen.height, 0.1, 1000.0, pMatrix);
             mat4.translate(pMatrix, [ 0.0, 0.0, -250.0 ]);
             mat4.identity(mvMatrix);
-            program.setUniformMatrix('uMVMatrix', mvMatrix);
+            renderer.setUniformMatrix('uMVMatrix', mvMatrix);
 
-            // Initializes screen.
-            screen.fillColor(0.0, 0.0, 0.0, 1.0);
-
-            // Draws circle.
-            program.setAttributeArray(
-                    'aVertexPosition', chromeVertices, 0, 3, 0);
-            program.setAttributeArray(
-                    'aVertexOffset', verticeOffsets, 0, 3, 0);
-            program.setAttributeArray(
-                    'aColor', colors, 0, 4, 0);
             setInterval(function () {
-                var mat = mat4;
-                var prg = program;
-                mat.rotate(pMatrix, 0.05, [ 0.1, 0.2, 0.0 ]);
-                prg.setUniformMatrix('uPMatrix', pMatrix);
+                mat4.rotate(pMatrix, 0.05, [ 0.1, 0.2, 0.0 ]);
+                renderer.setUniformMatrix('uPMatrix', pMatrix);
+                renderer.setAttributeArray(
+                        'aVertexPosition', chromeVertices, 0, 3, 0);
+                renderer.setAttributeArray(
+                        'aVertexOffset', verticeOffsets, 0, 3, 0);
+                renderer.setAttributeArray(
+                        'aColor', colors, 0, 4, 0);
+                fbo.bind();
                 screen.fillColor(0.0, 0.0, 0.0, 1.0);
-                prg.drawArrays(Tma3DScreen.MODE_TRIANGLES,
-                               0,
-                               chromeVertices.items);
+                renderer.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0,
+                        chromeVertices.items);
+
+                screen.bind();
+                effector.setAttributeArray('aCoord', coords, 0, 2, 0);
+                effector.setTexture('uTexture', fbo.texture);
+                effector.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
                 screen.flush();
             }, 10);
         };
