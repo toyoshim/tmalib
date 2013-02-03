@@ -22,6 +22,19 @@
         }
     </script>
     <script id="shader-v1" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        uniform mat4 uPMatrix;
+        void main() {
+            gl_Position = uPMatrix * vec4(aVertexPosition, 1.0);
+        }
+    </script>
+    <script id="shader-f1" type="x-shader/x-fragment">
+        precision mediump float;
+        void main() {
+            gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);
+        }
+    </script>
+    <script id="shader-v2" type="x-shader/x-vertex">
         attribute vec2 aCoord;
         varying vec2 vCoord;
         void main() {
@@ -30,22 +43,22 @@
             vCoord = aCoord;
         }
     </script>
-    <script id="shader-f1" type="x-shader/x-fragment">
+    <script id="shader-f2" type="x-shader/x-fragment">
         precision mediump float;
         uniform sampler2D uTexture;
         varying vec2 vCoord;
         void main() {
             vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-            for (int dy = -4; dy <= 4; dy++) {
-                for (int dx = -4; dx <= 4; dx++) {
-                    float x = vCoord.x + float(dx) / 500.0;
-                    float y = vCoord.y + float(dy) / 500.0;
+            for (int dy = -2; dy <= 2; dy++) {
+                for (int dx = -2; dx <= 2; dx++) {
+                    float x = vCoord.x + float(dx) / 400.0;
+                    float y = vCoord.y + float(dy) / 400.0;
                     vec4 c = texture2D(uTexture, vec2(x, y));
                     color += c / (1.0 + sqrt(pow(float(dx), 4.0) + pow(float(dy), 4.0)));
                 }
             }
-            float x = vCoord.x - mod(vCoord.x, 0.01);
-            float y = vCoord.y - mod(vCoord.y, 0.01);
+            float x = vCoord.x - mod(vCoord.x, 0.005);
+            float y = vCoord.y - mod(vCoord.y, 0.005);
             color += texture2D(uTexture, vec2(x, y)) * 0.3;
             gl_FragColor = color;
         }
@@ -53,11 +66,13 @@
     <script>
         tma.extlibs = [ 'ext/gl-matrix.js', 'example/data/data_chrome.js' ];
         tma.onload = function () {
-            var screen = new TmaScreen(256, 256, TmaScreen.MODE_3D);
+            //var screen = new TmaScreen(256, 256, TmaScreen.MODE_3D);
+            var screen = new TmaScreen(TmaScreen.FULL_WIDTH,
+                    TmaScreen.FULL_HEIGHT, TmaScreen.MODE_3D);
             screen.attachTo(TmaScreen.BODY);
 
             // Initializes buffers.
-            var resolution = 16;
+            var resolution = 8;
             var circleVertices = function (resolution) {
                 var vertices = [];
                 for (var i = 0; i < resolution; ++i) {
@@ -114,12 +129,51 @@
 
             var coords = screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
 
+            var lines = screen.createBuffer(function () {
+                var i = 0;
+                var lines = new Array()
+                for (var z = -900; z <= 900; z += 100) {
+                    for (var x = -900; x <= 900; x += 100) {
+                        lines[i + 0] = x;
+                        lines[i + 1] = -900;
+                        lines[i + 2] = z;
+                        lines[i + 3] = x;
+                        lines[i + 4] = 900;
+                        lines[i + 5] = z;
+                        i += 6;
+                    }
+                    for (var y = -900; y <= 900; y += 100) {
+                        lines[i + 0] = -900;
+                        lines[i + 1] = y;
+                        lines[i + 2] = z;
+                        lines[i + 3] = 900;
+                        lines[i + 4] = y;
+                        lines[i + 5] = z;
+                        i += 6;
+                    }
+                }
+                for (var x = -900; x <= 900; x += 100) {
+                    for (var y = -900; y <= 900; y += 100) {
+                        lines[i + 0] = x;
+                        lines[i + 1] = y;
+                        lines[i + 2] = -900;
+                        lines[i + 3] = x;
+                        lines[i + 4] = y;
+                        lines[i + 5] = 900;
+                        i += 6;
+                    }
+                }
+                return lines;
+            } ());
+            lines.items = 1944;
+
             // Initialize offscreen buffer.
             var fbo = screen.createFrameBuffer(screen.width, screen.height);
 
             // Initializes program with shaders.
             var renderer = screen.createProgram('shader-v0', 'shader-f0');
-            var effector = screen.createProgram('shader-v1', 'shader-f1');
+            var gridRenderer = screen.createProgram('shader-v1', 'shader-f1');
+            var effector = screen.createProgram('shader-v2', 'shader-f2');
 
             // Initializes matrices.
             var pMatrix = mat4.create();
@@ -128,10 +182,19 @@
                     45, screen.width / screen.height, 0.1, 1000.0, pMatrix);
             mat4.translate(pMatrix, [ 0.0, 0.0, -250.0 ]);
             mat4.identity(mvMatrix);
-            renderer.setUniformMatrix('uMVMatrix', mvMatrix);
 
             setInterval(function () {
+                renderer.setUniformMatrix('uMVMatrix', mvMatrix);
                 mat4.rotate(pMatrix, 0.05, [ 0.1, 0.2, 0.0 ]);
+                fbo.bind();
+
+                screen.fillColor(0.0, 0.0, 0.0, 1.0);
+
+                gridRenderer.setUniformMatrix('uPMatrix', pMatrix);
+                gridRenderer.setAttributeArray(
+                        'aVertexPosition', lines, 0, 3, 0);
+                gridRenderer.drawArrays(Tma3DScreen.MODE_LINES, 0, lines.items);
+
                 renderer.setUniformMatrix('uPMatrix', pMatrix);
                 renderer.setAttributeArray(
                         'aVertexPosition', chromeVertices, 0, 3, 0);
@@ -139,8 +202,6 @@
                         'aVertexOffset', verticeOffsets, 0, 3, 0);
                 renderer.setAttributeArray(
                         'aColor', colors, 0, 4, 0);
-                fbo.bind();
-                screen.fillColor(0.0, 0.0, 0.0, 1.0);
                 renderer.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0,
                         chromeVertices.items);
 
@@ -153,4 +214,6 @@
         };
     </script>
 </head>
+<body style="margin: 0;">
+</body>
 </html>
