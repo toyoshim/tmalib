@@ -183,9 +183,12 @@
             mat4.translate(pMatrix, [ 0.0, 0.0, -250.0 ]);
             mat4.identity(mvMatrix);
 
-            setInterval(function () {
+            var loop = function (time) {
+                var delta = time - startTime;
+                startTime = time;
+
                 renderer.setUniformMatrix('uMVMatrix', mvMatrix);
-                mat4.rotate(pMatrix, 0.05, [ 0.1, 0.2, 0.0 ]);
+                mat4.rotate(pMatrix, 0.002 * delta, [ 0.1, 0.2, 0.0 ]);
                 fbo.bind();
 
                 screen.fillColor(0.0, 0.0, 0.0, 1.0);
@@ -210,7 +213,13 @@
                 effector.setTexture('uTexture', fbo.texture);
                 effector.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
                 screen.flush();
-            }, 10);
+
+                requestAnimationFrame(loop, screen.canvas);
+            };
+            var startTime = window.mozAnimationStartTime || Date.now();
+            var requestAnimationFrame = window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame;
+            requestAnimationFrame(loop, screen.canvas);
         };
     </script>
 </head>
