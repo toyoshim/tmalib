@@ -172,6 +172,119 @@
             } ());
             lines.items = 1944;
 
+            // Setup particle system.
+            /*var*/ ps = new function () {
+                this._mode = 0;
+                this._autoCount = 0;
+                this.length = data_chrome.length;
+                this._x = new Array(length);
+                this._y = new Array(length);
+                this._z = new Array(length);
+                this._bx = new Array(length);
+                this._by = new Array(length);
+                this._bz = new Array(length);
+                this._vx = new Array(length);
+                this._vy = new Array(length);
+                this._vz = new Array(length);
+                this._gx = 0;
+                this._gy = 0;
+                this._gz = 0;
+                this._rx = 0;
+                this._ry = 0;
+                for (var i = 0; i < this.length; ++i) {
+                    var p = data_chrome[i];
+                    this._x[i] = p[0];
+                    this._y[i] = p[1];
+                    this._z[i] = 0.0;
+                    this._bx[i] = p[0];
+                    this._by[i] = p[1];
+                    this._bz[i] = 0.0;
+                    this._vx[i] = 0.0;
+                    this._vy[i] = 0.0;
+                    this._vz[i] = 0.0;
+                }
+
+                this.clash = function() {
+                    this._mode = 0;
+                    for (var i = 0; i < this.length; ++i) {
+                        this._vx[i] = Math.random() * 100 - 50;
+                        this._vy[i] = Math.random() * 100 - 50;
+                        this._vz[i] = Math.random() * 100 - 50;
+                    }
+                };
+
+                this.pilot = function () {
+                    if (this._autoCount > 0) {
+                        this._autoCount--;
+                        return;
+                    }
+                    this._autoCount = Math.floor(Math.random() * 100);
+                    this._mode = Math.floor(Math.random() * 3);
+                    console.log("mode: " + this._mode);
+                    if (this._mode == 2) {
+                        this.clash();
+                    }
+                };
+
+                this.update = function (delta) {
+                    this.pilot();
+                    var buffer = verticeOffsets.buffer();
+                    var points = resolution * 3;
+                    var dst = 0;
+                    var i;
+                    this._rx += 0.0002 * delta;
+                    this._ry += 0.0004 * delta;
+                    var radx = 2.0 * Math.PI * this._rx / 360;
+                    var rady = 2.0 * Math.PI * this._ry / 360;
+                    this._gx = Math.sin(radx) * Math.sin(rady);
+                    this._gy = Math.cos(radx);
+                    this._gz = -Math.sin(radx) * Math.cos(rady);
+                    if (this._mode == 0) {
+                        var t1 = Math.pow(0.9, delta / 30);
+                        var t2 = 0.01 *  delta / 30;
+                        for (i = 0; i < this.length; ++i) {
+                            this._vx[i] *= t1;
+                            this._vy[i] *= t1;
+                            this._vz[i] *= t1;
+                            this._vx[i] += (this._bx[i] - this._x[i]) * t2;
+                            this._vy[i] += (this._by[i] - this._y[i]) * t2;
+                            this._vz[i] += (this._bz[i] - this._z[i]) * t2;
+                        }
+                    } else {
+                        var gx = this._gx * delta / 30;
+                        var gy = this._gy * delta / 30;
+                        var gz = this._gz * delta / 30;
+                        var range = 100;
+                        for (i = 0; i < this.length; ++i) {
+                            if (this._x[i] < -range || range < this._x[i])
+                                this._vx[i] *= -1;
+                            else
+                                this._vx[i] += gx;
+                            if (this._y[i] < -range || range < this._y[i])
+                                this._vy[i] *= -1;
+                            else
+                                this._vy[i] += gy;
+                            if (this._z[i] < -range || range < this._z[i])
+                                this._vz[i] *= -1;
+                            else
+                                this._vz[i] += gz;
+                        }
+                    }
+                    for (i = 0; i < this.length; ++i) {
+                        this._x[i] += this._vx[i];
+                        this._y[i] += this._vy[i];
+                        this._z[i] += this._vz[i];
+                        for (var point = 0; point < points; point++) {
+                            buffer[dst + 0] = this._x[i];
+                            buffer[dst + 1] = this._y[i];
+                            buffer[dst + 2] = this._z[i];
+                            dst += 3;
+                        }
+                    }
+                    verticeOffsets.update();
+                };
+            };
+
             // Initialize offscreen buffer.
             var fbo = screen.createFrameBuffer(screen.width, screen.height);
 
@@ -219,6 +332,8 @@
                 screen.flush();
 
                 requestAnimationFrame(loop, screen.canvas);
+
+                ps.update(delta);
             };
             var startTime = window.mozAnimationStartTime || Date.now();
             var requestAnimationFrame = window.webkitRequestAnimationFrame ||

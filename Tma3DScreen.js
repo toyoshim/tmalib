@@ -209,13 +209,20 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
  */
 Tma3DScreen.prototype.createBuffer = function (array) {
     var buffer = this.gl.createBuffer();
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
-    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(array),
-            this.gl.STATIC_DRAW);
+    buffer._buffer = new Float32Array(array);
     buffer._owner = this;
     buffer.bind = function () {
         this._owner.gl.bindBuffer(this._owner.gl.ARRAY_BUFFER, this);
     };
+    buffer.buffer = function () {
+        return this._buffer;
+    };
+    buffer.update = function () {
+        this.bind();
+        var gl = this._owner.gl;
+        gl.bufferData(gl.ARRAY_BUFFER, buffer._buffer, gl.STATIC_DRAW);
+    };
+    buffer.update();
     return buffer;
 };
 
@@ -336,6 +343,7 @@ Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
 Tma3DScreen.prototype.bind = function () {
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
 };
+
 /**
  * Sets a float array to an internal buffer as a constant attribute array.
  * @param index attribute index
