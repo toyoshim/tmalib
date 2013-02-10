@@ -56,7 +56,7 @@
                     vec4 c = texture2D(uTexture, vec2(x, y));
                     float decay = sqrt(pow(float(dx), 4.0) + pow(float(dy), 4.0));
                     // Some GPUs returns NaN due to ... a bug?
-                    if (!(decay > 0.0))
+                    if (!(decay >= 0.0))
                         decay = 16.0;
                     color += c / (1.0 + decay);
                 }
