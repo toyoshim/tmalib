@@ -1,0 +1,363 @@
+<html>
+<head>
+    <script src="../tma.js"></script>
+    <script id="shader-v0" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        attribute vec3 aVertexOffset;
+        attribute vec4 aColor;
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        varying vec4 vColor;
+        void main() {
+            vec3 vertex = aVertexPosition + aVertexOffset;
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertex, 1.0);
+            vColor = aColor;
+        }
+    </script>
+    <script id="shader-f0" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 vColor;
+        void main() {
+            gl_FragColor = vColor;
+        }
+    </script>
+    <script id="shader-v1" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        uniform mat4 uPMatrix;
+        void main() {
+            gl_Position = uPMatrix * vec4(aVertexPosition, 1.0);
+        }
+    </script>
+    <script id="shader-f1" type="x-shader/x-fragment">
+        precision mediump float;
+        void main() {
+            gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);
+        }
+    </script>
+    <script id="shader-v2" type="x-shader/x-vertex">
+        attribute vec2 aCoord;
+        varying vec2 vCoord;
+        void main() {
+            vec2 position = vec2(aCoord.x * 2.0 - 1.0, aCoord.y * 2.0 - 1.0);
+            gl_Position = vec4(position, 0.0, 1.0);
+            vCoord = aCoord;
+        }
+    </script>
+    <script id="shader-f2" type="x-shader/x-fragment">
+        precision mediump float;
+        uniform sampler2D uTexture;
+        varying vec2 vCoord;
+        void main() {
+            vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+            for (int dy = -2; dy <= 2; dy++) {
+                for (int dx = -2; dx <= 2; dx++) {
+                    float x = vCoord.x + float(dx) / 400.0;
+                    float y = vCoord.y + float(dy) / 400.0;
+                    vec4 c = texture2D(uTexture, vec2(x, y));
+                    float decay = sqrt(pow(float(dx), 4.0) + pow(float(dy), 4.0));
+                    // Some GPUs returns NaN due to ... a bug?
+                    if (!(decay >= 0.0))
+                        decay = 16.0;
+                    color += c / (1.0 + decay);
+                }
+            }
+            float x = vCoord.x - mod(vCoord.x, 0.005);
+            float y = vCoord.y - mod(vCoord.y, 0.005);
+            color += texture2D(uTexture, vec2(x, y)) * 0.3;
+            gl_FragColor = color;
+        }
+    </script>
+    <script>
+        tma.extlibs = [ 'ext/gl-matrix.js', 'example/data/data_chrome.js' ];
+        tma.onload = function () {
+            var screen = new TmaScreen(512, 512, TmaScreen.MODE_3D);
+            screen.attachTo(TmaScreen.BODY);
+            screen.canvas.style.width = "100%";
+            screen.canvas.style.height = "100%";
+            var aspect = screen.canvas.clientWidth / screen.canvas.clientHeight;
+
+            // Initializes buffers.
+            var resolution = 8;
+            var circleVertices = function (resolution) {
+                var vertices = [];
+                for (var i = 0; i < resolution; ++i) {
+                    vertices = vertices.concat([0.0, 0.0, 0.0]);
+                    var w = 2.0 * Math.PI * i / resolution;
+                    vertices = vertices.concat([Math.cos(w), Math.sin(w), 0.0]);
+                    w = 2.0 * Math.PI * (i + 1) / resolution;
+                    vertices = vertices.concat([Math.cos(w), Math.sin(w), 0.0]);
+                }
+                return vertices;
+            } (resolution);
+
+            var chromeVertices = screen.createBuffer(function (circle, length) {
+                var totalLength = circle.length * length;
+                var vertices = new Array(totalLength);
+                for (var i = 0; i < totalLength; i += circle.length) {
+                    for (var j = 0; j < circle.length; ++j)
+                        vertices[i + j] = circle[j];
+                }
+                return vertices;
+            } (circleVertices, data_chrome.length));
+            chromeVertices.items = resolution * 3 * data_chrome.length;
+
+            var verticeOffsets = screen.createBuffer(function (data, points) {
+                var length = data.length * 3 * points;
+                var offsets = new Array(length);
+                for (var i = 0; i < data.length; i++) {
+                    var point = data[i];
+                    var base = i * 3 * points;
+                    for (var j = 0; j < 3 * points; j += 3) {
+                        offsets[base + j + 0] = point[0];
+                        offsets[base + j + 1] = point[1];
+                        offsets[base + j + 2] = 0.0;
+                    }
+                }
+                return offsets;
+            } (data_chrome, resolution * 3));
+
+            var colors = screen.createBuffer(function (data, points) {
+                var length = data.length * 4 * points;
+                var offsets = new Array(length);
+                for (var i = 0; i < data.length; i++) {
+                    var point = data[i];
+                    var base = i * 4 * points;
+                    for (var j = 0; j < 4 * points; j += 4) {
+                        offsets[base + j + 0] = point[2];
+                        offsets[base + j + 1] = point[3];
+                        offsets[base + j + 2] = point[4];
+                        offsets[base + j + 3] = point[5];
+                    }
+                }
+                return offsets;
+            } (data_chrome, resolution * 3));
+
+            var coords = screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
+
+            var lines = screen.createBuffer(function () {
+                var i = 0;
+                var lines = new Array()
+                for (var z = -900; z <= 900; z += 100) {
+                    for (var x = -900; x <= 900; x += 100) {
+                        lines[i + 0] = x;
+                        lines[i + 1] = -900;
+                        lines[i + 2] = z;
+                        lines[i + 3] = x;
+                        lines[i + 4] = 900;
+                        lines[i + 5] = z;
+                        i += 6;
+                    }
+                    for (var y = -900; y <= 900; y += 100) {
+                        lines[i + 0] = -900;
+                        lines[i + 1] = y;
+                        lines[i + 2] = z;
+                        lines[i + 3] = 900;
+                        lines[i + 4] = y;
+                        lines[i + 5] = z;
+                        i += 6;
+                    }
+                }
+                for (var x = -900; x <= 900; x += 100) {
+                    for (var y = -900; y <= 900; y += 100) {
+                        lines[i + 0] = x;
+                        lines[i + 1] = y;
+                        lines[i + 2] = -900;
+                        lines[i + 3] = x;
+                        lines[i + 4] = y;
+                        lines[i + 5] = 900;
+                        i += 6;
+                    }
+                }
+                return lines;
+            } ());
+            lines.items = 1944;
+
+            // Setup particle system.
+            /*var*/ ps = new function () {
+                this._mode = 0;
+                this._autoCount = 0;
+                this.length = data_chrome.length;
+                this._x = new Array(length);
+                this._y = new Array(length);
+                this._z = new Array(length);
+                this._bx = new Array(length);
+                this._by = new Array(length);
+                this._bz = new Array(length);
+                this._vx = new Array(length);
+                this._vy = new Array(length);
+                this._vz = new Array(length);
+                this._gx = 0;
+                this._gy = 0;
+                this._gz = 0;
+                this._rx = 0;
+                this._ry = 0;
+                for (var i = 0; i < this.length; ++i) {
+                    var p = data_chrome[i];
+                    this._x[i] = p[0];
+                    this._y[i] = p[1];
+                    this._z[i] = 0.0;
+                    this._bx[i] = p[0];
+                    this._by[i] = p[1];
+                    this._bz[i] = 0.0;
+                    this._vx[i] = 0.0;
+                    this._vy[i] = 0.0;
+                    this._vz[i] = 0.0;
+                }
+
+                this.clash = function() {
+                    this._mode = 0;
+                    for (var i = 0; i < this.length; ++i) {
+                        this._vx[i] = Math.random() * 100 - 50;
+                        this._vy[i] = Math.random() * 100 - 50;
+                        this._vz[i] = Math.random() * 100 - 50;
+                    }
+                };
+
+                this.pilot = function () {
+                    if (this._autoCount > 0) {
+                        this._autoCount--;
+                        return;
+                    }
+                    this._autoCount = Math.floor(Math.random() * 100);
+                    this._mode = Math.floor(Math.random() * 3);
+                    console.log("mode: " + this._mode);
+                    if (this._mode == 2) {
+                        this.clash();
+                    }
+                };
+
+                this.update = function (delta) {
+                    this.pilot();
+                    var buffer = verticeOffsets.buffer();
+                    var points = resolution * 3;
+                    var dst = 0;
+                    var i;
+                    this._rx += 0.0002 * delta;
+                    this._ry += 0.0004 * delta;
+                    var radx = 2.0 * Math.PI * this._rx / 360;
+                    var rady = 2.0 * Math.PI * this._ry / 360;
+                    this._gx = Math.sin(radx) * Math.sin(rady);
+                    this._gy = Math.cos(radx);
+                    this._gz = -Math.sin(radx) * Math.cos(rady);
+                    if (this._mode == 0) {
+                        var t1 = Math.pow(0.9, delta / 30);
+                        var t2 = 0.01 *  delta / 30;
+                        for (i = 0; i < this.length; ++i) {
+                            this._vx[i] *= t1;
+                            this._vy[i] *= t1;
+                            this._vz[i] *= t1;
+                            this._vx[i] += (this._bx[i] - this._x[i]) * t2;
+                            this._vy[i] += (this._by[i] - this._y[i]) * t2;
+                            this._vz[i] += (this._bz[i] - this._z[i]) * t2;
+                        }
+                    } else {
+                        var gx = this._gx * delta / 30;
+                        var gy = this._gy * delta / 30;
+                        var gz = this._gz * delta / 30;
+                        var range = 100;
+                        for (i = 0; i < this.length; ++i) {
+                            if (this._x[i] < -range || range < this._x[i])
+                                this._vx[i] *= -1;
+                            else
+                                this._vx[i] += gx;
+                            if (this._y[i] < -range || range < this._y[i])
+                                this._vy[i] *= -1;
+                            else
+                                this._vy[i] += gy;
+                            if (this._z[i] < -range || range < this._z[i])
+                                this._vz[i] *= -1;
+                            else
+                                this._vz[i] += gz;
+                        }
+                    }
+                    for (i = 0; i < this.length; ++i) {
+                        this._x[i] += this._vx[i];
+                        this._y[i] += this._vy[i];
+                        this._z[i] += this._vz[i];
+                        for (var point = 0; point < points; point++) {
+                            buffer[dst + 0] = this._x[i];
+                            buffer[dst + 1] = this._y[i];
+                            buffer[dst + 2] = this._z[i];
+                            dst += 3;
+                        }
+                    }
+                    verticeOffsets.update();
+                };
+            };
+
+            // Initialize offscreen buffer.
+            var fbo = screen.createFrameBuffer(screen.width, screen.height);
+
+            // Initializes program with shaders.
+            var renderer = screen.createProgram('shader-v0', 'shader-f0');
+            var gridRenderer = screen.createProgram('shader-v1', 'shader-f1');
+            var effector = screen.createProgram('shader-v2', 'shader-f2');
+
+            // Initializes matrices.
+            var pMatrix = mat4.create();
+            var mvMatrix = mat4.create();
+            mat4.perspective(45, aspect, 0.1, 1000.0, pMatrix);
+            mat4.translate(pMatrix, [ 0.0, 0.0, -250.0 ]);
+            mat4.identity(mvMatrix);
+
+            var loop = function (time) {
+                var delta = time - startTime;
+                startTime = time;
+
+                renderer.setUniformMatrix('uMVMatrix', mvMatrix);
+                mat4.rotate(pMatrix, 0.002 * delta, [ 0.1, 0.2, 0.0 ]);
+                fbo.bind();
+
+                screen.fillColor(0.0, 0.0, 0.0, 1.0);
+
+                gridRenderer.setUniformMatrix('uPMatrix', pMatrix);
+                gridRenderer.setAttributeArray(
+                        'aVertexPosition', lines, 0, 3, 0);
+                gridRenderer.drawArrays(Tma3DScreen.MODE_LINES, 0, lines.items);
+
+                renderer.setUniformMatrix('uPMatrix', pMatrix);
+                renderer.setAttributeArray(
+                        'aVertexPosition', chromeVertices, 0, 3, 0);
+                renderer.setAttributeArray(
+                        'aVertexOffset', verticeOffsets, 0, 3, 0);
+                renderer.setAttributeArray(
+                        'aColor', colors, 0, 4, 0);
+                renderer.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0,
+                        chromeVertices.items);
+
+                screen.bind();
+                effector.setAttributeArray('aCoord', coords, 0, 2, 0);
+                effector.setTexture('uTexture', fbo.texture);
+                effector.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+                screen.flush();
+
+                requestAnimationFrame(loop, screen.canvas);
+
+                ps.update(delta);
+            };
+            var startTime = window.mozAnimationStartTime || Date.now();
+            var requestAnimationFrame = window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame;
+            requestAnimationFrame(loop, screen.canvas);
+        };
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!navigator.mozApps)
+                return;
+            var request = navigator.mozApps.getSelf();
+            request.onsuccess = function () {
+                if (this.result)
+                    return;
+                var url = location.href;
+                var webapp = url.substring(0, url.lastIndexOf('.') + 1) + 'webapp';
+                var install = navigator.mozApps.install(webapp);
+                install.onerror = function () {
+                    console.log(this.error);
+                    alert(this.error.message);
+                };
+            };
+        }, false);
+    </script>
+</head>
+</html>

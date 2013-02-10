@@ -1,0 +1,13 @@
+{
+  "name": "Chrome Logo Particle",
+  "description": "WebGL Particle Demo using Chrome Logo",
+  "launch_path": "/~toyoshim/tmalib/mozapp/chrome_logo.html",
+  "icons": {
+    "256": "/~toyoshim/tmalib/mozapp/chrome_logo.png"
+  },
+  "developer": {
+    "name": "Takashi Toyoshima",
+    "url": "http://toyoshima-house.net"
+  },
+  "default_locale": "en"
+}
