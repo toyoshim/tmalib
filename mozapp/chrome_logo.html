@@ -345,9 +345,9 @@
         document.addEventListener('DOMContentLoaded', function () {
             if (!navigator.mozApps)
                 return;
-            var request = navigator.mozApps.getSelf();
+            var request = navigator.mozApps.getInstalled();
             request.onsuccess = function () {
-                if (this.result)
+                if (this.result.length != 0)
                     return;
                 var url = location.href;
                 var webapp = url.substring(0, url.lastIndexOf('.') + 1) + 'webapp';
