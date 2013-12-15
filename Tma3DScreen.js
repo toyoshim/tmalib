@@ -101,21 +101,31 @@ Tma3DScreen.prototype.detachFrom = function (element) {
 };
 
 /**
+ * Compiles a shader program.
+ * @param type shader type
+ * @param program shader program in text
+ * @return created shader
+ */
+Tma3DScreen.prototype.compileShader = function (type, program) {
+    var type = (Tma3DScreen.VERTEX_SHADER == type) ? this.gl.VERTEX_SHADER :
+            this.gl.FRAGMENT_SHADER;
+    var shader = this.gl.createShader(type);
+    this.gl.shaderSource(shader, program);
+    this.gl.compileShader(shader);
+    if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS))
+        tma.log("WebGL compiling shader " + id + ": " +
+                this.gl.getShaderInfoLog(shader));
+    return shader;
+};
+
+/**
  * Loads shader program from DOMElement and compiles it.
  * @param type shader type
  * @param id DOMElement id
  * @return created shader
  */
 Tma3DScreen.prototype.loadShader = function (type, id) {
-    var type = (Tma3DScreen.VERTEX_SHADER == type) ? this.gl.VERTEX_SHADER :
-            this.gl.FRAGMENT_SHADER;
-    var shader = this.gl.createShader(type);
-    this.gl.shaderSource(shader, document.getElementById(id).text);
-    this.gl.compileShader(shader);
-    if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS))
-        tma.log("WebGL compiling shader " + id + ": " +
-                this.gl.getShaderInfoLog(shader));
-    return shader;
+    return this.compileShader(type, document.getElementById(id).text);
 };
 
 /**

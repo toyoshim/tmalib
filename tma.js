@@ -8,7 +8,7 @@
  * This prototype provides base functions.
  * @author Takashi Toyoshima <toyoshim@gmail.com>
  */
-tma = {};
+var tma = {};
 
 /**
  * Private prototype variables.
@@ -46,14 +46,21 @@ tma.error = function () {
 /**
  * Loads JavaScript library dynamically.
  * @param src a source file URL
- * @param callback callback to be invoked when the JavaScript is loaded
+ * @param callback callback to invoke when the JavaScript is loaded
+ * @return Promise
  */
 tma.load = function (src, callback) {
     var script = document.createElement('script');
-    script.onload = callback;
     script.src = src;
-    tma._head.appendChild(script);
     tma._scripts[src] = script;
+    if (!callback) {
+        return new Promise(function (resolve, reject) {
+            script.onload = function () { resolve(); }
+            tma._head.appendChild(script);
+        });
+    }
+    script.onload = callback;
+    tma._head.appendChild(script);
 };
 
 /**
@@ -66,10 +73,45 @@ tma.unload = function (src) {
 };
 
 /**
+ * Loads a shader program from external html by id.
+ * @param src an external html URL
+ * @param id script ID to obtain the shader program
+ * @return Promise
+ */
+tma.loadShader = function (src, id) {
+    return new Promise(function (resolve, reject) {
+        var frames = document.getElementsByTagName('iframe');
+        for (var i = 0; i < frames.length; ++i) {
+            if (frames[i].src == src || frames[i]._src == src) {
+                if (frames[i]._load) {
+                    resolve(frames[i].contentDocument.getElementById(id).text);
+                } else {
+                    var callback = frames[i].onload;
+                    frames[i].onload = function () {
+                        callback.apply(this);
+                        resolve(frames[i].contentDocument.getElementById(
+                                id).text);
+                    };
+                }
+                return;
+            }
+        }
+        var frame = document.createElement('iframe');
+        frame.onload = function () {
+            this._load = true;
+            resolve(this.contentDocument.getElementById(id).text); };
+        frame.src = src;
+        frame._src = src;
+        tma._head.appendChild(frame);
+    });
+};
+
+/**
  * Debug function to reload all external JavaScript files which are loaded.
- * @param callback callback to be invoked when the JavaScript is reloaded
+ * @param callback callback to invoke when the JavaScript is reloaded
  */
 tma.reload = function (callback) {
+    // TODO: support shader reload.
     var srcs = [];
     for (var key in tma._scripts) {
         srcs.push(key);
@@ -81,12 +123,12 @@ tma.reload = function (callback) {
 /**
  * Private load implementation to support plural source files.
  * @param srcs source file paths
- * @param callback callback to be invoked when the JavaScript is loaded
+ * @param callback callback to invoke when the JavaScript is loaded
  */
 tma._load = function (srcs, callback) {
     var src = srcs.shift();
     tma.load(this._base + src, function () {
-        if (srcs.length != 0)
+        if (srcs.length !== 0)
             tma._load(srcs, callback);
         else
             callback();
@@ -118,7 +160,7 @@ var global = window;
     ];
     tma._load(libs, function () {
         tma.ready = true;
-        if (0 != tma.extlibs.length)
+        if (0 !== tma.extlibs.length)
             tma._load(tma.extlibs, function () {
                 if (tma.onload)
                     tma.onload();
