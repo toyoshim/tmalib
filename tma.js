@@ -16,7 +16,7 @@ var tma = {};
 // Holds head tag element.
 tma._head = document.getElementsByTagName('head')[0];
 // Holds base path for this JavaScript.
-tma._base = "";
+tma._base = '';
 // Holds loaded scripts' data.
 tma._scripts = {};
 // If all external scripts are loaded.

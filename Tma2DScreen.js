@@ -14,26 +14,26 @@
 function Tma2DScreen (width, height) {
     this.width = width;
     this.height = height;
-    this.canvas = document.createElement("canvas");
+    this.canvas = document.createElement('canvas');
     this.canvas.width = width;
     this.canvas.height = height;
     this.canvas.onmousemove = this._onmousemove.bind(this);
     this.canvas.onmouseout = this._onmouseout.bind(this);
     this.canvas.onmousedown = this._onmousedown.bind(this);
     this.canvas.onmouseup = this._onmouseup.bind(this);
-    this.context = this.canvas.getContext("2d");
+    this.context = this.canvas.getContext('2d');
     this._image = this.context.getImageData(0, 0, this.width, this.height);
     this.data = this._image.data;
-    this._offscreenCanvas = document.createElement("canvas");
+    this._offscreenCanvas = document.createElement('canvas');
     this._offscreenCanvas.width = width;
     this._offscreenCanvas.height = height;
-    this._offscreenContext = this._offscreenCanvas.getContext("2d");
+    this._offscreenContext = this._offscreenCanvas.getContext('2d');
     this._offscreenImage = this.createImageData(width, height);
     this._afterimage = 0;
-    this._blurCanvas = document.createElement("canvas");
+    this._blurCanvas = document.createElement('canvas');
     this._blurCanvas.width = width;
     this._blurCanvas.height = height;
-    this._blurContext = this._blurCanvas.getContext("2d");
+    this._blurContext = this._blurCanvas.getContext('2d');
     this._blurRatio = 0;
     this._blurAlpha = 0;
     this._blurWidth = 0;
@@ -146,7 +146,7 @@ Tma2DScreen.prototype.unlock = function () {
 /**
  * Sets afterimage parameter. |rgba| will be drawn over all pixels at the last
  * stage of screen update. Calling without |rgba| disables afterimage effect.
- * @param rgba Color and alpha parameter (E.g., "rgba(255, 0, 0, 1.0)")
+ * @param rgba Color and alpha parameter (E.g., 'rgba(255, 0, 0, 1.0)')
  */
 Tma2DScreen.prototype.afterimage = function (rgba) {
     this._afterimage = rgba;
@@ -198,7 +198,7 @@ Tma2DScreen.prototype.blur = function (ratio, alpha, zoom, x, y, sync) {
 
 /**
  * Fills screen with |rgba|.
- * @param rgba Color and alpha parameter (E.g., "rgba(255, 0, 0, 1.0)")
+ * @param rgba Color and alpha parameter (E.g., 'rgba(255, 0, 0, 1.0)')
  */
 Tma2DScreen.prototype.fill = function (rgba) {
     this.context.strokeStyle = rgba;
@@ -240,13 +240,13 @@ Tma2DScreen.prototype._applyBlur = function () {
     }
     this._blurContext.drawImage(canvas, 0, 0, this.width, this.height,
         0, 0, this._blurWidth, this._blurHeight);
-    context.globalCompositeOperation = "lighter";
+    context.globalCompositeOperation = 'lighter';
     context.globalAlpha = this._blurAlpha;
     context.drawImage(this._blurCanvas, this._blurSource.x,
         this._blurSource.y, this._blurSource.w, this._blurSource.h,
         this._blurDestination.x, this._blurDestination.y,
         this._blurDestination.w, this._blurDestination.h);
-    context.globalCompositeOperation = "source-over";
+    context.globalCompositeOperation = 'source-over';
     context.globalAlpha = 1;
     if (this._blurSync)
         this.context.drawImage(canvas, 0, 0);

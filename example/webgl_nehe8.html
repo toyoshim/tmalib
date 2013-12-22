@@ -151,7 +151,7 @@
             mat4.perspective(
                     45, screen.width / screen.height, 0.1, 100.0, pMatrix);
             mat4.identity(mvMatrix);
-            program.setUniform('uPMatrix', pMatrix);
+            program.setUniformMatrix('uPMatrix', pMatrix);
 
             var rCube = 0;
             var rSpeed = 0;
@@ -167,19 +167,19 @@
                 mat4.rotate(mvMatrix, rCube, [1.0, 0.5, 1]);
                 mat4.toInverseMat3(mvMatrix, nMatrix);
                 mat3.transpose(nMatrix);
-                program.setUniform('uMVMatrix', mvMatrix);
-                program.setUniform('uNMatrix', nMatrix);
-                program.setUniform('uLightingDirection', [
+                program.setUniformMatrix('uMVMatrix', mvMatrix);
+                program.setUniformMatrix('uNMatrix', nMatrix);
+                program.setUniformVector('uLightingDirection', [
                     parseFloat(document.getElementById('dX').value),
                     parseFloat(document.getElementById('dY').value),
                     parseFloat(document.getElementById('dZ').value)
                 ]);
-                program.setUniform('uDirectionalColor', [
+                program.setUniformVector('uDirectionalColor', [
                     parseFloat(document.getElementById('dR').value),
                     parseFloat(document.getElementById('dG').value),
                     parseFloat(document.getElementById('dB').value)
                 ]);
-                program.setUniform('uAmbientColor', [
+                program.setUniformVector('uAmbientColor', [
                     parseFloat(document.getElementById('aR').value),
                     parseFloat(document.getElementById('aG').value),
                     parseFloat(document.getElementById('aB').value)

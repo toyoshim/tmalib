@@ -44,7 +44,7 @@
             mat4.perspective(
                     45, screen.width / screen.height, 0.1, 100.0, pMatrix);
             mat4.identity(mvMatrix);
-            program.setUniform('uPMatrix', pMatrix);
+            program.setUniformMatrix('uPMatrix', pMatrix);
 
             // Initializes screen.
             screen.fillColor(0.0, 0.0, 0.0, 1.0);
@@ -53,14 +53,14 @@
             mat4.translate(mvMatrix, [-1.5, 0.0, -7.0]);
             program.setAttributeArray(
                     'aVertexPosition', triangleArrayBuffer, 0, 3, 0);
-            program.setUniform('uMVMatrix', mvMatrix);
+            program.setUniformMatrix('uMVMatrix', mvMatrix);
             program.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0, 3);
 
             // Draws square.
             mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
             program.setAttributeArray(
                     'aVertexPosition', squareArrayBuffer, 0, 3, 0);
-            program.setUniform('uMVMatrix', mvMatrix);
+            program.setUniformMatrix('uMVMatrix', mvMatrix);
             program.drawArrays(Tma3DScreen.MODE_TRIANGLE_STRIP, 0, 4);
         };
     </script>

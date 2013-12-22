@@ -142,7 +142,7 @@
             mat4.perspective(
                     45, screen.width / screen.height, 0.1, 100.0, pMatrix);
             mat4.identity(mvMatrix);
-            program.setUniform('uPMatrix', pMatrix);
+            program.setUniformMatrix('uPMatrix', pMatrix);
 
             var rPyramid = 0;
             var rCube = 0;
@@ -163,7 +163,7 @@
                 program.setAttributeArray(
                         'aVertexColor', pyramidColors, 0,
                         pyramidColors.dimension, 0);
-                program.setUniform('uMVMatrix', mvMatrix);
+                program.setUniformMatrix('uMVMatrix', mvMatrix);
                 program.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0,
                         pyramidColors.items);
 
@@ -177,7 +177,7 @@
                 program.setAttributeArray(
                         'aVertexColor', cubeColors, 0,
                         cubeColors.dimension, 0);
-                program.setUniform('uMVMatrix', mvMatrix);
+                program.setUniformMatrix('uMVMatrix', mvMatrix);
                 program.drawElements(Tma3DScreen.MODE_TRIANGLES,
                         cubeIndices, 0, cubeIndices.items);
 

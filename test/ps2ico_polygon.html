@@ -50,8 +50,8 @@
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js' ];
 tma.onload = function () {
-    var screen = new TmaScreen(window.document.width, window.document.height,
-    TmaScreen.MODE_3D);
+    var screen = new TmaScreen(TmaScreen.FULL_WIDTH, TmaScreen.FULL_HEIGHT,
+            TmaScreen.MODE_3D);
     screen.attachTo(TmaScreen.BODY);
 
     // Initialize program with shaders.
@@ -62,7 +62,7 @@ tma.onload = function () {
     var mvMatrix = mat4.create();
     mat4.perspective(45, screen.width / screen.height, 0.1, 500.0, pMatrix);
     mat4.identity(mvMatrix);
-    program.setUniform('uPMatrix', pMatrix);
+    program.setUniformMatrix('uPMatrix', pMatrix);
 
     var r = 0;
     var mvMatrixBase = mat4.create(mvMatrix);
@@ -87,10 +87,10 @@ tma.onload = function () {
             var shapeArray = ico.getVertices(i);
             var vertices = screen.createBuffer(shapeArray);
             program.setAttributeArray('aVertexShape' + i, vertices, 0, 3, 0);
-            program.setUniform('uWeightShape' + i, [ (i == 0) ? 1 : 0 ]);
+            program.setUniformVector('uWeightShape' + i, [ (i == 0) ? 1 : 0 ]);
         }
         for (; i < 8; ++i)
-            program.setUniform('uWeightShape' + i, [ 0 ]);
+            program.setUniformVector('uWeightShape' + i, [ 0 ]);
         var coords = screen.createBuffer(ico.getCoords());
         program.setAttributeArray('aTextureCoord', coords, 0, 2, 0);
         var image = screen.createImage(128, 128, ico.getTexture());
@@ -106,20 +106,20 @@ tma.onload = function () {
         // Draw
         mat4.set(mvMatrixBase, mvMatrix);
         mat4.translate(mvMatrix, [0.0, -10.0, -30.0]);
-        program.setUniform('uMVMatrix', mvMatrix);
+        program.setUniformMatrix('uMVMatrix', mvMatrix);
         var weight = ico.getWeights(frame);
         for (var i = 0; i < weight.length; ++i)
-            program.setUniform('uWeightShape' + i, [ weight[i] ]);
+            program.setUniformVector('uWeightShape' + i, [ weight[i] ]);
         for (; i < 8; ++i)
-            program.setUniform('uWeightShape' + i, [ 0 ]);
+            program.setUniformVector('uWeightShape' + i, [ 0 ]);
         program.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0, ico.items);
 
         mat4.translate(mvMatrix, [-15.0, 0.0, -10.0]);
-        program.setUniform('uMVMatrix', mvMatrix);
+        program.setUniformMatrix('uMVMatrix', mvMatrix);
         program.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0, ico.items);
 
         mat4.translate(mvMatrix, [30.0, 0.0, 0.0]);
-        program.setUniform('uMVMatrix', mvMatrix);
+        program.setUniformMatrix('uMVMatrix', mvMatrix);
         program.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0, ico.items);
 
         // Apply Animation.
@@ -128,5 +128,6 @@ tma.onload = function () {
 };
 </script>
 </head>
+<body>
 </body>
 </html>

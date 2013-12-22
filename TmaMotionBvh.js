@@ -46,17 +46,17 @@ TmaMotionBvh._CASE_SP = ' '.charCodeAt(0);
 TmaMotionBvh._CASE_CR = '\r'.charCodeAt(0);
 TmaMotionBvh._CASE_LF = '\n'.charCodeAt(0);
 
-TmaMotionBvh._KEY_CHANNELS = "CHANNELS";
-TmaMotionBvh._KEY_ENDSITE = "End Site";
-TmaMotionBvh._KEY_HIERARCHY = "HIERARCHY";
-TmaMotionBvh._KEY_JOINT = "JOINT";
-TmaMotionBvh._KEY_MOTION = "MOTION";
-TmaMotionBvh._KEY_OFFSET = "OFFSET";
-TmaMotionBvh._KEY_ROOT = "ROOT";
-TmaMotionBvh._KEY_POSITION = "position";
-TmaMotionBvh._KEY_ROTATION = "rotation";
-TmaMotionBvh._KEY_FRAMES = "Frames: ";
-TmaMotionBvh._KEY_FRAME_TIME = "Frame Time: ";
+TmaMotionBvh._KEY_CHANNELS = 'CHANNELS';
+TmaMotionBvh._KEY_ENDSITE = 'End Site';
+TmaMotionBvh._KEY_HIERARCHY = 'HIERARCHY';
+TmaMotionBvh._KEY_JOINT = 'JOINT';
+TmaMotionBvh._KEY_MOTION = 'MOTION';
+TmaMotionBvh._KEY_OFFSET = 'OFFSET';
+TmaMotionBvh._KEY_ROOT = 'ROOT';
+TmaMotionBvh._KEY_POSITION = 'position';
+TmaMotionBvh._KEY_ROTATION = 'rotation';
+TmaMotionBvh._KEY_FRAMES = 'Frames: ';
+TmaMotionBvh._KEY_FRAME_TIME = 'Frame Time: ';
 
 TmaMotionBvh._ID_UNKNOWN = -2;
 TmaMotionBvh._ID_EOF = -1;
@@ -150,7 +150,7 @@ TmaMotionBvh._checkKey = function (context, key) {
 TmaMotionBvh._parseJoint = function (context, joint, site) {
     var result = TmaMotionBvh._parse(context);
     if (TmaMotionBvh._ID_BEGIN != result.id) {
-        tma.error("BVH: JOINT/End Site doesn't start with '{'");
+        tma.error('BVH: JOINT/End Site doesn\'t start with \'{\'');
         return false;
     }
     joint.site = site;
@@ -161,13 +161,13 @@ TmaMotionBvh._parseJoint = function (context, joint, site) {
         switch (result.id) {
             case TmaMotionBvh._ID_CHANNELS:
                 if (site) {
-                    tma.error("BVH: End Site can not have a " +
-                        "CHANNELS");
+                    tma.error('BVH: End Site can not have a ' +
+                        'CHANNELS');
                     return false;
                 }
                 result = TmaMotionBvh._parse(context);
                 if (TmaMotionBvh._ID_NUMBER != result.id) {
-                    tma.error("BVH: CHANNELS requires a number");
+                    tma.error('BVH: CHANNELS requires a number');
                     return false;
                 }
                 var idMax = result.value;
@@ -201,8 +201,8 @@ TmaMotionBvh._parseJoint = function (context, joint, site) {
                             joint.channels.Zrotation = true;
                             break;
                         default:
-                            tma.error("BVH: CHANNELS has unknown " +
-                                "channel keyword");
+                            tma.error('BVH: CHANNELS has unknown ' +
+                                'channel keyword');
                             return false;
                     }
                 }
@@ -211,24 +211,24 @@ TmaMotionBvh._parseJoint = function (context, joint, site) {
             case TmaMotionBvh._ID_END:
                 return true;
             case TmaMotionBvh._ID_ENDSITE:
-                var endSite = { name: "End Site" };
-                tma.log("BVH: End Site");
+                var endSite = { name: 'End Site' };
+                tma.log('BVH: End Site');
                 joint.joint.push(endSite);
                 if (!TmaMotionBvh._parseJoint(context, endSite, true))
                     return false;
                 break;
             case TmaMotionBvh._ID_JOINT:
                 if (site) {
-                    tma.error("BVH: End Site can not have a JOINT");
+                    tma.error('BVH: End Site can not have a JOINT');
                     return false;
                 }
                 result = TmaMotionBvh._parse(context);
                 if (TmaMotionBvh._ID_NAME != result.id) {
-                    tma.error("BVH: JOINT doesn't have a name");
+                    tma.error('BVH: JOINT doesn\'t have a name');
                     return false;
                 }
                 var childJoint = { name: result.value };
-                tma.log("BVH: JOINT " + result.value);
+                tma.log('BVH: JOINT ' + result.value);
                 joint.joint.push(childJoint);
                 if (!TmaMotionBvh._parseJoint(context, childJoint, false))
                     return false;
@@ -249,10 +249,10 @@ TmaMotionBvh._parseJoint = function (context, joint, site) {
                         }
                     }
                 }
-                tma.error("BVH: OFFSET requires three numbers");
+                tma.error('BVH: OFFSET requires three numbers');
                 return false;
             default:
-                tma.error("BVH: internal error");
+                tma.error('BVH: internal error');
                 return false;
         }
     }
@@ -371,7 +371,7 @@ TmaMotionBvh._parse = function (context) {
             code = context.data[context.offset];
             if (TmaMotionBvh._CODE_DOT == code) {
                 if (dot) {
-                    tma.warn("BVH: dot apears twice for a number");
+                    tma.warn('BVH: dot apears twice for a number');
                     return unknown;
                 }
                 dot = true;
@@ -399,53 +399,53 @@ TmaMotionBvh.prototype.load = function (data) {
     };
     var result = TmaMotionBvh._parse(context);
     if (TmaMotionBvh._ID_HIERARCHY != result.id) {
-        tma.error("BVH: HIERARCHY not found");
+        tma.error('BVH: HIERARCHY not found');
         return false;
     }
     result = TmaMotionBvh._parse(context);
     if (TmaMotionBvh._ID_ROOT != result.id) {
-        tma.error("BVH: ROOT not found");
+        tma.error('BVH: ROOT not found');
         return false;
     }
     result = TmaMotionBvh._parse(context);
     if (TmaMotionBvh._ID_NAME != result.id) {
-        tma.error("BVH: ROOT doesn't have a name");
+        tma.error('BVH: ROOT doesn\'t have a name');
         return false;
     }
-    tma.log("BVH: ROOT " + result.value);
+    tma.log('BVH: ROOT ' + result.value);
     var root = { name: result.value };
     if (!TmaMotionBvh._parseJoint(context, root, false))
         return false;
     result = TmaMotionBvh._parse(context);
     if (TmaMotionBvh._ID_MOTION != result.id) {
-        tma.error("BVH: MOTION not found");
+        tma.error('BVH: MOTION not found');
         return false;
     }
     result = TmaMotionBvh._parse(context);
     if (TmaMotionBvh._ID_FRAMES != result.id) {
-        tma.error("BVH: Frames not found");
+        tma.error('BVH: Frames not found');
         return false;
     }
     result = TmaMotionBvh._parse(context);
     if (TmaMotionBvh._ID_NUMBER != result.id) {
-        tma.error("BVH: Frames doesn't have a number");
+        tma.error('BVH: Frames doesn\'t have a number');
         return false;
     }
-    tma.log("BVH: Frames " + result.value);
+    tma.log('BVH: Frames ' + result.value);
     this.frameLength = result.value;
     result = TmaMotionBvh._parse(context);
     if (TmaMotionBvh._ID_FRAME_TIME != result.id) {
-        tma.error("BVH: Frame Time not found");
+        tma.error('BVH: Frame Time not found');
         return false;
     }
     result = TmaMotionBvh._parse(context);
     if (TmaMotionBvh._ID_NUMBER != result.id) {
-        tma.error("BVH: Frame Time doesn't have a number");
+        tma.error('BVH: Frame Time doesn\'t have a number');
         return false;
     }
-    tma.log("BVH: Frame Time " + result.value);
+    tma.log('BVH: Frame Time ' + result.value);
     this.frameTime = result.value;
-    tma.log("BVH: Total Channels " + root.totalChannels);
+    tma.log('BVH: Total Channels ' + root.totalChannels);
 
     this._frameData = [];
     for (var frame = 0; frame < this.frameLength; frame++) {
@@ -453,17 +453,17 @@ TmaMotionBvh.prototype.load = function (data) {
         for (var ch = 0; ch < root.totalChannels; ch++) {
             result = TmaMotionBvh._parse(context);
             if (TmaMotionBvh._ID_NUMBER != result.id) {
-                tma.error("BVH: data broken at frame " + frame);
+                tma.error('BVH: data broken at frame ' + frame);
                 return false;
             }
             data.push(result.value);
         }
         this._frameData.push(data);
     }
-    tma.log("BVH: done");
+    tma.log('BVH: done');
     result = TmaMotionBvh._parse(context);
     if (TmaMotionBvh._ID_EOF != result.id)
-        tma.warn("BVH: unused data exists");
+        tma.warn('BVH: unused data exists');
 
     this._root = root;
     return true;

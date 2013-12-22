@@ -30,7 +30,7 @@ function TmaScreen (width, height, mode) {
 /**
  * Prototype variables.
  */
-TmaScreen.BODY = document.getElementsByTagName("body")[0];
+TmaScreen.BODY = document.getElementsByTagName('body')[0];
 // Locks screen to get offscreen ImageData object.
 TmaScreen.LOCK = 1;
 // Locks screen to get ImageData object containing screen.

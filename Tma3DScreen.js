@@ -14,25 +14,25 @@
 function Tma3DScreen (width, height) {
     this.width = width;
     this.height = height;
-    this.canvas = document.createElement("canvas");
+    this.canvas = document.createElement('canvas');
     this.canvas.width = width;
     this.canvas.height = height;
     this.canvas.onmousemove = this._onmousemove.bind(this);
     this.canvas.onmouseout = this._onmouseout.bind(this);
     this.canvas.onmousedown = this._onmousedown.bind(this);
     this.canvas.onmouseup = this._onmouseup.bind(this);
-    this.context = document.createElement("canvas").getContext("2d");
-    this.gl = this.canvas.getContext("webgl");
+    this.context = document.createElement('canvas').getContext('2d');
+    this.gl = this.canvas.getContext('webgl');
     if (!this.gl) {
-        tma.log("WebGL: webgl is not supported. Try experimental-webgl...");
-        this.gl = this.canvas.getContext("experimental-webgl");
+        tma.log('WebGL: webgl is not supported. Try experimental-webgl...');
+        this.gl = this.canvas.getContext('experimental-webgl');
     }
     if (!this.gl) {
-        tma.log("WebGL: Try webkit-3d...");
-        this.gl = this.canvas.getContext("webkit-3d");
+        tma.log('WebGL: Try webkit-3d...');
+        this.gl = this.canvas.getContext('webkit-3d');
     }
     if (!this.gl) {
-        tma.error("WebGL: not supported.");
+        tma.error('WebGL: not supported.');
     }
     this.gl.viewport(0, 0, width, height);
     this.setAlphaMode(false);
@@ -41,13 +41,13 @@ function Tma3DScreen (width, height) {
     this._mouseY = 0;
 
     // Logging GL capabilities.
-    tma.log("WebGL max vertex uniform vectors: " +
+    tma.log('WebGL max vertex uniform vectors: ' +
             this.gl.getParameter(this.gl.MAX_VERTEX_UNIFORM_VECTORS));
-    tma.log("WebGL max varying vectors: " +
+    tma.log('WebGL max varying vectors: ' +
             this.gl.getParameter(this.gl.MAX_VARYING_VECTORS));
-    tma.log("WebGL max fragment uniform vectors: " +
+    tma.log('WebGL max fragment uniform vectors: ' +
             this.gl.getParameter(this.gl.MAX_FRAGMENT_UNIFORM_VECTORS));
-    tma.log("WebGL max vertex attributes: " +
+    tma.log('WebGL max vertex attributes: ' +
             this.gl.getParameter(this.gl.MAX_VERTEX_ATTRIBS));
 
     if (!Tma3DScreen._MODE_INITIALIZED) {
@@ -113,8 +113,8 @@ Tma3DScreen.prototype.compileShader = function (type, program) {
     this.gl.shaderSource(shader, program);
     this.gl.compileShader(shader);
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS))
-        tma.log("WebGL compiling shader " + id + ": " +
-                this.gl.getShaderInfoLog(shader));
+        tma.log('WebGL compiling shader: ' + this.gl.getShaderInfoLog(shader) +
+		' : ' + program);
     return shader;
 };
 
@@ -135,9 +135,9 @@ Tma3DScreen.prototype.loadShader = function (type, id) {
 Tma3DScreen.prototype.linkProgram = function (program) {
     this.gl.linkProgram(program);
     if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS))
-        tma.log("WebGL link program error: " +
+        tma.log('WebGL link program error: ' +
                 this.gl.getProgramInfoLog(program));
-    tma.log("WebGL program active attributes " +
+    tma.log('WebGL program active attributes ' +
             this.gl.getProgramParameter(program, this.gl.ACTIVE_ATTRIBUTES));
 };
 
@@ -148,10 +148,10 @@ Tma3DScreen.prototype.linkProgram = function (program) {
  */
 Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
     var programObject = this.gl.createProgram();
-    if ("WebGLShader" != vertex.constructor.name)
+    if ('WebGLShader' != vertex.constructor.name)
         vertex = this.loadShader(Tma3DScreen.VERTEX_SHADER, vertex);
     this.gl.attachShader(programObject, vertex);
-    if ("WebGLShader" != fragment.constructor.name)
+    if ('WebGLShader' != fragment.constructor.name)
         fragment = this.loadShader(Tma3DScreen.FRAGMENT_SHADER, fragment);
     this.gl.attachShader(programObject, fragment);
     this.linkProgram(programObject);
@@ -180,10 +180,6 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
         var index = this._owner.gl.getAttribLocation(this, name);
         buffer.bind();
         this._owner.setAttributeArray(this, index, offset, dimension, stride);
-    };
-    programObject.setUniform = function (name, array) {
-        var index = this._owner.gl.getUniformLocation(this, name);
-        this._owner.setUniform(this, index, array);
     };
     programObject.setUniformVector = function (name, array) {
         var index = this._owner.gl.getUniformLocation(this, name);
@@ -385,29 +381,6 @@ Tma3DScreen.prototype.setAttributeArray =
     this.gl.vertexAttribPointer(
             index, dimension, this.gl.FLOAT, false, stride, offset);
     this.gl.enableVertexAttribArray(index);
-};
-
-/**
- * Sets a float array to an internal buffer as a constant uniform array.
- * TODO: Split this function into two functions for vectors and matrices.
- * @param index uniform index
- * @param array float array
- */
-Tma3DScreen.prototype.setUniform = function (program, index, array) {
-    console.log("this function is obsoleted.");
-    this.gl.useProgram(program);
-    if (1 == array.length)
-        this.gl.uniform1fv(index, array);
-    else if (3 == array.length)
-        this.gl.uniform3fv(index, array);
-    else if (4 == array.length)
-        this.gl.uniformMatrix2fv(index, false, array);
-    else if (9 == array.length)
-        this.gl.uniformMatrix3fv(index, false, array);
-    else if (16 == array.length)
-        this.gl.uniformMatrix4fv(index, false, array);
-    else
-        tma.error('WebGL unknown uniform matrix size: ' + array.length);
 };
 
 /**

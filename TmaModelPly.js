@@ -22,7 +22,7 @@ function TmaModelPly() {
  */
 TmaModelPly.prototype.load = function (data) {
     var reader = new (function(input) {
-        if (typeof input == "string") {
+        if (typeof input == 'string') {
             this._data = input;
             this._cr = '\r';
             this._lf = '\n';
