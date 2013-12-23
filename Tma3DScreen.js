@@ -148,10 +148,10 @@ Tma3DScreen.prototype.linkProgram = function (program) {
  */
 Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
     var programObject = this.gl.createProgram();
-    if ('WebGLShader' != vertex.constructor.name)
+    if (vertex.constructor.name && 'WebGLShader' != vertex.constructor.name)
         vertex = this.loadShader(Tma3DScreen.VERTEX_SHADER, vertex);
     this.gl.attachShader(programObject, vertex);
-    if ('WebGLShader' != fragment.constructor.name)
+    if (fragment.constructor.name && 'WebGLShader' != fragment.constructor.name)
         fragment = this.loadShader(Tma3DScreen.FRAGMENT_SHADER, fragment);
     this.gl.attachShader(programObject, fragment);
     this.linkProgram(programObject);
