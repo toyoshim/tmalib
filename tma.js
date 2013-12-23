@@ -44,6 +44,13 @@ tma.error = function () {
 };
 
 /**
+ * Gets library base directory.
+ * @return path in text
+ */
+tma.basePath = function () {
+    return tma._base;
+}
+/**
  * Loads JavaScript library dynamically.
  * @param src a source file URL
  * @param callback callback to invoke when the JavaScript is loaded
@@ -156,7 +163,7 @@ var global = window;
         'TmaParticle.js',
         'TmaMotionBvh.js',
         'TmaModelPly.js',
-	'TmaModelPrimitives.js',
+        'TmaModelPrimitives.js',
         'TmaModelPs2Ico.js'
     ];
     tma._load(libs, function () {
