@@ -19,14 +19,14 @@ tma.onload = function () {
 			effect.draw(delta, fbo.texture);
 			vj.screen().flush();
 		});
+		window.onresize = function () {
+			vj.onresize();
+			var ratio = vj.ratio();
+			effect.onresize(ratio);
+			wired.onresize(ratio);
+			snow.onresize(ratio);
+		};
 	}, function (e) { console.log('plugin load error: ' + e); });
-	window.onresize = function () {
-		vj.onresize();
-		var ratio = vj.ratio();
-		effect.onresize(ratio);
-		wired.onresize(ratio);
-		snow.onresize(ratio);
-	}
 };
 </script>
 </body>
