@@ -156,6 +156,7 @@ var global = window;
         'TmaParticle.js',
         'TmaMotionBvh.js',
         'TmaModelPly.js',
+	'TmaModelPrimitives.js',
         'TmaModelPs2Ico.js'
     ];
     tma._load(libs, function () {

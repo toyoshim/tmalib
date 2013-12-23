@@ -5,7 +5,7 @@
 /**
  * TmaModelPly prototype
  *
- * This prototype provide utility functions to handle ply files.
+ * This prototype provides utility functions to handle ply files.
  * @author Takashi Toyoshima <toyoshim@gmail.com>
  */
 function TmaModelPly() {
@@ -219,12 +219,16 @@ TmaModelPly.prototype.getVertices = function () {
 
 /**
  * Gets texture coord. Address is normalized from 0.0 to 1.0.
- * @return texture coord in Array.
+ * @return texture coord in Array
  */
 TmaModelPly.prototype.getCoords = function () {
     return this._coord;
 };
 
+/**
+ * Gets model's vertex indices.
+ * @return model's vertex indices in Array
+ */
 TmaModelPly.prototype.getIndices = function () {
     return this._indices;
 };
