@@ -1,0 +1,18 @@
+<html>
+<body style="margin: 0; cursor: none;">
+<script src="../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	var vj = new MajVj(512, 512);
+	vj.loadPlugin('frame', 'wired').then(function () {
+		var wired = vj.create('frame', 'wired');
+		vj.run(function (delta) {
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			wired.draw(delta);
+		});
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
