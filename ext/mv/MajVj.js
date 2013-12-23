@@ -45,6 +45,7 @@ MajVj.prototype.loadPlugin = function (type, name) {
  */
 MajVj.prototype.loadAllPlugins = function () {
     return Promise.all([
+        this.loadPlugin('effect', 'glow'),
         this.loadPlugin('frame', 'wired')
     ]);
 };
@@ -74,10 +75,18 @@ MajVj.prototype.create = function (type, name) {
 
 /**
  * Returns using Tma3DScreen object.
- * return Tma3DScreen object
+ * @return Tma3DScreen object
  */
 MajVj.prototype.screen = function () {
     return this._screen;
+};
+
+/**
+ * Returns screen aspect ratio.
+ * @return aspect ratio
+ */
+MajVj.prototype.aspect = function () {
+    return this._aspect;
 };
 
 /**

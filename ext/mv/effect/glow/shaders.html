@@ -1,0 +1,53 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+attribute vec2 aCoord;
+varying vec2 vCoord;
+
+void main() {
+    vec2 position = vec2(aCoord.x * 2.0 - 1.0, aCoord.y * 2.0 - 1.0);
+    gl_Position = vec4(position, 0.0, 1.0);
+    vCoord = aCoord;
+}
+</script>
+
+<script id='fragment' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture;
+uniform float uVolume;
+uniform float uT;
+varying vec2 vCoord;
+
+void main() {
+    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+    for (int dy = -2; dy <= 2; dy++) {
+        for (int dx = -2; dx <= 2; dx++) {
+            float x = vCoord.x + float(dx) / 400.0;
+            float y = vCoord.y + float(dy) / 400.0;
+            vec4 c = texture2D(uTexture, vec2(x, y));
+            float decay = sqrt(pow(float(dx), 4.0) + pow(float(dy), 4.0));
+            decay = decay / uVolume;
+            // Some GPUs returns NaN due to ... a bug?
+            if (!(decay >= 0.0))
+                decay = 16.0;
+            color += c / (1.0 + decay);
+        }
+    }
+    float x = vCoord.x - mod(vCoord.x, 0.005);
+    float y = vCoord.y - mod(vCoord.y, 0.005);
+    color += texture2D(uTexture, vec2(x, y)) * 0.3;
+    float a = sin((y * 4096.0 - x * 57.3) * uT) * sin((y * 5963.0 + x * 3.3) * uT) * 0.8;
+    gl_FragColor = color + vec4(a, a, a, 0.0);
+}
+</script>
+
+<script id='noEffectFragment' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture;
+varying vec2 vCoord;
+
+void main() {
+    gl_FragColor = texture2D(uTexture, vCoord);
+}
+</script>
