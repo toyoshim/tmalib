@@ -60,6 +60,10 @@ MajVj.frame.wired = function (screen, width, height, aspect) {
     this.onresize(aspect);
 };
 
+// Shader programs.
+MajVj.frame.wired._vertexShader = null;
+MajVj.frame.wired._fragmentShader = null;
+
 /**
  * Loads resources asynchronously.
  * @return a Promise object

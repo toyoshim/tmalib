@@ -46,6 +46,7 @@ MajVj.prototype.loadPlugin = function (type, name) {
 MajVj.prototype.loadAllPlugins = function () {
     return Promise.all([
         this.loadPlugin('effect', 'glow'),
+        this.loadPlugin('frame', 'crlogo'),
         this.loadPlugin('frame', 'snow'),
         this.loadPlugin('frame', 'wired')
     ]);
@@ -70,6 +71,10 @@ MajVj.prototype.loadAllPlugins = function () {
  * @return a plugin instance
  */
 MajVj.prototype.create = function (type, name) {
+    if (!MajVj[type] || !MajVj[type][name]) {
+        console.error('unknown plugin: ' + type + '/' + name);
+        return null;
+    }
     return new MajVj[type][name](
             this._screen, this._width, this._height, this._aspect);
 };

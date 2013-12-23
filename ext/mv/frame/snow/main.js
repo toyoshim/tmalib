@@ -26,6 +26,11 @@ MajVj.frame.snow = function (screen, width, height, aspect) {
     this.onresize(aspect);
 };
 
+// Shader programs.
+MajVj.frame.snow._vertexShader = null;
+MajVj.frame.snow._fragmentShader = null;
+
+
 /**
  * Loads resources asynchronously.
  * @return a Promise object

@@ -25,6 +25,11 @@ MajVj.effect.glow = function (screen, width, height, aspect) {
     this._coords = screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
 };
 
+// Shader programs.
+MajVj.effect.glow._vertexShader = null;
+MajVj.effect.glow._fragmentShader = null;
+
+
 /**
  * Loads resources asynchronously.
  */

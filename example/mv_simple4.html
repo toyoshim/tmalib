@@ -1,0 +1,36 @@
+<html>
+<body style="margin: 0; cursor: none;">
+<script src="../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	var vj = new MajVj(512, 512);
+	vj.loadAllPlugins().then(function () {
+		var effect = vj.create('effect', 'glow');
+		var wired = vj.create('frame', 'wired');
+		var logo = vj.create('frame', 'crlogo');
+		var snow = vj.create('frame', 'snow');
+		var fbo = vj.screen().createFrameBuffer(512, 512);
+		vj.run(function (delta) {
+			fbo.bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			wired.draw(delta);
+			logo.draw(delta);
+			vj.screen().bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			snow.draw(delta);
+			effect.draw(delta, fbo.texture);
+			vj.screen().flush();
+		});
+	}, function (e) { console.log('plugin load error: ' + e); });
+	window.onresize = function () {
+		vj.onresize();
+		var ratio = vj.aspect();
+		effect.onresize(ratio);
+		wired.onresize(ratio);
+		snow.onresize(ratio);
+	}
+};
+</script>
+</body>
+</html>
