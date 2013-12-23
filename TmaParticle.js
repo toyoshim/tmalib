@@ -54,6 +54,7 @@ TmaParticle.prototype.remove = function () {
 /**
  * TmaParticle.Container prototype. This object can contains many particles
  * effectively.
+ * @param func constructor function to create TmaParticle inheritant object
  */
 TmaParticle.Container = function (func) {
     this.length = 0;

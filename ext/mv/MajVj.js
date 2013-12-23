@@ -46,6 +46,7 @@ MajVj.prototype.loadPlugin = function (type, name) {
 MajVj.prototype.loadAllPlugins = function () {
     return Promise.all([
         this.loadPlugin('effect', 'glow'),
+        this.loadPlugin('frame', 'snow'),
         this.loadPlugin('frame', 'wired')
     ]);
 };
