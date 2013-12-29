@@ -11,7 +11,7 @@
  */
 function TmaModelPrimitives() {
     this._vertices = [];
-    this._coord = [];
+    this._coords = [];
     this._indices = [];
 }
 
@@ -42,11 +42,10 @@ TmaModelPrimitives.prototype.getVertices = function () {
 
 /**
  * Gets texture coord. Address is normalized from 0.0 to 1.0.
- * TODO: not implemented.
  * @return texture coord in Array.
  */
 TmaModelPrimitives.prototype.getCoords = function () {
-    return this._coord;
+    return this._coords;
 };
 
 /**
@@ -63,25 +62,39 @@ TmaModelPrimitives.prototype.getIndices = function () {
  */
 TmaModelPrimitives.prototype._createSphereEven = function (resolution) {
     // Maybe there are smarter ways to use quotanion or something.
-    var n = 1.0 / Math.sqrt(2.0);
-    var square = [ [ n, -n, 0 ], [ n, n, 0 ], [ -n, n, 0 ], [ -n, -n, 0 ] ];
-    var pushVertex = function (v) {
-        for (var i = 0; i < this._vertices.length; i += 3) {
+    var square = [ [ 1, 0, 0 ], [ 0, 1, 0 ], [ -1, 0, 0 ], [ 0, -1, 0 ] ];
+    var pushVertex = function (v, p) {
+        var length = this._vertices.length / 3;
+        var r = Math.sqrt(v[0] * v[0] + v[1] * v[1]);
+        var x = 0.5;
+        if (r != 0)
+            x = Math.acos(v[0] / r) / Math.PI / 2;
+        if (v[1] < 0.0)
+            x = 1 - x;
+        if (x == 0.0 && !p)
+            x = 1.0;
+        var y = 1 - Math.acos(v[2]) / Math.PI;
+        for (var i = 0; i < length; ++i) {
             // TODO: Make following checks use hash if it costs.
-            if (this._vertices[i + 0] != v[0] ||
-                this._vertices[i + 1] != v[1] ||
-                this._vertices[i + 2] != v[2])
+            if (this._vertices[i * 3 + 0] != v[0] ||
+                this._vertices[i * 3 + 1] != v[1] ||
+                this._vertices[i * 3 + 2] != v[2] ||
+                this._coords[i * 2 + 0] != x ||
+                this._coords[i * 2 + 1] != y)
                 continue;
-            this._indices.push(i / 3);
+            this._indices.push(i);
             return;
         }
-        this._indices.push(this._vertices.length / 3);
+        this._indices.push(i);
         this._vertices = this._vertices.concat(v);
+        this._coords.push(x);
+        this._coords.push(y);
     }.bind(this);
     var pushTriangle = function (a, b, c) {
-        pushVertex(a);
-        pushVertex(b);
-        pushVertex(c);
+        var p = ((a[1] + b[1] + c[1]) / 3) > 0;
+        pushVertex(a, p);
+        pushVertex(b, p);
+        pushVertex(c, p);
     }.bind(this);
     var create = function (depth, a, b, c) {
         if (depth == 0) {
