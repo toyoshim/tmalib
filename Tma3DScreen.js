@@ -36,6 +36,8 @@ function Tma3DScreen (width, height) {
     }
     this.gl.viewport(0, 0, width, height);
     this.setAlphaMode(false);
+    this._currentAlphaMode = {};
+    this._alphaModeStack = [];
     this._mouse = false;
     this._mouseX = 0;
     this._mouseY = 0;
@@ -477,6 +479,7 @@ Tma3DScreen.prototype.fillColor = function (r, g, b, a) {
  * @param dst destination drawing mode
  */
 Tma3DScreen.prototype.setAlphaMode = function (on, src, dst) {
+    this._currentAlphaMode = { on: on, src: src, dst: dst };
     if (on) {
         this.gl.disable(this.gl.DEPTH_TEST);
         this.gl.enable(this.gl.BLEND);
@@ -486,6 +489,21 @@ Tma3DScreen.prototype.setAlphaMode = function (on, src, dst) {
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
     }
+};
+
+/**
+ * Saves the current alpha blending mode to an internal stack.
+ */
+Tma3DScreen.prototype.pushAlphaMode = function () {
+    this._alphaModeStack.push(this._currentAlphaMode);
+};
+
+/**
+ * Restores an alpha blending mode from an internal stack.
+ */
+Tma3DScreen.prototype.popAlphaMode = function () {
+    var mode = this._alphaModeStack.pop();
+    this.setAlphaMode(mode.on, mode.src, mode.dst);
 };
 
 /**

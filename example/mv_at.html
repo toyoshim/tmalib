@@ -1,0 +1,42 @@
+<html>
+<head><title>Chrome + After Burner</title></head>
+<body style="margin: 0; cursor: none;">
+<script src="../ext/promise.js"></script>
+<script src="../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	var resolution = 512;
+	var vj = new MajVj(resolution, resolution);
+	vj.loadAllPlugins().then(function () {
+		MajVj.frame.at.resolution = 2;
+		var at = vj.create('frame', 'at');
+		var wired = vj.create('frame', 'wired');
+		var effect = vj.create('effect', 'glow');
+		effect.setController({ slider: 0.1, knob: 0.0 });
+		var fbo = vj.screen().createFrameBuffer(resolution, resolution);
+		vj.run(function (delta) {
+			effect._controller.knob = Math.random() * 0.2;
+			if (Math.random() < 0.95)
+				effect._controller.knob = 0.0;
+			fbo.bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			wired.draw(delta);
+			at.draw(delta);
+			vj.screen().bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			effect.draw(delta, fbo.texture);
+			vj.screen().flush();
+		});
+		window.onresize = function () {
+			vj.onresize();
+			var ratio = vj.aspect();
+			at.onresize(ratio);
+			wired.onresize(ratio);
+			effect.onresize(ratio);
+		};
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
