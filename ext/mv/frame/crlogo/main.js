@@ -4,7 +4,7 @@
  * @param screen Tma3DScreen object
  * @param width offscreen width
  * @param height offscreen height
- * @param aspect screen aspect ratio (screen height / screen width)
+ * @param aspect screen aspect ratio (screen width / screen height)
  */
 MajVj.frame.crlogo = function (screen, width, height, aspect) {
     this._screen = screen;

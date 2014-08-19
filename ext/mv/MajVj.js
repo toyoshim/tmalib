@@ -14,7 +14,7 @@
 function MajVj (width, height) {
     this._width = width;
     this._height = height;
-    this._aspect = height / width;
+    this._aspect = width / height;
     this._timestamp = 0;
     this._screen = new TmaScreen(width, height, TmaScreen.MODE_3D);
     this._screen.setAlphaMode(
