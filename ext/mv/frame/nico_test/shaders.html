@@ -1,0 +1,38 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+attribute vec2 aCoord;
+attribute vec3 aTexCoord;
+varying vec3 vCoord;
+
+void main() {
+    gl_Position = vec4(aCoord, 0.0, 1.0);
+    vCoord = aTexCoord;
+}
+</script>
+
+<script id='fragment' type='x-shader/x-fragment'>
+precision mediump float;
+varying vec3 vCoord;
+uniform float uX;
+uniform float uY;
+uniform float uZ;
+uniform vec3 uT;
+
+void main() {
+    float dx = (vCoord.x - uX) / 3.0;
+    float dy = (vCoord.y - uY) / 3.0;
+    float dz = (vCoord.z - uZ) / 5.0;
+    float x = 1.0 / (dx * dx);
+    float y = 1.0 / (dy * dy);
+    float z = 1.0 / (dz * dz);
+    gl_FragColor = vec4(uT + vec3(x + y / 2.0,
+                                  x / 3.0 + y + z / 8.0,
+                                  x + y / 4.0 + z),
+                                  0.8);
+}
+</script>
+
+</head>
+</html>
