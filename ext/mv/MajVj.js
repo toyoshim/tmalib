@@ -106,7 +106,8 @@ MajVj.prototype.aspect = function () {
  * @param main a function to run periodically
  */
  MajVj.prototype.run = function (main) {
-    var requestAnimationFrame = window.webkitRequestAnimationFrame ||
+    var requestAnimationFrame = window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame;
     var loop = function (time) {
         var delta = time - this._timestamp;
