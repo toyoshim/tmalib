@@ -1,0 +1,59 @@
+<html>
+<head><title>Nicofarre test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script>
+var controller = {};
+controller.volume = [0.0, 0.0];
+var emulate = true;
+document.body.addEventListener('keydown', function (e) {
+  switch (e.which) {
+    case 32:  // space
+      emulate = !emulate;
+    case 72:  // j
+      controller.volume[1] -= 0.01;
+      break;
+    case 74:  // j
+      controller.volume[0] -= 0.01;
+      break;
+    case 75:  // k
+      controller.volume[0] += 0.01;
+      break;
+    case 76:  // l
+      controller.volume[1] += 0.01;
+      break;
+    default:
+      console.log(e.which);
+  }
+});
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var width = 1920;
+  var height = 1080;
+  var vj = new MajVj(width, height, false);
+  vj.loadAllPlugins().then(function () {
+    var movie = vj.create('frame', 'movie');
+    movie.play('data/04_space_out.mp4');
+    var fx = vj.create('effect', 'nicofarre');
+    fx.setController(controller);
+    var fbo = vj.screen().createFrameBuffer(width, height);
+    vj.run(function (delta) {
+      if (emulate)
+        fbo.bind();
+      movie.draw(delta);
+      if (emulate) {
+        vj.screen().bind();
+        vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+        fx.draw(delta, fbo.texture);
+      }
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      var ratio = vj.aspect();
+      fx.onresize(ratio);
+    };
+  }, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
