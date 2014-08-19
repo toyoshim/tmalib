@@ -36,8 +36,11 @@ function Tma3DScreen (width, height) {
     }
     this.gl.viewport(0, 0, width, height);
     this.setAlphaMode(false);
+    this.setCullingMode(false, true);
     this._currentAlphaMode = {};
+    this._currentCullingMode = {};
     this._alphaModeStack = [];
+    this._cullingModeStack = [];
     this._mouse = false;
     this._mouseX = 0;
     this._mouseY = 0;
@@ -502,6 +505,36 @@ Tma3DScreen.prototype.pushAlphaMode = function () {
 Tma3DScreen.prototype.popAlphaMode = function () {
     var mode = this._alphaModeStack.pop();
     this.setAlphaMode(mode.on, mode.src, mode.dst);
+};
+
+/**
+ * Sets culling mode.
+ * @param on enable culling
+ * @param ccw front face direction is GL_CCW if true, otherwise GL_CW
+ */
+Tma3DScreen.prototype.setCullingMode = function (on, ccw) {
+    this._currentCullingMode = { on: on, ccw: ccw };
+    if (on) {
+        this.gl.enable(this.gl.CULL_FACE);
+        this.gl.frontFace(ccw ? this.gl.CCW : this.gl.CW);
+    } else {
+        this.gl.disable(this.gl.CULL_FACE);
+    }
+};
+
+/**
+ * Saves the current culling mode to an internal stack.
+ */
+Tma3DScreen.prototype.pushCullingMode = function () {
+    this._cullingModeStack.push(this._currentCullingMode);
+};
+
+/**
+ * Restores an culling mode from an internal stack.
+ */
+Tma3DScreen.prototype.popCullingMode = function () {
+    var mode = this._cullingModeStack.pop();
+    this.setCullingMode(mode.on, mode.ccw);
 };
 
 /**
