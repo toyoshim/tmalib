@@ -38,7 +38,8 @@ MajVj.effect.glow.load = function () {
         Promise.all([
             MajVj.loadShader('effect', 'glow', 'shaders.html', 'vertex'),
             MajVj.loadShader('effect', 'glow', 'shaders.html', 'fragment'),
-            MajVj.loadShader('effect', 'glow', 'shaders.html', 'noEffectFragment')
+            MajVj.loadShader('effect', 'glow', 'shaders.html',
+                    'noEffectFragment')
         ]).then(function (shaders) {
             MajVj.effect.glow._vertexShader = shaders[0];
             MajVj.effect.glow._fragmentShader = shaders[1];
