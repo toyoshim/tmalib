@@ -170,6 +170,23 @@ MajVj.loadScript = function (type, name, src) {
 };
 
 /**
+ * Loads a movie file from a url.
+ * @param url a URL to load a movie
+ * @return a Promise object
+ */
+MajVj.loadMovieFrom = function (url) {
+    return new Promise(function (resolve, reject) {
+        var video = document.createElement('video');
+        video.src = url;
+        video.style.setProperty('display', 'none');
+        video.addEventListener('canplay', function () {
+            resolve(this);
+        }, false);
+        document.head.appendChild(video);
+    });
+};
+
+/**
  * Loads a movie file.
  * @param type 'effect' or 'frame'
  * @param name plugin name
@@ -177,15 +194,7 @@ MajVj.loadScript = function (type, name, src) {
  * @return a Promise object
  */
 MajVj.loadMovie = function (type, name, path) {
-    return new Promise(function (resolve, reject) {
-        var video = document.createElement('video');
-        video.src = createPath(type, name, path);
-        video.style.setProperty('display', 'none');
-        video.addEventListener('canplay', function () {
-            resolve(this);
-        }, false);
-        document.head.appendChild(video);
-    });
+    return MajVj.loadMovieFrom(MajVj.createPath(type, name, path));
 };
 
 MajVj.effect = {};
