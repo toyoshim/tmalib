@@ -10,10 +10,12 @@
   * @author Takashi Toyoshima <toyoshim@gmail.com>
   * @param width offscreen width
   * @param height offscreen height
+  * @param fullscreen flag to decide if MajVj runs as a fullscreen app.
   */
-function MajVj (width, height) {
+function MajVj (width, height, fullscreen) {
     this._width = width;
     this._height = height;
+    this._fullscreen = (fullscreen === undefined) ? true : fullscreen;
     this._aspect = width / height;
     this._timestamp = 0;
     this._screen = new TmaScreen(width, height, TmaScreen.MODE_3D);
@@ -58,6 +60,8 @@ MajVj.prototype.loadAllPlugins = function () {
  * Handles screen resize.
  */
  MajVj.prototype.onresize = function () {
+    if (!this._fullscreen)
+        return;
     this._screen.canvas.style.width = window.innerWidth + 'px';
     this._screen.canvas.style.height = window.innerHeight + 'px';
     this._aspect =
