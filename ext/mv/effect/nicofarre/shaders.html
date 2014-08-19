@@ -1,0 +1,45 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+attribute vec3 aCoord;
+attribute vec2 aTexCoord;
+attribute vec2 aPhase;
+uniform mat4 uPMatrix;
+uniform mat4 uMVMatrix;
+varying vec2 vCoord;
+varying vec2 vPhase;
+
+void main() {
+    gl_Position = uPMatrix * uMVMatrix * vec4(aCoord, 1.0);
+    vCoord = aTexCoord;
+    vPhase = aPhase;
+}
+</script>
+
+<script id='fragment' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture;
+varying vec2 vCoord;
+varying vec2 vPhase;
+
+void main() {
+    gl_FragColor = texture2D(uTexture, vCoord);
+}
+</script>
+
+<script id='fragmentForCeiling' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture;
+varying vec2 vCoord;
+varying vec2 vPhase;
+
+void main() {
+    vec2 l = 1.0 - abs(sin(vPhase));
+    vec3 c = texture2D(uTexture, vCoord).xyz * l.x * l.y * 3.0;
+    gl_FragColor = vec4(c, 1.0);
+}
+</script>
+
+</head>
+</html>
