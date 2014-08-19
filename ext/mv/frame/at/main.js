@@ -300,6 +300,7 @@ MajVj.frame.at.prototype.draw = function (delta) {
 
 /**
  * Sets a controller.
+ * @param controller a controller object
  */
 MajVj.frame.at.prototype.setController = function (controller) {
     this._controller = controller;

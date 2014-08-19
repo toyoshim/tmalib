@@ -248,6 +248,7 @@ MajVj.frame.crlogo.prototype.draw = function (delta) {
 
 /**
  * Sets a controller.
+ * @param controller a controller object
  */
 MajVj.frame.crlogo.prototype.setController = function (controller) {
     if (this._controller) {

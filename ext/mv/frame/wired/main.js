@@ -110,6 +110,7 @@ MajVj.frame.wired.prototype.draw = function (delta) {
 
 /**
  * Sets a controller.
+ * @param controller a controller object
  */
 MajVj.frame.wired.prototype.setController = function (controller) {
     this._controller = controller;

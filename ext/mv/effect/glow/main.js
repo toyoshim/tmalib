@@ -82,6 +82,7 @@ MajVj.effect.glow.prototype.draw = function (delta, texture) {
 
 /**
  * Sets a controller.
+ * @param controller a controller object
  */
 MajVj.effect.glow.prototype.setController = function (controller) {
     this._controller = controller;
