@@ -84,7 +84,7 @@ MajVj.frame.nico_test = function (screen, width, height, aspect) {
             20, 300, 1560,
             20, 20, 1560,
             // E (stage right)
-            700, 20, 280,
+            700, 20, 280,  // 280 is just a estimation
             700, 300, 280,
             860, 300, 280,
             860, 20, 280,
@@ -144,6 +144,12 @@ MajVj.frame.nico_test.prototype.draw = function (delta) {
         this._ay = this._speed;
     else if (this._y > 320)
         this._ay = -this._speed;
+    if (this._controller && this._controller.volume &&
+        this._controller.volume[2]) {
+        this._az = 0;
+        this._z += this._controller.volume[2];
+        console.log(this._z);
+    }
     this._z += this._az;
     if (this._z < 0)
         this._az = this._speed;

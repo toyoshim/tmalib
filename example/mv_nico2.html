@@ -10,6 +10,13 @@ document.body.addEventListener('keydown', function (e) {
   switch (e.which) {
     case 32:  // space
       emulate = !emulate;
+      break;
+    case 69:  // e
+      controller.volume[2] = 0.1;
+      break;
+    case 70:  // f
+      document.body.webkitRequestFullscreen();
+      break;
     case 72:  // j
       controller.volume[1] -= 0.01;
       break;
@@ -21,6 +28,12 @@ document.body.addEventListener('keydown', function (e) {
       break;
     case 76:  // l
       controller.volume[1] += 0.01;
+      break;
+    case 81:  // q
+      controller.volume[2] = -0.1;
+      break;
+    case 87:  // w
+      controller.volume[2] = 0.0;
       break;
     default:
       console.log(e.which);
@@ -34,6 +47,7 @@ tma.onload = function () {
   vj.loadAllPlugins().then(function () {
     var gen = vj.create('frame', 'nico_test');
     var fx = vj.create('effect', 'nicofarre');
+    gen.setController(controller);
     fx.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.run(function (delta) {
@@ -48,6 +62,7 @@ tma.onload = function () {
       vj.screen().flush();
     });
     window.onresize = function () {
+      vj.onresize();
       var ratio = vj.aspect();
       gen.onresize(ratio);
       fx.onresize(ratio);
