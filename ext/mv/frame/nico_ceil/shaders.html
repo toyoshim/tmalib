@@ -3,13 +3,12 @@
 
 <script id='vertex' type='x-shader/x-vertex'>
 attribute vec2 aCoord;
+attribute vec2 aTexCoord;
 varying vec2 vCoord;
-uniform float uZoom;
 
 void main() {
-    vec2 coord = aCoord * 2.0 - 1.0;
-    gl_Position = vec4(coord.x, coord.y * uZoom, 0.0, 1.0);
-    vCoord = aCoord;
+    gl_Position = vec4(aCoord, 0.0, 1.0);
+    vCoord = aTexCoord;
 }
 </script>
 
@@ -22,3 +21,6 @@ void main() {
     gl_FragColor = vec4(texture2D(uTexture, vCoord).rgb, 1.0);
 }
 </script>
+
+</head>
+</html>
