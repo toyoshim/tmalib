@@ -41,6 +41,7 @@ function Tma3DScreen (width, height) {
     this._currentCullingMode = {};
     this._alphaModeStack = [];
     this._cullingModeStack = [];
+    this._lastBoundFrameBuffer = this;
     this._mouse = false;
     this._mouseX = 0;
     this._mouseY = 0;
@@ -268,6 +269,8 @@ Tma3DScreen.prototype.createFrameBuffer = function (width, height) {
     buffer.texture = null;
     buffer.renderbuffer = null;
     buffer.bind = function () {
+        var last = this._owner._lastBoundFrameBuffer;
+        this._owner._lastBoundFrameBuffer = this;
         var gl = this._owner.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this);
         if (!this.texture)
@@ -289,6 +292,7 @@ Tma3DScreen.prototype.createFrameBuffer = function (width, height) {
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
                 gl.RENDERBUFFER, this.renderbuffer);
         gl.viewport(0, 0, this.width, this.height);
+        return last;
     };
     return buffer;
 };
@@ -347,10 +351,14 @@ Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
 
 /**
  * Reset framebuffer to default screen buffer.
+ * @return previous frame buffer
  */
 Tma3DScreen.prototype.bind = function () {
+    var last = this._lastBoundFrameBuffer;
+    this._lastBoundFrameBuffer = this;
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
     this.gl.viewport(0, 0, this.width, this.height);
+    return last;
 };
 
 /**
