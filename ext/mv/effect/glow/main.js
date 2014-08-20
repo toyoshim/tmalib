@@ -1,12 +1,13 @@
 /**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - wired -
+ * @param mv MajVj object
  * @param screen Tma3DScreen object
  * @param width offscreen width
  * @param height offscreen height
  * @param aspect screen aspect ratio (screen width / screen height)
  */
-MajVj.effect.glow = function (screen, width, height, aspect) {
+MajVj.effect.glow = function (mv, screen, width, height, aspect) {
     this._screen = screen;
     this._width = width;
     this._height = height;

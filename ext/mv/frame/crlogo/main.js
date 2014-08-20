@@ -1,12 +1,13 @@
 /**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - crlogo -
+ * @param mv MajVj object
  * @param screen Tma3DScreen object
  * @param width offscreen width
  * @param height offscreen height
  * @param aspect screen aspect ratio (screen width / screen height)
  */
-MajVj.frame.crlogo = function (screen, width, height, aspect) {
+MajVj.frame.crlogo = function (mv, screen, width, height, aspect) {
     this._screen = screen;
     this._width = width;
     this._height = height;

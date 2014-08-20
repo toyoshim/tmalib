@@ -85,7 +85,7 @@ MajVj.prototype.create = function (type, name) {
         return null;
     }
     return new MajVj[type][name](
-            this._screen, this._width, this._height, this._aspect);
+            this, this._screen, this._width, this._height, this._aspect);
 };
 
 /**
