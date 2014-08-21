@@ -28,7 +28,6 @@ MajVj.effect.nicofarre = function (mv, screen, width, height, aspect) {
     this._mvMatrix = mat4.create();
     mat4.identity(this._mvMatrix);
     mat4.translate(this._mvMatrix, [0, 0, -500]);
-    //mat4.rotate(this._mvMatrix, Math.PI, [0, 1, 0]);
     this._coords = screen.createBuffer([
             // A (right): 1480x280, x=420
             420, -140, -740,
@@ -50,16 +49,16 @@ MajVj.effect.nicofarre = function (mv, screen, width, height, aspect) {
             420, 140, 740,
             -420, 140, 740,
             -420, -140, 740,
-            // E (stage right): 160x280, z=-500
-            260, -140, -500,
-            260, 140, -500,
-            420, 140, -500,
-            420, -140, -500,
-            // F (stage left): 160x280, z=-500
-            -420, -140, -500,
-            -420, 140, -500,
-            -260, 140, -500,
-            -260, -140, -500,
+            // E (stage right): 160x280, z=-580
+            260, -140, -580,
+            260, 140, -580,
+            420, 140, -580,
+            420, -140, -580,
+            // F (stage left): 160x280, z=-580
+            -420, -140, -580,
+            -420, 140, -580,
+            -260, 140, -580,
+            -260, -140, -580,
             // G (ceiling): 840x1480, y=140
             -420, 140, -740,
             -420, 140, 740,

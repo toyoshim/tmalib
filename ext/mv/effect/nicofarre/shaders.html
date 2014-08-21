@@ -35,9 +35,9 @@ varying vec2 vCoord;
 varying vec2 vPhase;
 
 void main() {
-    vec2 l = 1.0 - abs(sin(vPhase));
-    vec3 c = texture2D(uTexture, vCoord).xyz * l.x * l.y * 3.0;
-    gl_FragColor = vec4(c, 1.0);
+    vec2 l = 0.1 / (0.1 + sin(vPhase) * sin(vPhase));
+    vec3 c = texture2D(uTexture, vCoord).xyz * l.x * l.y;
+    gl_FragColor = vec4(c.rg * 0.7, c.b, 1.0);
 }
 </script>
 
