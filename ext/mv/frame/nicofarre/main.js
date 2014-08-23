@@ -50,7 +50,23 @@ MajVj.frame.nicofarre = function (options) {
             1760 / 1920 * 2 - 1, 870 / 1080 * 2 - 1,
             1760 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
             1858 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
-            1858 / 1920 * 2 - 1, 870 / 1080 * 2 - 1]);
+            1858 / 1920 * 2 - 1, 870 / 1080 * 2 - 1,
+            // LEFT_STAGE_RIGHT - C
+            40 / 1920 * 2 - 1, 440 / 1080 * 2 - 1,
+            40 / 1920 * 2 - 1, 720 / 1080 * 2 - 1,
+            1520 / 1920 * 2 - 1, 720 / 1080 * 2 - 1,
+            1520 / 1920 * 2 - 1, 440 / 1080 * 2 - 1,
+            // LEFT_STAGE_RIGHT - B
+            40 / 1920 * 2 - 1, 120 / 1080 * 2 - 1,
+            40 / 1920 * 2 - 1, 400 / 1080 * 2 - 1,
+            880 / 1920 * 2 - 1, 400 / 1080 * 2 - 1,
+            880 / 1920 * 2 - 1, 120 / 1080 * 2 - 1,
+            // LEFT_STAGE_RIGHT - A
+            40 / 1920 * 2 - 1, 760 / 1080 * 2 - 1,
+            40 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
+            1520 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
+            1520 / 1920 * 2 - 1, 760 / 1080 * 2 - 1,
+            ]);
     this._texCoods = this._screen.createBuffer([
             0, 0, 0, 1, 1, 1, 1, 0,  // A
             0, 0, 0, 1, 1, 1, 1, 0,  // B
@@ -58,15 +74,23 @@ MajVj.frame.nicofarre = function (options) {
             0, 0, 0, 1, 1, 1, 1, 0,  // D
             0, 0, 0, 1, 1, 1, 1, 0,  // E
             0, 0, 0, 1, 1, 1, 1, 0,  // F
-            0, 0, 0, 1, 1, 1, 1, 0]);  // G
+            0, 0, 0, 1, 1, 1, 1, 0,  // G
+            // LEFT_STAGE_RIGHT - C, B, A
+            0, 0, 0, 1, 1480 / 3800, 1, 1480 / 3800, 0,
+            1480 / 3800, 0, 1480 / 3800, 1, 2320 / 3800, 1, 2320 / 3800, 0,
+            2320 / 3800, 0, 2320 / 3800, 1, 3800 / 3800, 1, 3800 / 3800, 0,
+            ]);
     var size = [
-      [1480, 280],
-      [840, 280],
-      [1480, 280],
-      [840, 280],
-      [160, 280],
-      [160, 280],
-      [98, 170]];
+      [1480, 280],  // A
+      [840, 280],   // B
+      [1480, 280],  // C
+      [840, 280],   // D
+      [160, 280],   // E
+      [160, 280],   // F
+      [98, 170],    // G
+      // LEFT_STAGE_RIGHT - C, B, A
+      [3800, 280], [], [],
+      ];
     this._led = options.led;
     this._mirror = options.mirror;
     if (this._mirror === undefined)
@@ -107,6 +131,7 @@ MajVj.frame.nicofarre.LED_CEILING = [6];
 MajVj.frame.nicofarre.LED_FRONT_BOTH = [4, 5];
 MajVj.frame.nicofarre.LED_WALL_BOTH = [0, 2];
 MajVj.frame.nicofarre.LED_STAGE_AND_BACK = [1, 3];
+MajVj.frame.nicofarre.LED_LEFT_STAGE_RIGHT = [7, 8, 9];
 
 // Const values to specify mirroing mode.
 MajVj.frame.nicofarre.MIRROR_OFF = 2;

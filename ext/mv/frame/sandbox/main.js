@@ -37,7 +37,11 @@ MajVj.frame.sandbox.load = function () {
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18713.0'),
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18613.0'),
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18568.0'),
-            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18451.0')
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18451.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19297.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18759.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19336.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18981.0')
         ]).then(function (results) {
             MajVj.frame.sandbox._vertexShader = results[0];
             MajVj.frame.sandbox._fragmentShaders['19291.0'] = results[1];
@@ -48,6 +52,10 @@ MajVj.frame.sandbox.load = function () {
             MajVj.frame.sandbox._fragmentShaders['18613.0'] = results[6];
             MajVj.frame.sandbox._fragmentShaders['18568.0'] = results[7];
             MajVj.frame.sandbox._fragmentShaders['18451.0'] = results[8];
+            MajVj.frame.sandbox._fragmentShaders['19297.0'] = results[9];
+            MajVj.frame.sandbox._fragmentShaders['18759.0'] = results[10];
+            MajVj.frame.sandbox._fragmentShaders['19336.0'] = results[11];
+            MajVj.frame.sandbox._fragmentShaders['18981.0'] = results[12];
             resolve();
         }, function (error) { console.log(error); });
     });
