@@ -16,22 +16,83 @@ MajVj.frame.nicofarre = function (options) {
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.nicofarre._fragmentShader));
     this._coords = this._screen.createBuffer([
+            // A (right): (40, 760) - (1520, 1040) / (1920, 1080)
+            40 / 1920 * 2 - 1, 760 / 1080 * 2 - 1,
+            40 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
+            1520 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
+            1520 / 1920 * 2 - 1, 760 / 1080 * 2 - 1,
+            // B (stage): (40, 120) - (880, 400) / (1920, 1080)
+            40 / 1920 * 2 - 1, 120 / 1080 * 2 - 1,
+            40 / 1920 * 2 - 1, 400 / 1080 * 2 - 1,
+            880 / 1920 * 2 - 1, 400 / 1080 * 2 - 1,
+            880 / 1920 * 2 - 1, 120 / 1080 * 2 - 1,
+            // C (left): (40, 440) - (1520, 720) / (1920, 1080)
+            40 / 1920 * 2 - 1, 440 / 1080 * 2 - 1,
+            40 / 1920 * 2 - 1, 720 / 1080 * 2 - 1,
+            1520 / 1920 * 2 - 1, 720 / 1080 * 2 - 1,
+            1520 / 1920 * 2 - 1, 440 / 1080 * 2 - 1,
+            // D (back): (920, 120) - (1760, 400) / (1920, 1080)
+            920 / 1920 * 2 - 1, 120 / 1080 * 2 - 1,
+            920 / 1920 * 2 - 1, 400 / 1080 * 2 - 1,
+            1760 / 1920 * 2 - 1, 400 / 1080 * 2 - 1,
+            1760 / 1920 * 2 - 1, 120 / 1080 * 2 - 1,
+            // E (stage right): (1560, 760) - (1720, 1040) / (1920, 1080)
+            1560 / 1920 * 2 - 1, 760 / 1080 * 2 - 1,
+            1560 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
+            1720 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
+            1720 / 1920 * 2 - 1, 760 / 1080 * 2 - 1,
+            // F (stage left): (1560, 440) - (1720, 720) / (1920, 1080)
+            1560 / 1920 * 2 - 1, 440 / 1080 * 2 - 1,
+            1560 / 1920 * 2 - 1, 720 / 1080 * 2 - 1,
+            1720 / 1920 * 2 - 1, 720 / 1080 * 2 - 1,
+            1720 / 1920 * 2 - 1, 440 / 1080 * 2 - 1,
             // G (ceiling): (1760, 870) - (1858, 1040) / (1920, 1080)
             1760 / 1920 * 2 - 1, 870 / 1080 * 2 - 1,
             1760 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
             1858 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
             1858 / 1920 * 2 - 1, 870 / 1080 * 2 - 1]);
     this._texCoods = this._screen.createBuffer([
-            // G (ceiling)
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0]);
-    this._fbo = this._screen.createFrameBuffer(98, 170);
-    var flags = { width: 98, height: 170, aspect: 98 / 170 };
+            0, 0, 0, 1, 1, 1, 1, 0,  // A
+            0, 0, 0, 1, 1, 1, 1, 0,  // B
+            0, 0, 0, 1, 1, 1, 1, 0,  // C
+            0, 0, 0, 1, 1, 1, 1, 0,  // D
+            0, 0, 0, 1, 1, 1, 1, 0,  // E
+            0, 0, 0, 1, 1, 1, 1, 0,  // F
+            0, 0, 0, 1, 1, 1, 1, 0]);  // G
+    var size = [
+      [1480, 280],
+      [840, 280],
+      [1480, 280],
+      [840, 280],
+      [160, 280],
+      [160, 280],
+      [98, 170]];
+    this._led = options.led;
+    var w = size[this._led[0]][0];
+    var h = size[this._led[0]][1];
+    this._fbo = this._screen.createFrameBuffer(w, h);
+    var flags = { width: w, height: h, aspect: w / h };
     this._wired = options.mv.create('frame', 'wired', flags);
     this._crlogo = options.mv.create('frame', 'ab2', flags);
 };
+
+MajVj.frame.nicofarre.LED_A = [0];
+MajVj.frame.nicofarre.LED_B = [1];
+MajVj.frame.nicofarre.LED_C = [2];
+MajVj.frame.nicofarre.LED_D = [3];
+MajVj.frame.nicofarre.LED_E = [4];
+MajVj.frame.nicofarre.LED_F = [5];
+MajVj.frame.nicofarre.LED_G = [6];
+MajVj.frame.nicofarre.LED_WALL_RIGHT = [0];
+MajVj.frame.nicofarre.LED_STAGE = [1];
+MajVj.frame.nicofarre.LED_WALL_LEFT = [2];
+MajVj.frame.nicofarre.LED_BACK = [3];
+MajVj.frame.nicofarre.LED_FRONT_RIGHT = [4];
+MajVj.frame.nicofarre.LED_FRONT_LEFT = [5];
+MajVj.frame.nicofarre.LED_CEILING = [6];
+MajVj.frame.nicofarre.LED_FRONT_BOTH = [4, 5];
+MajVj.frame.nicofarre.LED_WALL_BOTH = [0, 2];
+MajVj.frame.nicofarre.LED_STAGE_AND_BACK = [1, 3];
 
 // Shader programs.
 MajVj.frame.nicofarre._vertexShader = null;
@@ -74,7 +135,11 @@ MajVj.frame.nicofarre.prototype.draw = function (delta) {
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setAttributeArray('aTexCoord', this._texCoods, 0, 2, 0);
     this._program.setTexture('uTexture', this._fbo.texture);
-    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+    for (var i = 0; i < this._led.length; ++i) {
+      var offset = this._led[i] * 4;
+      this._program.setUniformVector('uMirror', [i]);
+      this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, offset, 4);
+    }
 };
 
 /**
