@@ -142,8 +142,12 @@ MajVj.frame.nicofarre.prototype.onresize = function (aspect) {
 MajVj.frame.nicofarre.prototype.draw = function (delta) {
     var fbo = this._fbo.bind();
     var i;
+    this._screen.pushAlphaMode();
+    this._screen.setAlphaMode(true, this._screen.gl.ONE, this._screen.gl.ONE);
+    this._screen.fillColor(0.0, 0.0, 0.0, 1.0);
     for (i = 0; i < this._frames.length; ++i)
       this._frames[i].draw(delta);
+    this._screen.popAlphaMode();
     fbo.bind();
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setAttributeArray('aTexCoord', this._texCoods, 0, 2, 0);

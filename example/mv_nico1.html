@@ -37,8 +37,10 @@ tma.onload = function () {
     fx.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.run(function (delta) {
-      if (emulate)
+      if (emulate) {
         fbo.bind();
+        vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      }
       movie.draw(delta);
       if (emulate) {
         vj.screen().bind();

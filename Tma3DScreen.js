@@ -273,15 +273,20 @@ Tma3DScreen.prototype.createFrameBuffer = function (width, height) {
         this._owner._lastBoundFrameBuffer = this;
         var gl = this._owner.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this);
-        if (!this.texture)
+        var init = false;
+        if (!this.texture) {
             this.texture = gl.createTexture();
+            init = true;
+        }
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height,
-                0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        if (init) {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height,
+                    0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        }
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
                 gl.TEXTURE_2D, this.texture, 0);
         if (!this.renderbuffer)
