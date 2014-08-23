@@ -71,15 +71,22 @@ MajVj.frame.nicofarre = function (options) {
     this._mirror = options.mirror;
     if (this._mirror === undefined)
       this._mirror = MajVj.frame.nicofarre.MIRROR_OFF;
-    console.log(options);
-    console.log(this._mirror);
     var w = size[this._led[0]][0];
     var h = size[this._led[0]][1];
     this._fbo = this._screen.createFrameBuffer(w, h);
-    var flags = { width: w, height: h, aspect: w / h };
     this._frames = [];
-    for (var i = 0; i < options.frames.length; ++i)
-      this._frames[i] = options.mv.create('frame', options.frames[i], flags);
+    for (var i = 0; i < options.frames.length; ++i) {
+      var frame = options.frames[i];
+      var flags = {};
+      if (typeof frame != 'string') {
+        flags = frame.options;
+        frame = frame.name;
+      }
+      flags.width = flags.width || w;
+      flags.height = flags.height || h;
+      flags.aspect = flags.aspect || w / h;
+      this._frames[i] = options.mv.create('frame', frame, flags);
+    }
 };
 
 // Const values to specify the showing LED screen.

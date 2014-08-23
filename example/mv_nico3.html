@@ -1,0 +1,86 @@
+<html>
+<head><title>Nicofarre test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script>
+var controller = {};
+controller.volume = [0.0, 0.0];
+var emulate = true;
+document.body.addEventListener('keydown', function (e) {
+  switch (e.which) {
+    case 32:  // space
+      emulate = !emulate;
+      break;
+    case 69:  // e
+      controller.volume[2] = 0.1;
+      break;
+    case 70:  // f
+      document.body.webkitRequestFullscreen();
+      break;
+    case 72:  // j
+      controller.volume[1] -= 0.01;
+      break;
+    case 74:  // j
+      controller.volume[0] -= 0.01;
+      break;
+    case 75:  // k
+      controller.volume[0] += 0.01;
+      break;
+    case 76:  // l
+      controller.volume[1] += 0.01;
+      break;
+    case 81:  // q
+      controller.volume[2] = -0.1;
+      break;
+    case 87:  // w
+      controller.volume[2] = 0.0;
+      break;
+    default:
+      console.log(e.which);
+  }
+});
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var width = 1920;
+  var height = 1080;
+  var vj = new MajVj(width, height, true);
+  vj.loadAllPlugins().then(function () {
+    var stage = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_STAGE,
+                          frames: [
+                            //{ name: 'sandbox', options: { id: '18713.0' } }
+                            { name: 'sandbox', options: { id: '18922.0' } }
+                          ]});
+    var wall = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_WALL_BOTH,
+                          mirror: MajVj.frame.nicofarre.MIRROR_ON_RIGHT,
+                          frames: [
+                            { name: 'sandbox', options: { id: '18918.0' } }
+                          ]});
+
+    var fx = vj.create('effect', 'nicofarre');
+    fx.setController(controller);
+    var fbo = vj.screen().createFrameBuffer(width, height);
+    vj.screen().setAlphaMode(false);
+    vj.run(function (delta) {
+      if (emulate)
+        fbo.bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      stage.draw(delta);
+      wall.draw(delta);
+      if (emulate) {
+        vj.screen().bind();
+        vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+        fx.draw(delta, fbo.texture);
+      }
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      vj.onresize();
+      fx.onresize(vj.aspect());
+    };
+  }, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

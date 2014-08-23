@@ -1,0 +1,1000 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+attribute vec2 aCoord;
+varying vec2 surfacePosition;
+
+void main() {
+    gl_Position = vec4(aCoord.x, aCoord.y, 0.0, 1.0);
+    surfacePosition = aCoord;
+}
+</script>
+
+
+<!-- http://glsl.heroku.com/e#19291.0 -->
+<script id='19291.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+// a raymarching experiment by kabuto
+
+
+const int MAXITER = 80;
+
+vec3 field(vec3 p) {
+        p *= .1;
+        float f = .1;
+        for (int i = 0; i < 5; i++) {
+                p = p.yzx*mat3(.8,.6,0,-.6,.8,0,0,0,1);
+                p += vec3(.123,.456,.789)*float(i);
+                p = abs(fract(p)-.5);
+                p *= 2.0;
+                f *= 2.0;
+        }
+        p *= p;
+        return sqrt(p+p.yzx)/f-.002;
+}
+
+void main( void ) {
+        vec3 dir = normalize(vec3((gl_FragCoord.xy-resolution*.5)/resolution.x,1.));
+        vec3 pos = vec3(mouse+.5,time);
+        vec3 color = vec3(0);
+        for (int i = 0; i < MAXITER; i++) {
+                vec3 f2 = field(pos);
+                float f = min(min(f2.x,f2.y),f2.z);
+                
+                pos += dir*f;
+                color += float(MAXITER-i)/(f2+.001);
+        }
+        vec3 color3 = vec3(.17/(color*(.09/float(MAXITER*MAXITER))));
+        color3 *= color3;
+        gl_FragColor = 1.0 - vec4(color3.zyx,0.);
+}
+</script>
+
+<!-- http://glsl.heroku.com/e#18918.0 -->
+<script id='18918.0' type='x-shader/x-fragment'>
+// Tenjix
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+#define PI 3.1415926535897932384626433832795
+
+uniform float time;
+uniform vec2 resolution;
+
+const float position = 1.0;
+const float scale = 1.0;
+const float intensity = 1.0;
+
+varying vec2 surfacePosition;
+
+float band(vec2 pos, float amplitude, float frequency) {
+        float wave = scale * amplitude * sin(2.0 * PI * frequency * pos.x + time) / 2.05;
+        float light = clamp(amplitude * frequency * 0.002, 0.001 + 0.001 / scale, 5.0) * scale / abs(wave - pos.y);
+        return light;
+}
+
+void main( void ) {
+
+        vec3 color = vec3(0.15, 0.5, 1.0);
+        color = color == vec3(0.0)? vec3(0.5, 0.5, 1.0) : color;
+        vec2 pos = surfacePosition;//(gl_FragCoord.xy / resolution.xy);
+        //pos.y += - 0.5 - position;
+        
+        // +pk
+        float spectrum = 0.0;
+        const float lim = 128.;
+        #define time time*0.037 + pos.x*10.
+        for(float i = 0.; i < lim; i++){
+                spectrum += band(pos, 1.0*sin(time*0.1), 1.0*sin(time*i/lim))/pow(lim, 0.25);
+        }
+        
+        spectrum += band(pos, 0.7, 2.5);
+        spectrum += band(pos, 0.4, 2.0);
+        spectrum += band(pos, 0.05, 4.5);
+        spectrum += band(pos, 0.1, 7.0);
+        spectrum += band(pos, 0.1, 1.0);
+        
+        gl_FragColor = vec4(color * spectrum, spectrum);
+        
+}
+</script>
+
+<!-- http://glsl.heroku.com/e#18922.0 -->
+<script id='18922.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+vec2 rotate(vec2 p, float a)
+        {
+        return vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
+        }
+float box(vec2 p, vec2 b, float r)
+        {
+        return length(max(abs(p) - b, 0.0)) - (r * 2.0);
+        }
+
+vec3 intersect(in vec3 o, in vec3 d, vec3 c, vec3 u, vec3 v)
+        {
+        vec3 q = o - c;
+        return vec3(
+        dot(cross(u, v), q),
+        dot(cross(q, u), d),
+        dot(cross(v, q), d)) / dot(cross(v, u), d);
+        }
+
+float rand11(float p)
+        {
+        return fract(sin(p * 591.32) * 43758.5357);
+        }
+float rand12(vec2 p)
+        {
+        return fract(sin(dot(p.xy, vec2(12.9898, 78.233))) * 43758.5357);
+        }
+vec2 rand21(float p)
+        {
+        return fract(vec2(sin(p * 591.32), cos(p * 391.32)));
+        }
+
+vec2 rand22(in vec2 p)
+        {
+        return fract(vec2(sin(p.x * 591.32 + p.y * 154.077), cos(p.x * 391.32 + p.y * 49.077)));
+        }
+
+float noise11(float p)
+        {
+        float fl = floor(p);
+        return mix(rand11(fl), rand11(fl + 1.0), fract(p));//smoothstep(0.0, 1.0, fract(p)));
+        }
+float fbm11(float p)
+        {
+        return noise11(p) * 0.5 + noise11(p * 2.0) * 0.25 + noise11(p * 5.0) * 0.125;
+        }
+vec3 noise31(float p)
+        {
+        return vec3(noise11(p), noise11(p + 18.952), noise11(p - 11.372)) * 2.0 - 1.0;
+        }
+
+float sky(vec3 p)
+        {
+        float a = atan(p.x, p.z);
+        float t = time * 0.1;
+        float v = rand11(floor(a * 4.0 + t)) * 0.5 + rand11(floor(a * 8.0 - t)) * 0.25 + rand11(floor(a * 16.0 + t)) * 0.125;
+        return v;
+        }
+
+vec3 voronoi(in vec2 x)
+        {
+        vec2 n = floor(x); // grid cell id
+        vec2 f = fract(x); // grid internal position
+        vec2 mg; // shortest distance...
+        vec2 mr; // ..and second shortest distance
+        float md = 5.0, md2 = 1.0;
+        for(int j = -1; j <= 1; j ++)
+                {
+                for(int i = -1; i <= 1; i ++)
+                        {
+                        vec2 g = vec2(float(i), float(j)); // cell id
+                        vec2 o = rand22(n + g); // offset to edge point
+                        vec2 r = g + o - f;
+                        
+                        float d = max(abs(r.x), abs(r.y)); // distance to the edge
+                        
+                        if(d < md)
+                                {
+                                md2 = md; md = d; mr = r; mg = g;
+                                }
+                        else if(d < md2)
+                                {
+                                md2 = d;
+                                }
+                        }
+                }
+        return vec3(n + mg, md2 - md);
+        }
+
+#define A2V(a) vec2(sin((a) * 6.28318531 / 100.0), cos((a) * 6.28318531 / 100.0))
+
+float circles(vec2 p)
+        {
+        float v, w, l, c;
+        vec2 pp;
+        l = length(p);
+        
+        
+        pp = rotate(p, time * -3.0);
+        c = max(dot(pp, normalize(vec2(-0.75, 0.5))), -dot(pp, normalize(vec2(0.2, 0.5))));
+        c = min(c, max(dot(pp, normalize(vec2(0.5, -0.5))), -dot(pp, normalize(vec2(0.2, -0.5)))));
+        c = min(c, max(dot(pp, normalize(vec2(0.3, 0.5))), -dot(pp, normalize(vec2(0.2, 0.5)))));
+        
+        // innerest stuff
+        v = abs(l - 0.5) - 0.03;
+        v = max(v, -c);
+        v = min(v, abs(l - 0.35) - 0.0002);
+        v = min(v, abs(l - 0.75) - 0.005);
+        
+        pp = rotate(p, time * -1.333);
+        c = max(dot(pp, A2V(-5.0)), -dot(pp, A2V(5.0)));
+        c = min(c, max(dot(pp, A2V(25.0 - 5.0)), -dot(pp, A2V(25.0 + 5.0))));
+        c = min(c, max(dot(pp, A2V(50.0 - 5.0)), -dot(pp, A2V(50.0 + 5.0))));
+        c = min(c, max(dot(pp, A2V(70.0 - 5.0)), -dot(pp, A2V(75.0 + 5.0))));
+        
+        w = abs(l - 0.83) - 0.09;
+        v = min(v, max(w, c));
+        
+        return v;
+        }
+
+float shade1(float d)
+        {
+        float v = 1.0 - smoothstep(0.0, mix(0.012, 0.2, 0.0), d);
+        float g = exp(d * -20.0);
+        return v + g * 0.5;
+        }
+
+
+void main()
+        {
+        vec2 uv = gl_FragCoord.xy / resolution.xy;
+        uv = uv * 2.0 - 1.0;
+        uv.x *= resolution.x / resolution.y;
+        
+        
+        // using an iq styled camera this time :)
+        // ray origin
+        vec3 ro = 0.7 * vec3(cos(0.2 * time), 0.0, sin(0.2 * time));
+        ro.y = cos(0.6 * time) * 0.3 + 0.65;
+        // camera look at
+        vec3 ta = vec3(0.0, 0.2, 0.0);
+        
+        // camera shake intensity
+        float shake = 0.0;
+        float st = mod(time, 10.0) * 143.0;
+        
+        // build camera matrix
+        vec3 ww = normalize(ta - ro + noise31(st) * shake * 0.01);
+        vec3 uu = normalize(cross(ww, normalize(vec3(0.0, 1.0, 0.2 * cos(time)))));
+        vec3 vv = normalize(cross(uu, ww));
+        // obtain ray direction
+        vec3 rd = normalize(uv.x * uu + uv.y * vv + 1.0 * ww);
+        
+        // shaking and movement
+        ro += noise31(-st) * shake * 0.015;
+        ro.x += time * 2.0;
+        
+        float inten = 0.0;
+        
+        // background
+        float sd = dot(rd, vec3(0.0, 1.0, 0.0));
+        inten = pow(1.0 - abs(sd), 16.0) + pow(sky(rd), 5.0) * step(0.0, rd.y) * 0.2;
+        
+        vec3 its;
+        float v, g;
+        
+        // voronoi floor layers
+        for(int i = 0; i < 16; i ++)
+                {
+                float layer = float(i);
+                its = intersect(ro, rd, vec3(0.0, -5.0 - layer * 5.0, 0.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
+                if(its.x > 0.0)
+                        {
+                        vec3 vo = voronoi((its.yz) * 0.05 + 8.0 * rand21(float(i)));
+                        v = exp(-100.0 * (vo.z - 0.02));
+                        
+                        float fx = 0.0;
+                        
+                        // add some special fx to lowest layer
+                        if(i == 3)
+                                {
+                                float crd = 0.0;//fract(time * 0.2) * 50.0 - 25.0;
+                                float fxi = cos(vo.x * 0.2 + time * 1.5);//abs(crd - vo.x);
+                                fx = clamp(smoothstep(0.9, 1.0, fxi), 0.0, 0.9) * 1.0 * rand12(vo.xy);
+                                fx *= exp(-3.0 * vo.z) * 2.0;
+                                }
+                        inten += v * 0.1 + fx;
+                        }
+                }
+        
+/*      // draw the gates, 4 should be enough
+        float gatex = floor(ro.x / 8.0 + 0.5) * 8.0 + 4.0;
+        float go = - 10.0;
+        for(int i = 0; i < 2; i ++)
+                {
+                its = intersect(ro, rd, vec3(gatex + go, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0));
+                if(dot(its.yz, its.yz) < 2.0 && its.x > 0.0)
+                        {
+                        v = circles(its.yz);
+                        inten += shade1(v);
+                        }
+                
+                go += 8.0;
+                }
+*/      
+        // draw the stream
+/*      for(int j = 0; j < 5; j ++)
+                {
+                float id = float(j);
+                
+                vec3 bp = vec3(0.0, (rand11(id) * 2.0 - 1.0) * 0.25, 0.0);
+                vec3 its = intersect(ro, rd, bp, vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
+                
+                if(its.x > 0.0)
+                        {
+                        vec2 pp = its.yz;
+                        float spd = (1.0 + rand11(id) * 3.0) * 2.5;
+                        pp.y += time * spd;
+                        pp += (rand21(id) * 2.0 - 1.0) * vec2(0.3, 1.0);
+                        float rep = rand11(id) + 1.5;
+                        pp.y = mod(pp.y, rep * 2.0) - rep;
+                        float d = box(pp, vec2(0.02, 0.3), 0.1);
+                        float foc = 0.0;
+                        float v = 1.0 - smoothstep(0.0, 0.03, abs(d) - 0.001);
+                        float g = min(exp(d * -20.0), 2.0);
+                        
+                        inten += (v + g * 0.7) * 0.5;
+                        
+                        }
+                }
+*/      
+        inten *= 0.5 + (sin(time) * 0.5 + 0.5) * .6;
+        
+        vec3 col = pow(vec3(inten), vec3(1.0, 1.0, .3));
+        
+        gl_FragColor = vec4(col, 1.0);
+        }
+</script>
+
+<!-- http://glsl.heroku.com/e#18916.0 -->
+<script id='18916.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+uniform sampler2D bb;
+
+//keep the mouse near center, but as you go far enough left or right, you can do a barrel roll.
+//uncomment to reverse vertical control, as in flight and not in arcade
+//#define SIM
+
+vec2 rotate(vec2 p, float a)
+        {
+        return vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
+        }
+float box(vec2 p, vec2 b, float r)
+        {
+        return length(max(abs(p) - b, 0.0)) - (r * 2.0);
+        }
+
+vec3 intersect(in vec3 o, in vec3 d, vec3 c, vec3 u, vec3 v)
+        {
+        vec3 q = o - c;
+        return vec3(
+        dot(cross(u, v), q),
+        dot(cross(q, u), d),
+        dot(cross(v, q), d)) / dot(cross(v, u), d);
+        }
+
+float rand11(float p)
+        {
+        return fract(sin(p * 591.32) * 43758.5357);
+        }
+float rand12(vec2 p)
+        {
+        return fract(sin(dot(p.xy, vec2(12.9898, 78.233))) * 43758.5357);
+        }
+vec2 rand21(float p)
+        {
+        return fract(vec2(sin(p * 591.32), cos(p * 391.32)));
+        }
+
+vec2 rand22(in vec2 p)
+        {
+        return fract(vec2(sin(p.x * 591.32 + p.y * 154.077), cos(p.x * 391.32 + p.y * 49.077)));
+        }
+
+float noise11(float p)
+        {
+        float fl = floor(p);
+        return mix(rand11(fl), rand11(fl + 1.0), fract(p));//smoothstep(0.0, 1.0, fract(p)));
+        }
+float fbm11(float p)
+        {
+        return noise11(p) * 0.5 + noise11(p * 2.0) * 0.25 + noise11(p * 5.0) * 0.125;
+        }
+vec3 noise31(float p)
+        {
+        return vec3(noise11(p), noise11(p + 18.952), noise11(p - 11.372)) * 2.0 - 1.0;
+        }
+
+float sky(vec3 p)
+        {
+        float a = atan(p.x, p.z);
+        float t = time * 0.1;
+        float v = rand11(floor(a * 4.0 + t)) * 0.5 + rand11(floor(a * 8.0 - t)) * 0.25 + rand11(floor(a * 16.0 + t)) * 0.125;
+        return v;
+        }
+
+vec3 voronoi(in vec2 x)
+        {
+        vec2 n = floor(x); // grid cell id
+        vec2 f = fract(x); // grid internal position
+        vec2 mg; // shortest distance...
+        vec2 mr; // ..and second shortest distance
+        float md = 5.0, md2 = 1.0;
+        for(int j = -1; j <= 1; j ++)
+                {
+                for(int i = -1; i <= 1; i ++)
+                        {
+                        vec2 g = vec2(float(i), float(j)); // cell id
+                        vec2 o = rand22(n + g); // offset to edge point
+                        vec2 r = g + o - f;
+                        
+                        float d = max(abs(r.x), abs(r.y)); // distance to the edge
+                        
+                        if(d < md)
+                                {
+                                md2 = md; md = d; mr = r; mg = g;
+                                }
+                        else if(d < md2)
+                                {
+                                md2 = d;
+                                }
+                        }
+                }
+        return vec3(n + mg, md2 - md);
+        }
+
+#define A2V(a) vec2(sin((a) * 6.28318531 / 100.0), cos((a) * 6.28318531 / 100.0))
+
+float circles(vec2 p)
+        {
+        float v, w, l, c;
+        vec2 pp;
+        l = length(p);
+        
+        
+        pp = rotate(p, time * -3.0);
+        c = max(dot(pp, normalize(vec2(-0.75, 0.5))), -dot(pp, normalize(vec2(0.2, 0.5))));
+        c = min(c, max(dot(pp, normalize(vec2(0.5, -0.5))), -dot(pp, normalize(vec2(0.2, -0.5)))));
+        c = min(c, max(dot(pp, normalize(vec2(0.3, 0.5))), -dot(pp, normalize(vec2(0.2, 0.5)))));
+        
+        // innerest stuff
+        v = abs(l - 0.5) - 0.03;
+        v = max(v, -c);
+        v = min(v, abs(l - 0.35) - 0.0002);
+        v = min(v, abs(l - 0.75) - 0.005);
+        
+        pp = rotate(p, time * 10.333);
+        c = max(dot(pp, A2V(-5.0)), -dot(pp, A2V(5.0)));
+        c = min(c, max(dot(pp, A2V(25.0 - 5.0)), -dot(pp, A2V(25.0 + 5.0))));
+        c = min(c, max(dot(pp, A2V(50.0 - 5.0)), -dot(pp, A2V(50.0 + 5.0))));
+        c = min(c, max(dot(pp, A2V(70.0 - 5.0)), -dot(pp, A2V(75.0 + 5.0))));
+        
+        w = abs(l - 0.83) - 0.09;
+        v = min(v, max(w, c));
+        
+        return v;
+        }
+
+float shade1(float d)
+        {
+        float v = 1.0 - smoothstep(0.0, mix(0.012, 0.2, 0.0), d);
+        float g = exp(d * -20.0);
+        return v + g * 0.5;
+        }
+
+
+void main()
+        {
+        const float twopi = 6.2831853;
+        vec4 old = texture2D(bb,vec2(0.0));
+        vec2 oldpos = (time < 2.0) ? vec2(0.5) : old.rg;
+        float oldroll = (time < 2.0) ? 0.5 : old.b;
+        float tunnel = 14.0; //limits
+        vec2 op = (oldpos - 0.5) * tunnel;
+        vec2 ms = mouse-0.5;
+#ifdef SIM
+        ms.y = -ms.y;
+#endif
+        vec2 uv = gl_FragCoord.xy / resolution.xy;
+        uv = uv * 2.0 - 1.0;
+        uv.x *= resolution.x / resolution.y;
+        
+        
+        // using an iq styled camera this time :)
+        // ray origin
+        vec3 ro = 0.7 * vec3(0.0, op.y, op.x);
+        // camera look at
+        vec3 ta = vec3(1.0, ms.y, ms.x) * 48.;
+        
+        //also stateful
+        float roll = twopi * (oldroll - 0.5) + ms.x * 0.7;
+
+        // build camera matrix
+        vec3 ww = normalize(ta - ro);
+        vec3 uu = normalize(cross(ww, vec3(0.0, cos(roll), sin(roll))));
+        vec3 vv = normalize(cross(uu, ww));
+        // obtain ray direction
+        vec3 rd = normalize(uv.x * uu + uv.y * vv + 1.0 * ww);
+        
+        // shaking and movement
+        ro.x += time * 2.0;
+        
+        float blue = 0.0;
+        float red = 0.0;
+        float green = 0.0;
+        
+        // background
+        float sd = dot(rd, vec3(0.0, 1.0, 0.0));
+        blue = pow(1.0 - abs(sd), 16.0) + pow(sky(rd), 5.0) * step(0.0, rd.y) * 0.2;
+        
+        vec3 its;
+        float v, g;
+        
+        // voronoi floor layers
+        for(int i = 0; i < 16; i ++)
+                {
+                float layer = float(i);
+                its = intersect(ro, rd, vec3(0.0, -5.0 - layer * 5.0, 0.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
+                if(its.x > 0.0)
+                        {
+                        vec3 vo = voronoi((its.yz) * 0.05 + 8.0 * rand21(float(i)));
+                        v = exp(-100.0 * (vo.z - 0.02));
+                        
+                        float fx = 0.0;
+                        
+                        // add some special fx to lowest layer
+                        if(i == 3)
+                                {
+                                float crd = 0.0;//fract(time * 0.2) * 50.0 - 25.0;
+                                float fxi = cos(vo.x * 0.2 + time * 1.5);//abs(crd - vo.x);
+                                fx = clamp(smoothstep(0.9, 1.0, fxi), 0.0, 0.9) * 1.0 * rand12(vo.xy);
+                                fx *= exp(-3.0 * vo.z) * 2.0;
+                                }
+                        blue += v * 0.1 + fx;
+                        }
+                }
+        
+        // draw the gates
+        float gatex = floor(ro.x / 8.0 + 0.5) * 8.0 - 4.0;
+        const int ngates = 16;
+        float gateSize = 10.;
+        float go = 8.0;
+        for(int i = 0; i < ngates; i ++)
+                {
+                float rx = cos(time*0.9878915919)*2. + cos(-time*1.1591)*3.;
+                float ry = sin(time*0.87416981)*2. + sin(-time*0.998402)*3.;
+                its = intersect(ro, rd, vec3(gatex + go, rx, ry), vec3(0.0, gateSize, 0.0), vec3(0.0, 0.0, gateSize));
+                //if(dot(its.yz, its.yz) < 2.0 && its.x > 0.0)
+                        {
+                        v = circles(its.yz);
+                        red += shade1(v);
+                        }
+                
+                go += 8.0;
+                }
+        
+        // draw the stream
+        for(int j = 0; j < 5; j ++)
+                {
+                float id = float(j);
+                
+                vec3 bp = vec3(0.0, (rand11(id) * 2.0 - 1.0) * 0.25, 0.0);
+                vec3 its = intersect(ro, rd, bp, vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
+                
+                if(its.x > 0.0)
+                        {
+                        vec2 pp = its.yz;
+                        float spd = (1.0 + rand11(id) * 3.0) * 2.5;
+                        pp.y += time * spd;
+                        pp += (rand21(id) * 2.0 - 1.0) * vec2(0.3, 1.0);
+                        float rep = rand11(id) + 1.5;
+                        pp.y = mod(pp.y, rep * 2.0) - rep;
+                        float d = box(pp, vec2(0.02, 0.3), 0.1);
+                        float foc = 0.0;
+                        float v = 1.0 - smoothstep(0.0, 0.03, abs(d) - 0.001);
+                        float g = min(exp(d * -20.0), 2.0);
+                        
+                        green += (v + g * 0.7) * 0.5;
+                        
+                        }
+                }
+        vec3 rgb = vec3(0.0);
+#if 1
+        float inten = 1.0; //0.4 + (sin(time*0.3) * 0.5 + 0.5) * 0.6;
+        float desat = 0.2 * (cos(time*3.) * 0.5 + 0.5) + 0.07;
+        rgb.b = inten * (blue + desat * (red+green));
+        rgb.r = inten * (red + desat * (blue+green));
+        rgb.g = inten * (green + desat * (red+blue));
+#else
+        rgb = vec3(red,green,blue);
+#endif
+        vec3 col = pow(rgb, vec3(1.0, 1.0, 1.25));
+        float mn = 0.1; //maneuverability
+        if (int(gl_FragCoord.x) == 0) {
+        if (int(gl_FragCoord.y) == 0)
+        {
+                col.r = oldpos.x + (ms.x * mn);
+                col.g = oldpos.y + (ms.y * mn);
+                col.b = mix(0.5, fract(oldroll + (0.0008 * (pow(7., 5.0 * abs(ms.x))) * sign(ms.x))), abs(ms.x * 2.0)); //fixme: this is sloppy
+        }
+        }
+        gl_FragColor = vec4(col, 1.0);
+
+        }
+</script>
+
+<!-- http://glsl.heroku.com/e#18713.0 -->
+<script id='18713.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+//#define EASY_MODE
+#ifdef EASY_MODE
+const float pipeSpacing = 300
+        .0;
+const float pipeHole = 150.0;
+#else
+const float pipeSpacing = 600.0;
+const float pipeHole = 100.0;
+#endif
+
+uniform vec2 resolution;
+uniform vec2 mouse;
+uniform float time;
+uniform sampler2D backbuffer;
+
+struct cState
+{
+    float validData;
+    float alive;
+    float deadTime;
+    float birdPosY;  
+     float birdVelY;
+       float mouseRegion;
+    float score;
+    float hiscore;
+    float xParity;  // before or after the current pipe? 
+};
+
+void resetState( inout cState state )
+{
+    state.alive = 1.0;
+    state.deadTime = 0.0;
+    state.birdPosY = 100.0;
+    state.birdVelY = 0.0;
+    state.mouseRegion = step( 0.5, mouse.y );
+    state.score = 0.0;
+    state.xParity = 1.0;
+}
+
+cState loadState()
+{
+    // If speed is an issue, we could spoil a few pixels and use RGBA of 3 pixels instead of alpha of 9.
+    // A few could be merged as well.
+    cState state;
+    state.validData =  texture2D(backbuffer,( vec2(0.4,0.0) / resolution.xy )).a;
+    state.alive =      texture2D(backbuffer,( vec2(1.4,0.0) / resolution.xy )).a;
+    state.deadTime =   texture2D(backbuffer,( vec2(2.4,0.0) / resolution.xy )).a;
+    state.birdPosY =   texture2D(backbuffer,( vec2(3.4,0.0) / resolution.xy )).a * 800.0 - 250.0;
+    state.birdVelY =   texture2D(backbuffer,( vec2(4.4,0.0) / resolution.xy )).a * 80.0 - 40.0;
+    state.mouseRegion = texture2D(backbuffer,( vec2(5.4,0.0) / resolution.xy )).a;
+    state.score =       texture2D(backbuffer,( vec2(6.4,0.0) / resolution.xy )).a * 255.0;
+    state.hiscore =     texture2D(backbuffer,( vec2(7.4,0.0) / resolution.xy )).a * 255.0;
+    state.xParity  =      texture2D(backbuffer,( vec2(8.4,0.0) / resolution.xy )).a;
+    
+    if( state.validData < 0.25 || state.validData > 0.75 )
+    {
+        resetState( state );
+        state.hiscore = 0.0;
+    }
+    return state;
+}
+
+void saveState( cState state, vec3 col )
+{
+    // Who loves if statements?
+    float alpha = 1.0;
+    if( gl_FragCoord.y <= 0.5 )
+    {
+        if( gl_FragCoord.x <= 0.5 )
+            alpha = 0.5;    //valid data
+        else if( gl_FragCoord.x <= 1.5 )
+            alpha = ( state.alive );
+        else if( gl_FragCoord.x <= 2.5 )
+            alpha = ( state.deadTime );
+        else if( gl_FragCoord.x <= 3.5 )
+            alpha = ( state.birdPosY + 250.0 ) / 800.0;
+        else if( gl_FragCoord.x <= 4.5 )
+            alpha = ( state.birdVelY + 40.0 ) / 80.0;
+        else if( gl_FragCoord.x <= 5.5 )
+            alpha = state.mouseRegion;
+        else if( gl_FragCoord.x <= 6.5 )
+            alpha = state.score / 255.0;
+        else if( gl_FragCoord.x <= 7.5 )
+            alpha = state.hiscore / 255.0;
+        else if( gl_FragCoord.x <= 8.5 )
+            alpha = state.xParity;
+    }
+    
+    gl_FragColor = vec4( col, alpha );
+}
+
+float box( vec2 p, vec4 rect)
+{
+    float trim = min(rect.z, rect.w) * 0.5;
+    float minX = min(p.x - rect.x, rect.x + rect.z - p.x);
+    float minY = min(p.y - rect.y, rect.y + rect.w - p.y);
+    return step(0.0, minX) * step(0.0, minY) * step(trim, minX + minY);
+}
+
+float digit( vec2 p, vec4 dim, float d)
+{
+        d = (d - mod(d,1.0)) / 10.0;
+        d = mod( d, 1.0 );
+
+        p.xy -= dim.xy;
+        p.xy /= dim.zw;
+        
+
+        float c = 0.0;
+        
+        // I'm sure all of these can be improved... in fact, this way may actually be slower than just if else if else if else for
+        // all ten numbers.  Oh well, it was worth a shot :)
+        
+        // ed: removed all conditional expressions, should work everywhere
+
+        // top - 0, 2, 3, 5, 7, 8, 9
+        c += box(p, vec4(0.05, 0.8, 0.9, 0.2)) * step(cos((0.85*d+0.1)*30.0) - sin(pow(d,1.0)), 0.0);
+
+        // middle - 2, 3, 4, 5, 6, 8, 9
+        c += box(p, vec4(0.05, 0.4, 0.9, 0.2)) * step(1.0, min(pow(6.0*d,2.0), pow(20.0*(d-0.7),2.0)));
+
+        // bottom - 0, 2, 3, 5, 6, 8
+        c += box(p, vec4(0.05, 0.0, 0.9, 0.2)) * step(0.0, max(cos(18.6*pow(d,0.75)), 1.0-pow(40.0*(d-0.8),2.0)));
+
+        // bottom left - 0, 2, 6, 8
+        c += box(p, vec4(0.0, 0.04, 0.2, 0.47)) * step(0.1, cos(d*30.0) * abs(d-0.4));
+        
+        // bottom right - 0, 1, 3, 4, 5, 6, 7, 8, 9
+        c += box(p, vec4(0.8, 0.04, 0.2, 0.47)) * step(0.1, pow(4.0*d-0.8, 2.0));
+
+        // top left - 0, 4, 5, 6, 8, 9
+        c += box(p, vec4(0.0, 0.48, 0.2, 0.47)) * step(sin((d-0.05)*10.5) - 12.0*sin(pow(d,10.0)), 0.0);
+        
+        // top right - 0, 1, 2, 3, 4, 7, 8, 9
+        c += box(p, vec4(0.8, 0.48, 0.2, 0.47)) * step(0.02, pow(d-0.55, 2.0));
+
+        return c;
+}
+
+float rand(float n)
+{
+    return fract(sin(n * 12.9898) * 43758.5453)-0.5;
+}
+
+float hAt(float i)
+{
+        return 250.0*rand(i*1.232157);
+}
+
+void pipe(inout vec3 col, vec2 p, float h)
+{
+        vec2 ap = abs(p);
+        if (ap.y > h)
+        {
+                float dy = ap.y - h;
+                if (dy < 60.0) ap.x *= 0.93;
+                col = mix(col, vec3(0.322, 0.224, 0.290), step(ap.x, 65.0)); // outline
+                if (dy > 60.0 || mod(dy, 55.0) > 5.0) 
+                {
+                        float gradient = 0.0;
+                        if (abs(dy - 57.5) > 7.5) gradient = max(0.0, 0.5*cos(floor((p.x+25.0)/5.0)*5.0*(0.026 - 0.006*step(dy, 10.0))));
+                        col = mix(col, vec3(0.322, 0.506, 0.129) + gradient, step(ap.x, 60.0)); // pipe
+                }
+        }
+}
+
+// constant-array-index workaround ---
+float slice(int id) 
+{
+        // flappy bird character (no worries, I have a tool)
+        if (id == 0) return 2359296.0;
+        if (id == 1) return 585.0;
+        if (id == 2) return 4489216.0;
+        if (id == 3) return 46674.0;
+        if (id == 4) return 4751360.0;
+        if (id == 5) return 2995812.0;
+        if (id == 6) return 8945664.0;
+        if (id == 7) return 3003172.0;
+        if (id == 8) return 9469963.0;
+        if (id == 9) return 7248164.0;
+        if (id == 10) return 2359385.0;
+        if (id == 11) return 10897481.0;
+        if (id == 12) return 6554331.0;
+        if (id == 13) return 9574107.0;
+        if (id == 14) return 2134601.0;
+        if (id == 15) return 9492189.0;
+        if (id == 16) return 3894705.0;
+        if (id == 17) return 9474632.0;
+        if (id == 18) return 2396785.0;
+        if (id == 19) return 9585152.0;
+        if (id == 20) return 14380132.0;
+        if (id == 21) return 8683521.0;
+        if (id == 22) return 2398500.0;
+        if (id == 23) return 1.0;
+        if (id == 24) return 4681.0;    
+        return 0.0;     
+}
+
+vec3 color(int id)
+{
+        // flappy bird colors
+        if (id == 0) return vec3(0.0);
+        if (id == 1) return vec3(0.320,0.223,0.289);
+        if (id == 2) return vec3(0.996,0.449,0.063);
+        if (id == 3) return vec3(0.965,0.996,0.965);
+        if (id == 4) return vec3(0.996,0.223,0.000);
+        if (id == 5) return vec3(0.836,0.902,0.805);
+        return vec3(0.965,0.707,0.191);
+}
+// ---
+
+int sprite(vec2 p)
+{
+        // this time it's 3 bit/px (8 colors) and 8px/slice, 204px total
+        int d = 0;
+        p = floor(p);
+        p.x = 16.0 - p.x;
+        
+        if (clamp(p.x, 0.0, 16.0) == p.x && clamp(p.y, 0.0, 11.0) == p.y)
+        {
+                float k = p.x + 17.0*p.y;
+                float s = floor(k / 8.0);
+                float n = slice(int(s));
+                k = (k - s*8.0)*3.0;
+                if (int(mod(n/(pow(2.0,k)),2.0)) == 1)          d += 1;
+                if (int(mod(n/(pow(2.0,k+1.0)),2.0)) == 1)      d += 2;
+                if (int(mod(n/(pow(2.0,k+2.0)),2.0)) == 1)      d += 4;
+        }
+        return d;
+}
+
+void hero(inout vec3 col, vec2 p, float angle)
+{
+    p -= vec2( 40.0, 27.5 );
+        p = vec2(p.x * cos(angle) - p.y * sin(angle), p.y * cos(angle) + p.x * sin(angle));
+    p += vec2( 40.0, 27.5 );
+    
+        int i = sprite(p*0.2);
+        col = mix(col, color(i), min(1.0, float(i)));
+}
+
+void ground(inout vec3 col, vec2 p)
+{
+        p = floor(p);
+        if (p.y > -280.0) return;
+        if (p.y < -285.0) col = color(1);
+        if (p.y < -290.0) col = vec3(0.902, 1.000, 0.549);
+        if (p.y < -295.0) col = mix(vec3(0.612, 0.906, 0.353), vec3(0.451, 0.745, 0.192), step(mod(p.x-floor(p.y/5.0)*5.0, 60.0), 30.0));
+        if (p.y < -325.0) col = vec3(0.322, 0.506, 0.129);
+        if (p.y < -330.0) col = vec3(0.839, 0.667, 0.290);
+        if (p.y < -335.0) col = vec3(0.871, 0.843, 0.580);
+}
+
+void sky(inout vec3 col, vec2 p)
+{
+        col = mix(col, vec3(1.0), 0.3*sin(p.y*0.01));
+}
+
+void main(void)
+{
+    cState state = loadState();
+    
+        float s = 2000.0/resolution.x;
+        vec2 p = max(1.6666667, s)*(gl_FragCoord.xy - resolution.xy * 0.5);
+    
+        float dx = time * 320.0;
+        p.x += dx;
+        
+        vec3 col = vec3(0.322, 0.745, 0.808);
+        sky(col, vec2(0.0, -100.0)-p);
+        
+        pipe(col, vec2(mod(p.x, pipeSpacing)-pipeSpacing*0.5, p.y + hAt(floor(p.x / pipeSpacing)) - 80.0), pipeHole);
+
+    if( state.alive < 0.5 )
+    {
+        state.deadTime += 0.008;
+        if( state.deadTime >= 1.0 )
+        {
+            resetState( state );
+        }
+    }
+    
+    if( state.alive > 0.5 )
+    {
+        float currentMouseRegion = step( 0.5, mouse.y );
+        if( currentMouseRegion != state.mouseRegion )
+        {
+            state.birdVelY = 120.0;
+            state.mouseRegion = currentMouseRegion;
+        }
+    }
+        
+    state.birdVelY -= 2.0;
+    state.birdPosY += state.birdVelY * 0.2;
+        
+    vec2 birdPos = vec2( dx - 200.0 - 950.0 * state.deadTime, state.birdPosY );
+    
+    if( birdPos.y < -225.0 )
+    {
+        state.alive = 0.0;
+    }
+    
+    float birdInPipeSpaceX = mod( birdPos.x, pipeSpacing ) - pipeSpacing * 0.5;
+    float pipeY = -hAt( floor( birdPos.x / pipeSpacing ) ) + 80.0;
+    
+    float xParity = step( 0.0, birdInPipeSpaceX );
+    if( state.xParity == 0.0 && xParity == 1.0 && state.alive > 0.5 )
+    {
+        state.score += 1.0;
+    }
+    state.xParity = xParity;
+    
+    if( ( birdInPipeSpaceX > - 60.0 ) && ( birdInPipeSpaceX < 120.0 ) )
+    {
+        if( ( birdPos.y < pipeY - pipeHole + 55.0 ) )
+        {
+            state.alive = 0.0;
+        }        
+        else if( ( birdPos.y > pipeY + pipeHole + 20.0 ) )
+        {
+            state.alive = 0.0;
+        }        
+    }
+    
+    float angle = clamp( -state.birdVelY * 0.05, -0.3, 1.0 );
+    if( state.alive < 0.5 )
+    {
+        angle = 3.14;
+    }
+        hero(col, birdPos-p, angle);
+        
+        ground(col, p);
+    
+    vec2 dp = ( gl_FragCoord.xy / resolution.xy );
+    if( state.score >= 100.0 )
+        col += digit( dp, vec4( 0.1, 0.90, 0.05, 0.05 ), state.score/100.0 );
+    if( state.score >= 10.0          )
+        col += digit( dp, vec4( 0.16, 0.90, 0.05, 0.05 ), state.score/10.0 );
+    col += digit( dp, vec4( 0.22, 0.90, 0.05, 0.05 ), state.score );
+    
+    state.hiscore = max( state.hiscore, state.score );
+    if( state.hiscore >= 100.0 )
+        col += digit( dp, vec4( 0.72, 0.90, 0.05, 0.05 ), state.hiscore/100.0 );
+    if( state.hiscore >= 10.0 )
+        col += digit( dp, vec4( 0.78, 0.90, 0.05, 0.05 ), state.hiscore/10.0 );
+    col += digit( dp, vec4( 0.84, 0.90, 0.05, 0.05 ), state.hiscore );
+
+    saveState( state, col );
+}
+
+</script>
