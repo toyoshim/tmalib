@@ -71,8 +71,8 @@ MajVj.frame.nicofarre = function (options) {
     this._mirror = options.mirror;
     if (this._mirror === undefined)
       this._mirror = MajVj.frame.nicofarre.MIRROR_OFF;
-    var w = size[this._led[0]][0];
-    var h = size[this._led[0]][1];
+    var w = size[this._led[0]][0] * this._width / 1920;
+    var h = size[this._led[0]][1] * this._height / 1080;
     this._fbo = this._screen.createFrameBuffer(w, h);
     this._frames = [];
     for (var i = 0; i < options.frames.length; ++i) {
