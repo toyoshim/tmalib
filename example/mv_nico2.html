@@ -9,12 +9,8 @@ var emulate = true;
 var mode = 0;
 document.body.addEventListener('keydown', function (e) {
   switch (e.which) {
-    case 32:  // space
-      emulate = !emulate;
-      break;
-    case 49:
-    case 50:
-    case 51:
+    case 49:  // 1
+    case 50:  // 2
       mode = e.which - 49;
       break;
     case 69:  // e
@@ -23,7 +19,7 @@ document.body.addEventListener('keydown', function (e) {
     case 70:  // f
       document.body.webkitRequestFullscreen();
       break;
-    case 72:  // j
+    case 72:  // h
       controller.volume[1] -= 0.01;
       break;
     case 74:  // j
@@ -40,6 +36,9 @@ document.body.addEventListener('keydown', function (e) {
       break;
     case 87:  // w
       controller.volume[2] = 0.0;
+      break;
+    case 88:  // x
+      emulate = !emulate;
       break;
     default:
       console.log(e.which);

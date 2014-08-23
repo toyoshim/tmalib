@@ -8,9 +8,7 @@ controller.volume = [0.0, 0.0];
 var emulate = true;
 document.body.addEventListener('keydown', function (e) {
   switch (e.which) {
-    case 32:  // space
-      emulate = !emulate;
-    case 72:  // j
+    case 72:  // h
       controller.volume[1] -= 0.01;
       break;
     case 74:  // j
@@ -22,8 +20,9 @@ document.body.addEventListener('keydown', function (e) {
     case 76:  // l
       controller.volume[1] += 0.01;
       break;
-    default:
-      console.log(e.which);
+    case 88:  // x
+      emulate = !emulate;
+      break;
   }
 });
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
