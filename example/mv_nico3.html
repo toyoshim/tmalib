@@ -46,9 +46,9 @@ tma.onload = function () {
   var vj = new MajVj(width, height, true);
   vj.loadAllPlugins().then(function () {
     var stage = vj.create('frame', 'nicofarre',
-                        { led: MajVj.frame.nicofarre.LED_STAGE,
+                        { led: MajVj.frame.nicofarre.LED_STAGE_AND_BACK,
+                          mirror: MajVj.frame.nicofarre.MIRROR_ON_LEFT,
                           frames: [
-                            //{ name: 'sandbox', options: { id: '18713.0' } }
                             { name: 'sandbox', options: { id: '18922.0' } }
                           ]});
     var wall = vj.create('frame', 'nicofarre',
@@ -57,7 +57,17 @@ tma.onload = function () {
                           frames: [
                             { name: 'sandbox', options: { id: '18918.0' } }
                           ]});
-
+    var side = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_FRONT_BOTH,
+                          mirror: MajVj.frame.nicofarre.MIRROR_ON_RIGHT,
+                          frames: [
+                            { name: 'sandbox', options: { id: '18451.0' } }
+                          ]});
+    var ceil = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_CEILING,
+                          frames: [
+                            { name: 'sandbox', options: { id: '18568.0' } }
+                          ]});
     var fx = vj.create('effect', 'nicofarre');
     fx.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);
@@ -68,6 +78,8 @@ tma.onload = function () {
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
       stage.draw(delta);
       wall.draw(delta);
+      side.draw(delta);
+      ceil.draw(delta);
       if (emulate) {
         vj.screen().bind();
         vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);

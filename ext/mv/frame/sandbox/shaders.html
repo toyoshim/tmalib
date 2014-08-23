@@ -998,3 +998,121 @@ void main(void)
 }
 
 </script>
+
+<!-- http://glsl.heroku.com/e#18613.0 -->
+<script id='18613.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform vec2  resolution;
+uniform float time;
+uniform vec2 mouse;
+
+float PI = 3.1415926535;
+
+void main( void ) {
+    float time = time * 0.01+length(mouse)*3e2;
+    vec2 p=(gl_FragCoord.xy -.5 * resolution)/ min(resolution.x,resolution.y)/2.;
+    vec3 c = vec3(0);
+    vec3 c2 = vec3(0);
+        
+    for(int i = 0; i < 128; i++){
+        float t = (1.5 + .3 ) * PI * float(i+3) / 10. * time*0.05;
+        float x = .05 * cos(t);
+        float y = .05* sin(t);
+        vec2 o = 1.45 * vec2(0.5*x,.5*y);
+        float hue = time*0.03*float(i+5)*1e3;
+        float r = max(sin(hue)+0.35, 0.2);
+        float g = max(sin(hue+PI*3./4.)+0.15, 0.2);
+        float b = max(sin(hue+PI*5./4.)+0.15, 0.2);
+        c += 1e-3/(length(2.0*p-o*5.*(1.2-cos(time*((0.205)*float(i+17))))))*vec3(r,g,b);
+        //c += 0.003/(length(2.0*p-o*5.*(1.2-cos(time*float(i+7)))))*vec3(r,g,b);
+          
+    }
+
+    gl_FragColor = vec4(c,99);
+        
+}
+</script>
+
+<!-- http://glsl.heroku.com/e#18568.0 -->
+<script id='18568.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform vec2  resolution;
+uniform float time;
+uniform vec2 mouse;
+
+float PI = 3.1415926535;
+
+void main( void ) {
+    vec2 p=(gl_FragCoord.xy -.5 * resolution)/ min(resolution.x,resolution.y)/2.;
+    vec3 c = vec3(0);
+    vec3 c2 = vec3(0);
+        
+    for(int i = 0; i < 50; i++){
+    float t = (1.5 + .3 * mouse.x) * PI * float(i+3) / 10. * time*0.05;
+    float x = .05 * cos(t);
+    float y = .05* sin(t);
+    vec2 o = 1.45 * vec2(0.5*x,.5*y);
+    float hue = time*0.03*float(i+5);
+    float r = max(sin(hue)+0.35, 0.2);
+    float g = max(sin(hue+PI*3./4.)+0.15, 0.2);
+    float b = max(sin(hue+PI*5./4.)+0.15, 0.2);
+     c += 0.003/(length(2.0*p-o*5.*(1.2-cos(time*((0.205+0.00005*mouse.y)*float(i+17))))))*vec3(r,g,b);
+//      c += 0.003/(length(2.0*p-o*5.*(1.2-cos(time*float(i+7)))))*vec3(r,g,b);
+            
+    }
+
+    gl_FragColor = vec4(c,99);
+        
+}
+</script>
+
+<!-- http://glsl.heroku.com/e#18451.0 -->
+<script id='18451.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+// rakesh@picovico.com : www.picovico.com
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+const float fRadius = 0.2;
+
+void main(void)
+{
+    vec2 uv = -1.0 + 2.0*gl_FragCoord.xy / resolution.xy;
+    uv.x *=  resolution.x / resolution.y;
+    
+    vec3 color = vec3(0.0);
+
+        // bubbles
+    for( int i=0; i<64; i++ )
+    {
+            // bubble seeds
+        float pha = tan(float(i)*6.+1.0)*0.5 + 0.5;
+        float siz = pow( cos(float(i)*2.4+5.0)*0.5 + 0.5, 4.0 );
+        float pox = cos(float(i)*3.55+4.1) * resolution.x / resolution.y;
+        
+            // buble size, position and color
+        float rad = fRadius + sin(float(i))*0.12+0.08;
+        vec2  pos = vec2( pox+sin(time/30.+pha+siz), -1.0-rad + (2.0+2.0*rad)
+                         *mod(pha+0.1*(time/5.)*(0.2+0.8*siz),1.0)) * vec2(1.0, 1.0);
+        float dis = length( uv - pos );
+        vec3  col = mix( vec3(0.1, 0.2, 0.8), vec3(0.2,0.8,0.6), 0.5+0.5*sin(float(i)*sin(time*pox*0.03)+1.9));
+        
+            // render
+        color += col.xyz *(1.- smoothstep( rad*(0.65+0.20*sin(pox*time)), rad, dis )) * (1.0 - cos(pox*time));
+    }
+
+    gl_FragColor = vec4(color,1.0);
+}
+</script>
+
