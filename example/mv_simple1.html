@@ -5,6 +5,7 @@
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
 	var vj = new MajVj(512, 512);
+	window.onresize = vj.onresize;
 	vj.loadPlugin('frame', 'wired').then(function () {
 		var wired = vj.create('frame', 'wired');
 		vj.run(function (delta) {

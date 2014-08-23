@@ -32,8 +32,7 @@ tma.onload = function () {
   var height = 1080;
   var vj = new MajVj(width, height, false);
   vj.loadAllPlugins().then(function () {
-    var movie = vj.create('frame', 'movie');
-    movie.play('data/04_space_out.mp4');
+      var movie = vj.create('frame', 'movie', {url: 'data/04_space_out.mp4'});
     var fx = vj.create('effect', 'nicofarre');
     fx.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);

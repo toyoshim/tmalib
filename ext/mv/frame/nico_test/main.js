@@ -1,18 +1,14 @@
 /**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - nico_test -
- * @param mv MajVj object
- * @param screen Tma3DScreen object
- * @param width offscreen width
- * @param height offscreen height
- * @param aspect screen aspect ratio (screen width / screen height)
+ * @param options options (See MajVj.prototype.create)
  */
-MajVj.frame.nico_test = function (mv, screen, width, height, aspect) {
-    this._screen = screen;
-    this._width = width;
-    this._height = height;
-    this._aspect = aspect;
-    this._controller = null;
+MajVj.frame.nico_test = function (options) {
+    this._screen = options.screen;
+    this._width = options.width;
+    this._height = options.height;
+    this._aspect = options.aspect;
+    this._controller = options.controller;
     this._speed = 4;
     this._x = 0;
     this._y = 0;
@@ -22,12 +18,12 @@ MajVj.frame.nico_test = function (mv, screen, width, height, aspect) {
     this._az = this._speed;
     this._t = 0;
 
-    this._program = screen.createProgram(
-            screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.nico_test._vertexShader),
-            screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.nico_test._fragmentShader));
-    this._coords = screen.createBuffer([
+    this._coords = this._screen.createBuffer([
             // A (right): (40, 760) - (1520, 1040) / (1920, 1080)
             40 / 1920 * 2 - 1, 760 / 1080 * 2 - 1,
             40 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
@@ -63,7 +59,7 @@ MajVj.frame.nico_test = function (mv, screen, width, height, aspect) {
             1760 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
             1858 / 1920 * 2 - 1, 1040 / 1080 * 2 - 1,
             1858 / 1920 * 2 - 1, 870 / 1080 * 2 - 1]);
-    this._texCoods = screen.createBuffer([
+    this._texCoods = this._screen.createBuffer([
             // A (right)
             880, 20, 40,
             880, 300, 40,

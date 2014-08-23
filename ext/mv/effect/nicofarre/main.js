@@ -1,34 +1,30 @@
 /**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - nicofarre -
- * @param mv MajVj object
- * @param screen Tma3DScreen object
- * @param width offscreen width
- * @param height offscreen height
- * @param aspect screen aspect ratio (screen width / screen height)
+ * @param options options (See MajVj.prototype.create)
  */
-MajVj.effect.nicofarre = function (mv, screen, width, height, aspect) {
-    this._screen = screen;
-    this._width = width;
-    this._height = height;
-    this._aspect = aspect;
-    this._controller = null;
-    this._program = screen.createProgram(
-            screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+MajVj.effect.nicofarre = function (options) {
+    this._screen = options.screen;
+    this._width = options.width;
+    this._height = options.height;
+    this._aspect = options.aspect;
+    this._controller = options.controller;
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.effect.nicofarre._vertexShader),
-            screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.effect.nicofarre._fragmentShader));
-    this._programForCeiling = screen.createProgram(
-            screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+    this._programForCeiling = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.effect.nicofarre._vertexShader),
-            screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.effect.nicofarre._fragmentShaderForCeiling));
     this._pMatrix = mat4.create();
-    this.onresize(aspect);
+    this.onresize(this._aspect);
     this._mvMatrix = mat4.create();
     mat4.identity(this._mvMatrix);
     mat4.translate(this._mvMatrix, [0, 0, -500]);
-    this._coords = screen.createBuffer([
+    this._coords = this._screen.createBuffer([
             // A (right): 1480x280, x=420
             420, -140, -740,
             420, 140, -740,
@@ -64,7 +60,7 @@ MajVj.effect.nicofarre = function (mv, screen, width, height, aspect) {
             -420, 140, 740,
             420, 140, 740,
             420, 140, -740]);
-    this._texCoords = screen.createBuffer([
+    this._texCoords = this._screen.createBuffer([
             // A (right): (40, 760) - (1520, 1040) / (1920, 1080)
             40 / 1920, 760 / 1080,
             40 / 1920, 1040 / 1080,
@@ -100,7 +96,7 @@ MajVj.effect.nicofarre = function (mv, screen, width, height, aspect) {
             1760 / 1920, 1040 / 1080,
             1858 / 1920, 1040 / 1080,
             1858 / 1920, 870 / 1080]);
-    this._phase = screen.createBuffer([
+    this._phase = this._screen.createBuffer([
             // A, B, C, D, E, F
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0,

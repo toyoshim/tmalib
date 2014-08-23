@@ -1,28 +1,24 @@
 /**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - at -
- * @param mv MajVj object
- * @param screen Tma3DScreen object
- * @param width offscreen width
- * @param height offscreen height
- * @param aspect screen aspect ratio (screen width / screen height)
+ * @param options options (See MajVj.prototype.create)
  */
-MajVj.frame.at = function (mv, screen, width, height, aspect) {
-    this._screen = screen;
-    this._width = width;
-    this._height = height;
-    this._aspect = aspect;
-    this._controller = null;
+MajVj.frame.at = function (options) {
+    this._screen = options.screen;
+    this._width = options.width;
+    this._height = options.height;
+    this._aspect = options.aspect;
+    this._controller = options.controller;
 
-    this._program = screen.createProgram(
-            screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.at._vertexShader),
-            screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.at._fragmentShader));
     this._sphere = TmaModelPrimitives.createSphere(
             MajVj.frame.at.resolution, TmaModelPrimitives.SPHERE_METHOD_EVEN);
-    this._vertices = screen.createBuffer(this._sphere.getVertices());
-    this._indices = screen.createElementBuffer(this._sphere.getIndices());
+    this._vertices = this._screen.createBuffer(this._sphere.getVertices());
+    this._indices = this._screen.createElementBuffer(this._sphere.getIndices());
     this._program.setAttributeArray('aVertexPosition', this._vertices, 0, 3, 0);
     this._pMatrix = mat4.create();
     this._mvMatrix = mat4.create();
@@ -157,7 +153,7 @@ MajVj.frame.at = function (mv, screen, width, height, aspect) {
             }
         };
     }
-    this.onresize(aspect);
+    this.onresize(this._aspect);
 };
 
 MajVj.frame.at.resolution = 3;

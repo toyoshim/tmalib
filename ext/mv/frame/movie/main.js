@@ -1,28 +1,26 @@
 /**
  * T'MediaArt library for Javascript
  *  - MajVj extension - frame plugin - movie -
- * @param mv MajVj object
- * @param screen Tma3DScreen oject
- * @param width offscreen width
- * @param height offscreen height
- * @param aspect screen aspect ratio (screen width / screen height)
+ * @param options options (See MajVj.prototype.create)
  */
-MajVj.frame.movie = function (mv, screen, width, height, aspect) {
-    this._screen = screen;
-    this._width = width;
-    this._height = height;
-    this._aspect = aspect;
-    this._controller = null;
+MajVj.frame.movie = function (options) {
+    this._screen = options.screen;
+    this._width = options.width;
+    this._height = options.height;
+    this._aspect = options.aspect;
+    this._controller = options.controller;
     this._video = null;
     this._texture = null;
     this._zoom = 1.0;
 
-    this._program = screen.createProgram(
-            screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.movie._vertexShader),
-            screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.movie._fragmentShader));
-    this._coords = screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0])
+    this._coords = this._screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0])
+    if (options.url)
+      this.play(options.url);
 };
 
 // Shader programs.

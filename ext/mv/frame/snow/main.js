@@ -1,30 +1,26 @@
 /**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - snow -
- * @param mv MajVj object
- * @param screen Tma3DScreen object
- * @param width offscreen width
- * @param height offscreen height
- * @param aspect screen aspect ratio (screen width / screen height)
+ * @param options options (See MajVj.prototype.create)
  */
-MajVj.frame.snow = function (mv, screen, width, height, aspect) {
-    this._screen = screen;
-    this._width = width;
-    this._height = height;
-    this._aspect = aspect;
-    this._controller = null;
+MajVj.frame.snow = function (options) {
+    this._screen = options.screen;
+    this._width = options.width;
+    this._height = options.height;
+    this._aspect = options.aspect;
+    this._controller = options.controller;
     this._ps = new TmaParticle.Container(MajVj.frame.snow.ps);
-    this._coords = screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
-    this._program = screen.createProgram(
-            screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+    this._coords = this._screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.snow._vertexShader),
-            screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.snow._fragmentShader));
-    this._image = screen.createImage(512, 512);
+    this._image = this._screen.createImage(512, 512);
     this._data = this._image.data;
-    this._texture =screen.createTexture(
+    this._texture = this._screen.createTexture(
             this._image, true, Tma3DScreen.FILTER_LINEAR);
-    this.onresize(aspect);
+    this.onresize(this._aspect);
 };
 
 // Shader programs.

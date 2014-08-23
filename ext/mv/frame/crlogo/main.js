@@ -1,35 +1,31 @@
 /**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - crlogo -
- * @param mv MajVj object
- * @param screen Tma3DScreen object
- * @param width offscreen width
- * @param height offscreen height
- * @param aspect screen aspect ratio (screen width / screen height)
+ * @param options options (See MajVj.prototype.create)
  */
-MajVj.frame.crlogo = function (mv, screen, width, height, aspect) {
-    this._screen = screen;
-    this._width = width;
-    this._height = height;
-    this._aspect = aspect;
-    this._controller = null;
-    this._program = screen.createProgram(
-            screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+MajVj.frame.crlogo = function (options) {
+    this._screen = options.screen;
+    this._width = options.width;
+    this._height = options.height;
+    this._aspect = options.aspect;
+    this._controller = options.controller;
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.crlogo._vertexShader),
-            screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.crlogo._fragmentShader));
     this._pMatrix = mat4.create();
     this._mvMatrix = mat4.create();
     this._rotate = 0.0;
 
     var logo = MajVj.frame.crlogo._logos[0];
-    this._vertices = screen.createBuffer(logo.vertices);
+    this._vertices = this._screen.createBuffer(logo.vertices);
     this._vertices.items = logo.items;
-    this._offsets = screen.createBuffer(logo.offsets);
-    this._colors = screen.createBuffer(logo.colors);
+    this._offsets = this._screen.createBuffer(logo.offsets);
+    this._colors = this._screen.createBuffer(logo.colors);
     this._ps = new MajVj.frame.crlogo.ps(this, 0);
 
-    this.onresize(aspect);
+    this.onresize(this._aspect);
     mat4.identity(this._mvMatrix);
 };
 

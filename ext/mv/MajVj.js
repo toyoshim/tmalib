@@ -75,30 +75,25 @@ MajVj.prototype.loadAllPlugins = function () {
 };
 
 /**
- * Creates a plugin instance with width and height.
+ * Creates a plugin instance.
  * @param type 'effect' or 'frame'
  * @param name plugin name
- * @param width screen width
- * @param height screeen height
+ * @param options options
  * @return a plugin instance
  */
-MajVj.prototype.createWith = function (type, name, width, height) {
+MajVj.prototype.create = function (type, name, options) {
     if (!MajVj[type] || !MajVj[type][name]) {
         console.error('unknown plugin: ' + type + '/' + name);
         return null;
     }
-    return new MajVj[type][name](
-            this, this._screen, width, height, width / height);
-};
-
-/**
- * Creates a plugin instance.
- * @param type 'effect' or 'frame'
- * @param name plugin name
- * @return a plugin instance
- */
-MajVj.prototype.create = function (type, name) {
-    return this.createWith(type, name, this._width, this._height);
+    var opt = options || {};
+    opt.mv = this;
+    opt.screen = this._screen;
+    opt.width = opt.width || this._width;  // offscreen width
+    opt.height = opt.height || this._height;  // offscreen height
+    // screen aspect / offscreen aspect
+    opt.aspect = opt.aspect || this.aspect();
+    return new MajVj[type][name](opt);
 };
 
 /**
