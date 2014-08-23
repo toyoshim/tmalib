@@ -68,14 +68,21 @@ MajVj.frame.nicofarre = function (options) {
       [160, 280],
       [98, 170]];
     this._led = options.led;
+    this._mirror = options.mirror;
+    if (this._mirror === undefined)
+      this._mirror = MajVj.frame.nicofarre.MIRROR_OFF;
+    console.log(options);
+    console.log(this._mirror);
     var w = size[this._led[0]][0];
     var h = size[this._led[0]][1];
     this._fbo = this._screen.createFrameBuffer(w, h);
     var flags = { width: w, height: h, aspect: w / h };
-    this._wired = options.mv.create('frame', 'wired', flags);
-    this._crlogo = options.mv.create('frame', 'ab2', flags);
+    this._frames = [];
+    for (var i = 0; i < options.frames.length; ++i)
+      this._frames[i] = options.mv.create('frame', options.frames[i], flags);
 };
 
+// Const values to specify the showing LED screen.
 MajVj.frame.nicofarre.LED_A = [0];
 MajVj.frame.nicofarre.LED_B = [1];
 MajVj.frame.nicofarre.LED_C = [2];
@@ -93,6 +100,11 @@ MajVj.frame.nicofarre.LED_CEILING = [6];
 MajVj.frame.nicofarre.LED_FRONT_BOTH = [4, 5];
 MajVj.frame.nicofarre.LED_WALL_BOTH = [0, 2];
 MajVj.frame.nicofarre.LED_STAGE_AND_BACK = [1, 3];
+
+// Const values to specify mirroing mode.
+MajVj.frame.nicofarre.MIRROR_OFF = 2;
+MajVj.frame.nicofarre.MIRROR_ON_RIGHT = 0;
+MajVj.frame.nicofarre.MIRROR_ON_LEFT = 1;
 
 // Shader programs.
 MajVj.frame.nicofarre._vertexShader = null;
@@ -129,15 +141,17 @@ MajVj.frame.nicofarre.prototype.onresize = function (aspect) {
  */
 MajVj.frame.nicofarre.prototype.draw = function (delta) {
     var fbo = this._fbo.bind();
-    this._wired.draw(delta);
-    this._crlogo.draw(delta);
+    var i;
+    for (i = 0; i < this._frames.length; ++i)
+      this._frames[i].draw(delta);
     fbo.bind();
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setAttributeArray('aTexCoord', this._texCoods, 0, 2, 0);
     this._program.setTexture('uTexture', this._fbo.texture);
-    for (var i = 0; i < this._led.length; ++i) {
+    for (i = 0; i < this._led.length; ++i) {
       var offset = this._led[i] * 4;
-      this._program.setUniformVector('uMirror', [i]);
+      var mirror = (i == this._mirror) ? 1 : 0;
+      this._program.setUniformVector('uMirror', [mirror]);
       this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, offset, 4);
     }
 };

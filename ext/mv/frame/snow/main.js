@@ -16,7 +16,7 @@ MajVj.frame.snow = function (options) {
                     MajVj.frame.snow._vertexShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.snow._fragmentShader));
-    this._image = this._screen.createImage(512, 512);
+    this._image = this._screen.createImage(this._width, this._height);
     this._data = this._image.data;
     this._texture = this._screen.createTexture(
             this._image, true, Tma3DScreen.FILTER_LINEAR);
@@ -50,6 +50,7 @@ MajVj.frame.snow.load = function () {
  * @param aspect screen aspect ratio
  */
 MajVj.frame.snow.prototype.onresize = function (aspect) {
+    // Do smoething to support dynamic screen size update.
     this._aspect = aspect;
 };
 
@@ -74,7 +75,7 @@ MajVj.frame.snow.prototype.draw = function (delta) {
         var vy = Math.random() + 0.5;
         this._ps.add(x, vx, vy, this._image, this._width, this._height);
     }
-    var size = 512 * 512 * 4;
+    var size = this._width * this._height * 4;
     for (i = 0; i < size; ++i)
         this._data[i] = 0;
     this._ps.update();
@@ -82,7 +83,6 @@ MajVj.frame.snow.prototype.draw = function (delta) {
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setTexture('uTexture', this._texture);
     this._program.setUniformVector('uVolume', [volume]);
-    this._program.setUniformVector('uAspect', [this._aspect]);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
 
