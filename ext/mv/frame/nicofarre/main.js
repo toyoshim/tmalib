@@ -1,9 +1,9 @@
 /**
  * T'MediaArt library for JavaScript
- *  - MajVj extension - frame plugin - nico_ceil -
+ *  - MajVj extension - frame plugin - nicofarre -
  * @param options options (See MajVj.prototype.create)
  */
-MajVj.frame.nico_ceil = function (options) {
+MajVj.frame.nicofarre = function (options) {
     this._screen = options.screen;
     this._width = options.width;
     this._height = options.height;
@@ -12,9 +12,9 @@ MajVj.frame.nico_ceil = function (options) {
 
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.frame.nico_ceil._vertexShader),
+                    MajVj.frame.nicofarre._vertexShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
-                    MajVj.frame.nico_ceil._fragmentShader));
+                    MajVj.frame.nicofarre._fragmentShader));
     this._coords = this._screen.createBuffer([
             // G (ceiling): (1760, 870) - (1858, 1040) / (1920, 1080)
             1760 / 1920 * 2 - 1, 870 / 1080 * 2 - 1,
@@ -34,23 +34,23 @@ MajVj.frame.nico_ceil = function (options) {
 };
 
 // Shader programs.
-MajVj.frame.nico_ceil._vertexShader = null;
-MajVj.frame.nico_ceil._fragmentShader = null;
+MajVj.frame.nicofarre._vertexShader = null;
+MajVj.frame.nicofarre._fragmentShader = null;
 
 /**
  * Loads resources asynchronously.
  * @return a Promise object
  */
-MajVj.frame.nico_ceil.load = function () {
+MajVj.frame.nicofarre.load = function () {
     return new Promise(function (resolve, reject) {
         Promise.all([
-            MajVj.loadShader('frame', 'nico_ceil', 'shaders.html', 'vertex'),
-            MajVj.loadShader('frame', 'nico_ceil', 'shaders.html', 'fragment')
+            MajVj.loadShader('frame', 'nicofarre', 'shaders.html', 'vertex'),
+            MajVj.loadShader('frame', 'nicofarre', 'shaders.html', 'fragment')
         ]).then(function (shaders) {
-            MajVj.frame.nico_ceil._vertexShader = shaders[0];
-            MajVj.frame.nico_ceil._fragmentShader = shaders[1];
+            MajVj.frame.nicofarre._vertexShader = shaders[0];
+            MajVj.frame.nicofarre._fragmentShader = shaders[1];
             resolve();
-        }, function () { reject('nico_ceil.load fails'); });
+        }, function () { reject('nicofarre.load fails'); });
     });
 };
 
@@ -58,7 +58,7 @@ MajVj.frame.nico_ceil.load = function () {
  * Handles screen resize.
  * @param aspect screen aspect ratio
  */
-MajVj.frame.nico_ceil.prototype.onresize = function (aspect) {
+MajVj.frame.nicofarre.prototype.onresize = function (aspect) {
     this._aspect = aspect;
 };
 
@@ -66,12 +66,11 @@ MajVj.frame.nico_ceil.prototype.onresize = function (aspect) {
  * Draws a frame.
  * @param delta delta time from the last rendering
  */
-MajVj.frame.nico_ceil.prototype.draw = function (delta) {
+MajVj.frame.nicofarre.prototype.draw = function (delta) {
     var fbo = this._fbo.bind();
     this._wired.draw(delta);
     this._crlogo.draw(delta);
     fbo.bind();
-    this._screen.fillColor(0.0, 0.0, 0.0, 1.0);
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setAttributeArray('aTexCoord', this._texCoods, 0, 2, 0);
     this._program.setTexture('uTexture', this._fbo.texture);
@@ -82,6 +81,6 @@ MajVj.frame.nico_ceil.prototype.draw = function (delta) {
  * Sets a controller.
  * @param controller a controller object
  */
-MajVj.frame.nico_ceil.prototype.setController = function (controller) {
+MajVj.frame.nicofarre.prototype.setController = function (controller) {
     this._controller = controller;
 };
