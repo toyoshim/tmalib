@@ -17,7 +17,7 @@ function MajVj (width, height, fullscreen) {
     this._height = height;
     this._fullscreen = (fullscreen === undefined) ? true : fullscreen;
     this._aspect = width / height;
-    this._timestamp = 0;
+    this._timestamp = undefined;
     this._screen = new TmaScreen(width, height, TmaScreen.MODE_3D);
     this._screen.setAlphaMode(
             true, this._screen.gl.SRC_ALPHA, this._screen.gl.ONE);
@@ -125,15 +125,15 @@ MajVj.prototype.aspect = function () {
     var requestAnimationFrame = window.requestAnimationFrame ||
             window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame;
-    var loop = function (time) {
-        var delta = time - this._timestamp;
+    loop = function (time) {
+        if (this._timestamp) {
+          var delta = time - this._timestamp;
+          main(delta);
+        }
         this._timestamp = time;
-        main(delta);
         requestAnimationFrame(loop, this._canvas);
     }.bind(this);
-    this._timestamp = window.mozAnimationStartTime || Date.now();
-    this._timestamp -= 0.1;
-    loop(this._timestamp + 0.1);
+    loop();
 };
 
 /**
