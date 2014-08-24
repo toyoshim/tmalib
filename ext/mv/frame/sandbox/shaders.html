@@ -1328,3 +1328,65 @@ void main(void)
         gl_FragColor = vec4(color,1.0);
 }
 </script>
+
+<!-- http://glsl.heroku.com/e#18543.2 -->
+<script id='18543.2_' type='x-shader/x-fragment'>
+/*
+  Daily an hour GLSL sketch by @chimanaco 3/30
+
+  References:
+  http://tokyodemofest.jp/2014/7lines/index.html
+*/
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform vec2  resolution;
+uniform float time;
+uniform vec2 mouse;
+
+float PI = 3.1415926535;
+
+void main( void ) {
+    vec2 p=(gl_FragCoord.xy -.5 * resolution)/ min(resolution.x,resolution.y);
+    vec3 c = vec3(0);
+   
+    for(int i = 0; i < 128; i++){
+    float t = 3.* PI * float(i) / 200. * fract(time*0.95);
+    float x = cos(t/cos(time+time*time)) / sin(t-time*time+p.y*1e1);
+    float y = sin(-t+p.x*16.);
+    vec2 o = 0.145 * vec2(x,y)/cos(time*1e-1);
+    float r = fract(t);
+    float g = 1.-r;
+    float b = 1.-r;
+    c += 8e-4/(length(p-o))*vec3(r,g,b);
+    }
+    gl_FragColor = vec4(c,1);
+}
+</script>
+
+<!-- http://glsl.heroku.com/e#18543.2 -->
+<script id='18543.2' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+void main( void ) {
+
+        vec2 position = ( gl_FragCoord.xy / resolution.xy ) + mouse / 4.0;
+
+        float color = 0.0;
+        color += sin( position.x * cos( time / 10.0 ) * 90.0 ) + cos( position.y * cos( time / 15.0 ) * 10.0 );
+        color += sin( position.y * sin( time / 10.0 ) * 40.0 ) + cos( position.x * sin( time / 25.0 ) * 40.0 );
+        color += sin( position.x * sin( time / 5.0 ) * 10.0 ) + sin( position.y * sin( time / 35.0 ) * 80.0 );
+        color *= sin( time / 10.0 ) * 0.5;
+
+        gl_FragColor = vec4( vec3( color, color * 0.5, sin( color + time / 3.0 ) * 0.75 ), 1.0 );
+
+}
+</script>

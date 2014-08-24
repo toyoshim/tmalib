@@ -19,11 +19,9 @@ uniform sampler2D uTexture;
 uniform float uMirror;
 
 void main() {
-  vec2 coord;
-  if (uMirror == 0.0)
-    coord = vCoord;
-  else
-    coord = vec2(1.0 - vCoord.x, vCoord.y);
+  vec2 coord = mod(vCoord, vec2(1.0, 1.0));
+  if (uMirror != 0.0)
+    coord = vec2(1.0 - coord.x, coord.y);
   gl_FragColor = vec4(texture2D(uTexture, coord).rgb, 1.0);
 }
 </script>
