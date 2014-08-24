@@ -160,7 +160,7 @@ MajVj.frame.nicofarre.LED_LEFT_STAGE_RIGHT = [7, 8, 9];
 MajVj.frame.nicofarre.LED_WHOLE_WALLS = [10, 11, 12, 13];
 
 // Const values to specify mirroing mode.
-MajVj.frame.nicofarre.MIRROR_OFF = 2;
+MajVj.frame.nicofarre.MIRROR_OFF = -1;
 MajVj.frame.nicofarre.MIRROR_ON_RIGHT = 0;
 MajVj.frame.nicofarre.MIRROR_ON_LEFT = 1;
 
