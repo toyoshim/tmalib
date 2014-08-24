@@ -1,0 +1,114 @@
+<html>
+<head><title>Nicofarre test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script>
+var controller = {};
+controller.volume = [0.0, 0.0];
+var emulate = true;
+document.body.addEventListener('keydown', function (e) {
+  switch (e.which) {
+    case 70:  // f
+      document.body.webkitRequestFullscreen();
+      break;
+    case 72:  // h
+      controller.volume[1] -= 0.01;
+      break;
+    case 74:  // j
+      controller.volume[0] -= 0.01;
+      break;
+    case 75:  // k
+      controller.volume[0] += 0.01;
+      break;
+    case 76:  // l
+      controller.volume[1] += 0.01;
+      break;
+    case 88:  // x
+      emulate = !emulate;
+      break;
+    default:
+      console.log(e.which);
+  }
+});
+
+function _(f){return function(){try{f();}catch(e){console.error(e.stack); }}}
+
+var Box = function () {
+  this._n = 256;
+  this._x = [];
+  this._y = [];
+  this._z = [];
+  this._s = [];
+  this._c = [];
+  this._r = [];
+  for (var i = 0; i < this._n; ++i)
+    this.init(i, (Math.random() - 0.5) * 20000);
+};
+
+Box.prototype.init = function (i, z) {
+  this._x[i] = (Math.random() - 0.5) * 10000.0;
+  this._y[i] = (Math.random() - 0.5) * 1000.0;
+  this._z[i] = z;
+  this._s[i] = 100.0;
+  var r = Math.random();
+  var g = Math.random();
+  var b = Math.random();
+  this._c[i] = [r, g, b, 1.0];
+  this._r[i] = Math.random() * Math.PI * 2.0;
+};
+
+Box.prototype.draw = function (api) {
+  api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
+  // FIXME: Depth test does not work even if the alpha mode is disabled. Why?
+  // api.setAlphaMode(false);
+  api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
+  var speed = api.delta * 2.0;
+  var rs = speed / 1000.0;
+  for (var i = 0; i < this._n; ++i) {
+    api.color = this._c[i];
+    api.drawCube(this._s[i], this._s[i], this._s[i],
+                [this._x[i], this._y[i], this._z[i]],
+                [this._r[i], 0.0, 0.0]);
+    this._r[i] += rs;
+    this._z[i] += speed;
+    if (this._z[i] > 10000)
+      this.init(i, -10000);
+  }
+};
+
+var box = new Box();
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var r = 1;
+  var width = 1920 / r;
+  var height = 1080 / r;
+  var vj = new MajVj(width, height, true);
+  vj.loadAllPlugins().then(_(function () {
+    var wall = vj.create('frame', 'nicofarre3d', { draw: box.draw.bind(box) });
+    var fx = vj.create('effect', 'nicofarre', { front: false,
+                                                position: [0, 0, 0]});
+    fx.setController(controller);
+    var fbo = vj.screen().createFrameBuffer(width, height);
+    vj.screen().setAlphaMode(false);
+    vj.run(function (delta) {
+      if (emulate)
+        fbo.bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      wall.draw(delta);
+      if (emulate) {
+        vj.screen().bind();
+        vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+        fx.draw(delta, fbo.texture);
+      }
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      vj.onresize();
+      fx.onresize(vj.aspect());
+    };
+  }), function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

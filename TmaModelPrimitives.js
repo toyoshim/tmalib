@@ -57,6 +57,35 @@ TmaModelPrimitives.prototype.getIndices = function () {
 };
 
 /**
+ * Creates a cube model.
+ */
+TmaModelPrimitives.prototype._createCube = function () {
+    this._vertices = [
+            -0.5, -0.5, -0.5,  // 0
+            -0.5, -0.5,  0.5,  // 1
+            -0.5,  0.5, -0.5,  // 2
+            -0.5,  0.5,  0.5,  // 3
+             0.5, -0.5, -0.5,  // 4
+             0.5, -0.5,  0.5,  // 5
+             0.5,  0.5, -0.5,  // 6
+             0.5,  0.5,  0.5]; // 7
+    this._indices = [
+          1, 5, 7, 7, 3, 1,
+          3, 7, 6, 6, 2, 3,
+          2, 6, 4, 4, 0, 2,
+          0, 4, 5, 5, 1, 0,
+          5, 4, 6, 6, 7, 5,
+          0, 1, 3, 3, 2, 0];
+    this._coords = [
+          0, 0, 0, 1, 1, 1, 1, 0,
+          0, 0, 0, 1, 1, 1, 1, 0,
+          0, 0, 0, 1, 1, 1, 1, 0,
+          0, 0, 0, 1, 1, 1, 1, 0,
+          0, 0, 0, 1, 1, 1, 1, 0,
+          0, 0, 0, 1, 1, 1, 1, 0];
+};
+
+/**
  * Creates a sphere model with evenly divided triangles.
  * @param resolution divition depth
  */
@@ -126,6 +155,16 @@ TmaModelPrimitives.prototype._createSphereEven = function (resolution) {
 
 TmaModelPrimitives.SPHERE_METHOD_THEODOLITE = 0;
 TmaModelPrimitives.SPHERE_METHOD_EVEN = 1;
+
+/**
+ * Creates a cube model.
+ * @return A TmaModelPrimitives object containing a cube model
+ */
+TmaModelPrimitives.createCube = function () {
+    var cube = new TmaModelPrimitives();
+    cube._createCube();
+    return cube;
+};
 
 /**
  * Creates a sphere model.

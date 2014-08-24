@@ -15,6 +15,7 @@ MajVj.frame.nicofarre3d = function (options) {
       color: [1.0, 1.0, 1.0, 1.0],
       delta: 0.0,
       drawBox: this._drawBox.bind(this),
+      drawCube: this._drawCube.bind(this),
       drawLine: this._drawLine.bind(this),
       fill: this._fill.bind(this),
       gl: this._screen.gl,
@@ -101,6 +102,10 @@ MajVj.frame.nicofarre3d = function (options) {
             [-1, -1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1]);
     this._boxCoord = this._screen.createBuffer(
             [-0.5, -0.5, 0, -0.5, 0.5, 0, 0.5, 0.5, 0, 0.5, -0.5, 0]);
+    var cube = TmaModelPrimitives.createCube();
+    this._cubeVertices = this._screen.createBuffer(cube.getVertices());
+    this._cubeIndices = this._screen.createElementBuffer(cube.getIndices());
+    this._cubeItems = cube.items();
 };
 
 // Shader programs.
@@ -173,11 +178,6 @@ MajVj.frame.nicofarre3d.prototype.setController = function (controller) {
     this._controller = controller;
 };
 
-// TODO:
-//  - drawCube
-//  - drawArrays
-//  - drawElements
-
 /**
  * Clears all displays.
  * @param flag flag, e.g., gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
@@ -232,6 +232,52 @@ MajVj.frame.nicofarre3d.prototype._drawBox = function (w, h, p, r) {
     this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixBack);
     this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixBack);
     this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+};
+
+/**
+ * Draws a cube to all displays.
+ * @param w width
+ * @param h height
+ * @param d depth
+ * @param p position in [x, y, z]
+ * @param r rotation in [z, y, z] in radian.
+ */
+MajVj.frame.nicofarre3d.prototype._drawCube = function (w, h, d, p, r) {
+    this._drawProgram.setAttributeArray('aCoord', this._cubeVertices, 0, 3, 0);
+    this._drawProgram.setUniformVector('uColor', this._api.color);
+
+    mat4.translate(this._iMatrix, p, this._matrix);
+    if (r) {
+      mat4.rotateX(this._matrix, r[0]);
+      mat4.rotateY(this._matrix, r[1]);
+      mat4.rotateZ(this._matrix, r[2]);
+    }
+    mat4.scale(this._matrix, [w, h, d]);
+    this._drawProgram.setUniformMatrix('uMatrix', this._matrix);
+
+    this._fboRight.bind();
+    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixRight);
+    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixRight);
+    this._drawProgram.drawElements(Tma3DScreen.MODE_TRIANGLES,
+                                   this._cubeIndices, 0, this._cubeItems);
+
+    this._fboStage.bind();
+    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixStage);
+    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixStage);
+    this._drawProgram.drawElements(Tma3DScreen.MODE_TRIANGLES,
+                                   this._cubeIndices, 0, this._cubeItems);
+
+    this._fboLeft.bind();
+    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixLeft);
+    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixLeft);
+    this._drawProgram.drawElements(Tma3DScreen.MODE_TRIANGLES,
+                                   this._cubeIndices, 0, this._cubeItems);
+
+    this._fboBack.bind();
+    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixBack);
+    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixBack);
+    this._drawProgram.drawElements(Tma3DScreen.MODE_TRIANGLES,
+                                   this._cubeIndices, 0, this._cubeItems);
 };
 
 /**
