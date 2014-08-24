@@ -46,8 +46,8 @@ var Box = function () {
 };
 
 Box.prototype.init = function (i, z) {
-  this._x[i] = (Math.random() - 0.5) * 100.0;
-  this._y[i] = (Math.random() - 0.5) * 10.0;
+  this._x[i] = (Math.random() - 0.5) * 10000.0;
+  this._y[i] = (Math.random() - 0.5) * 1000.0;
   this._z[i] = z;
   this._s[i] = 100.0;  // Math.random() * 100.0;
   var r = Math.random();

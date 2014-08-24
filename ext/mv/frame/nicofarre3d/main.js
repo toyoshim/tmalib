@@ -204,13 +204,13 @@ MajVj.frame.nicofarre3d.prototype._drawBox = function (w, h, p, r) {
     this._drawProgram.setAttributeArray('aCoord', this._boxCoord, 0, 3, 0);
     this._drawProgram.setUniformVector('uColor', this._api.color);
 
-    mat4.scale(this._iMatrix, [w, h, 1.0], this._matrix);
-    mat4.translate(this._matrix, p);
+    mat4.translate(this._iMatrix, p, this._matrix);
     if (r) {
       mat4.rotateX(this._matrix, r[0]);
       mat4.rotateY(this._matrix, r[1]);
       mat4.rotateZ(this._matrix, r[2]);
     }
+    mat4.scale(this._matrix, [w, h, 1.0]);
     this._drawProgram.setUniformMatrix('uMatrix', this._matrix);
 
     this._fboRight.bind();
