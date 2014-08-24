@@ -13,6 +13,7 @@ MajVj.frame.nicofarre3d = function (options) {
     this._api = {
       clear: this._clear.bind(this),
       color: [1.0, 1.0, 1.0, 1.0],
+      createTexture: this._screen.createTexture,
       delta: 0.0,
       drawBox: this._drawBox.bind(this),
       drawCube: this._drawCube.bind(this),
@@ -33,6 +34,11 @@ MajVj.frame.nicofarre3d = function (options) {
                     MajVj.frame.nicofarre3d._vDrawShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.nicofarre3d._fDrawShader));
+    this._textureProgram = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.frame.nicofarre3d._vTextureShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.frame.nicofarre3d._fTextureShader));
     this._coords = this._screen.createBuffer([
             // A (right): (40, 760) - (1520, 1040) / (1920, 1080)
             40 / 1920 * 2 - 1, 760 / 1080 * 2 - 1,
@@ -112,6 +118,10 @@ MajVj.frame.nicofarre3d = function (options) {
 // Shader programs.
 MajVj.frame.nicofarre3d._vScreenShader = null;
 MajVj.frame.nicofarre3d._fScreenShader = null;
+MajVj.frame.nicofarre3d._vDrawShader = null;
+MajVj.frame.nicofarre3d._fDrawShader = null;
+MajVj.frame.nicofarre3d._vTextureShader = null;
+MajVj.frame.nicofarre3d._fTextureShader = null;
 
 /**
  * Loads resources asynchronously.
@@ -125,12 +135,16 @@ MajVj.frame.nicofarre3d.load = function () {
                 MajVj.loadShader('frame', name, path, 'v_screen'),
                 MajVj.loadShader('frame', name, path, 'f_screen'),
                 MajVj.loadShader('frame', name, path, 'v_draw'),
-                MajVj.loadShader('frame', name, path, 'f_draw')
+                MajVj.loadShader('frame', name, path, 'f_draw'),
+                MajVj.loadShader('frame', name, path, 'v_texture'),
+                MajVj.loadShader('frame', name, path, 'f_texture')
         ]).then(function (shaders) {
             MajVj.frame.nicofarre3d._vScreenShader = shaders[0];
             MajVj.frame.nicofarre3d._fScreenShader = shaders[1];
             MajVj.frame.nicofarre3d._vDrawShader = shaders[2];
             MajVj.frame.nicofarre3d._fDrawShader = shaders[3];
+            MajVj.frame.nicofarre3d._vTextureShader = shaders[4];
+            MajVj.frame.nicofarre3d._fTextureShader = shaders[5];
             resolve();
         }, function () { reject('nicofarre3d.load fails'); });
     });
@@ -297,9 +311,17 @@ MajVj.frame.nicofarre3d.prototype._drawLine =
  * @param r rotation in [z, y, z] in radian.
  */
 MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
-    this._drawProgram.setAttributeArray(
+    var texture = o.getTexture();
+    var program = texture ? this._textureProgram : this._drawProgram;
+    program.setAttributeArray(
             'aCoord', o.getVerticesBuffer(this._screen), 0, 3, 0);
-    this._drawProgram.setUniformVector('uColor', this._api.color);
+    if (texture) {
+        program.setAttributeArray(
+               'aTexCoord', o.getCoordsBuffer(this._screen), 0, 2, 0);
+        program.setTexture('uTexture', texture);
+    } else {
+        program.setUniformVector('uColor', this._api.color);
+    }
 
     mat4.translate(this._iMatrix, p, this._matrix);
     if (r) {
@@ -308,33 +330,40 @@ MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
       mat4.rotateZ(this._matrix, r[2]);
     }
     mat4.scale(this._matrix, [w, h, d]);
-    this._drawProgram.setUniformMatrix('uMatrix', this._matrix);
+    program.setUniformMatrix('uMatrix', this._matrix);
 
     this._fboRight.bind();
-    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixRight);
-    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixRight);
-    this._drawProgram.drawElements(
+    if (texture) program.setTexture('uTexture', texture);
+    program.setUniformMatrix('uPMatrix', this._pMatrixRight);
+    program.setUniformMatrix('uMVMatrix', this._mvMatrixRight);
+    program.drawElements(
             Tma3DScreen.MODE_TRIANGLES,
             o.getIndicesBuffer(this._screen), 0, o.items());
 
     this._fboStage.bind();
-    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixStage);
-    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixStage);
-    this._drawProgram.drawElements(
+    if (texture) program.setTexture('uTexture', texture);
+    program.setUniformMatrix('uPMatrix', this._pMatrixRight);
+    program.setUniformMatrix('uPMatrix', this._pMatrixStage);
+    program.setUniformMatrix('uMVMatrix', this._mvMatrixStage);
+    program.drawElements(
             Tma3DScreen.MODE_TRIANGLES,
             o.getIndicesBuffer(this._screen), 0, o.items());
 
     this._fboLeft.bind();
-    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixLeft);
-    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixLeft);
-    this._drawProgram.drawElements(
+    if (texture) program.setTexture('uTexture', texture);
+    program.setUniformMatrix('uPMatrix', this._pMatrixRight);
+    program.setUniformMatrix('uPMatrix', this._pMatrixLeft);
+    program.setUniformMatrix('uMVMatrix', this._mvMatrixLeft);
+    program.drawElements(
             Tma3DScreen.MODE_TRIANGLES,
             o.getIndicesBuffer(this._screen), 0, o.items());
 
     this._fboBack.bind();
-    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixBack);
-    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixBack);
-    this._drawProgram.drawElements(
+    if (texture) program.setTexture('uTexture', texture);
+    program.setUniformMatrix('uPMatrix', this._pMatrixRight);
+    program.setUniformMatrix('uPMatrix', this._pMatrixBack);
+    program.setUniformMatrix('uMVMatrix', this._mvMatrixBack);
+    program.drawElements(
             Tma3DScreen.MODE_TRIANGLES,
             o.getIndicesBuffer(this._screen), 0, o.items());
 };

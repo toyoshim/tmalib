@@ -36,17 +36,25 @@ function _(f){return function(){try{f();}catch(e){console.error(e.stack); }}}
 var init = false;
 var s;
 var t = 0;
+var img = new Image();
+img.ready = false;
+img.onload = function () {
+  img.ready = true;
+};
+img.src = 'data/jupiter.jpg';
+
 var draw = function (api) {
-  if (!init) {
+  if (!init && img.ready) {
     init = true;
-    console.log(TmaModelPrimitives);
     s = TmaModelPrimitives.createSphere(
         4, TmaModelPrimitives.SPHERE_METHOD_EVEN);
+    //s = TmaModelPrimitives.createCube();
+    s.setTexture(api.createTexture(img, true, Tma3DScreen.FILTER_LINEAR));
   }
   api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
-  var p = [5000 * Math.cos(t), 0, 5000 * Math.sin(t)];
-  t += 0.01;
-  api.drawPrimitive(s, 100, 100, 100, p);
+  var p = [2000 * Math.cos(t), 0, 2000 * Math.sin(t)];
+  t += 0.005;
+  api.drawPrimitive(s, 200, 200, 200, p, [Math.PI / 2.0, 0.0, t * 3]);
 };
 
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
@@ -57,7 +65,7 @@ tma.onload = function () {
   var vj = new MajVj(width, height, true);
   vj.loadAllPlugins().then(_(function () {
     var wall = vj.create('frame', 'nicofarre3d', { draw: draw });
-    var fx = vj.create('effect', 'nicofarre', { front: false,
+    var fx = vj.create('effect', 'nicofarre', { front: true,
                                                 position: [0, 0, 0]});
     fx.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);

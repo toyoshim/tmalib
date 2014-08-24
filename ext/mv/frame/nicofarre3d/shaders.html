@@ -42,5 +42,30 @@ void main() {
 }
 </script>
 
+<script id='v_texture' type='x-shader/x-vertex'>
+attribute vec3 aCoord;
+attribute vec2 aTexCoord;
+uniform mat4 uPMatrix;
+uniform mat4 uMVMatrix;
+uniform mat4 uMatrix;
+varying vec2 vTexCoord;
+
+void main() {
+  gl_Position = uPMatrix * uMVMatrix * uMatrix * vec4(aCoord, 1.0);
+  vTexCoord = aTexCoord;
+}
+</script>
+
+<script id='f_texture' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture;
+varying vec2 vTexCoord;
+
+void main() {
+  gl_FragColor = texture2D(uTexture, vTexCoord);
+}
+</script>
+
+
 </head>
 </html>

@@ -14,7 +14,9 @@ function TmaModelPrimitives() {
     this._coords = [];
     this._indices = [];
     this._verticesBuffer = null;
+    this._coordsBuffer = null;
     this._indicesBuffer = null;
+    this._texture = null;
 }
 
 /**
@@ -70,6 +72,17 @@ TmaModelPrimitives.prototype.getVerticesBuffer = function (screen) {
 };
 
 /**
+ * Gets an array buffer bound to the coords. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object for texture coords
+ */
+TmaModelPrimitives.prototype.getCoordsBuffer = function (screen) {
+    if (!this._coordsBuffer)
+        this._coordsBuffer = screen.createBuffer(this.getCoords());
+    return this._coordsBuffer;
+};
+
+/**
  * Gets an element buffer bound to the indices. It may be created if needed.
  * @param screen a Tma3DScreen object that will be used to create a buffer
  * @return an element buffer object
@@ -78,6 +91,22 @@ TmaModelPrimitives.prototype.getIndicesBuffer = function (screen) {
     if (!this._indicesBuffer)
         this._indicesBuffer = screen.createElementBuffer(this.getIndices());
     return this._indicesBuffer;
+};
+
+/**
+ * Sets a texture.
+ * @param texture a texture object
+ */
+TmaModelPrimitives.prototype.setTexture = function (texture) {
+    this._texture = texture;
+};
+
+/**
+ * Gets a bound texture object.
+ * @return a texture object
+ */
+TmaModelPrimitives.prototype.getTexture = function () {
+    return this._texture;
 };
 
 /**
