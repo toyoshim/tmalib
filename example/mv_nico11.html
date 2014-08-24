@@ -64,6 +64,11 @@ tma.onload = function () {
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
   vj.loadAllPlugins().then(_(function () {
+    var ceil = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_CEILING,
+                          frames: [
+                            { name: 'sandbox', options: { id: '19336.0' } }
+                          ]});
     var wall = vj.create('frame', 'nicofarre3d', { draw: draw });
     var fx = vj.create('effect', 'nicofarre', { front: true,
                                                 position: [0, 0, 0]});
@@ -74,6 +79,7 @@ tma.onload = function () {
       if (emulate)
         fbo.bind();
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      ceil.draw(delta);
       wall.draw(delta);
       if (emulate) {
         vj.screen().bind();
