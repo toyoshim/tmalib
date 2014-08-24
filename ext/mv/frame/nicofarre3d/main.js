@@ -11,7 +11,10 @@ MajVj.frame.nicofarre3d = function (options) {
     this._controller = options.controller;
     this._draw = options.draw;
     this._api = {
-      color: [1, 1, 1, 1],
+      clear: this._clear.bind(this),
+      color: [1.0, 1.0, 1.0, 1.0],
+      delta: 0.0,
+      drawBox: this._drawBox.bind(this),
       drawLine: this._drawLine.bind(this),
       fill: this._fill.bind(this),
       gl: this._screen.gl,
@@ -91,10 +94,13 @@ MajVj.frame.nicofarre3d = function (options) {
     this._mvMatrixLeft = mat4.rotateY(mat4.identity(), -Math.PI / 2);
     this._mvMatrixBack = mat4.rotateY(mat4.identity(), -Math.PI);
     this._iMatrix = mat4.identity();
+    this._matrix = mat4.create();
 
     this._buffer2 = this._screen.createBuffer(new Array(2 * 3));
     this._bufferICoord = this._screen.createBuffer(
             [-1, -1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1]);
+    this._boxCoord = this._screen.createBuffer(
+            [-0.5, -0.5, 0, -0.5, 0.5, 0, 0.5, 0.5, 0, 0.5, -0.5, 0]);
 };
 
 // Shader programs.
@@ -140,6 +146,7 @@ MajVj.frame.nicofarre3d.prototype.draw = function (delta) {
     this._screen.pushAlphaMode();
     var screen = this._fboRight.bind();
 
+    this._api.delta = delta;
     this._draw(this._api);
 
     screen.bind();
@@ -166,6 +173,76 @@ MajVj.frame.nicofarre3d.prototype.setController = function (controller) {
     this._controller = controller;
 };
 
+// TODO:
+//  - drawCube
+//  - drawArrays
+//  - drawElements
+
+/**
+ * Clears all displays.
+ * @param flag flag, e.g., gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
+ */
+MajVj.frame.nicofarre3d.prototype._clear = function (flag) {
+    this._fboRight.bind();
+    this._screen.gl.clear(flag);
+    this._fboStage.bind();
+    this._screen.gl.clear(flag);
+    this._fboLeft.bind();
+    this._screen.gl.clear(flag);
+    this._fboBack.bind();
+    this._screen.gl.clear(flag);
+};
+
+/**
+ * Draws a box to all displays.
+ * @param w width
+ * @param h height
+ * @param p position in [x, y, z]
+ * @param r rotation in [z, y, z] in radian.
+ */
+MajVj.frame.nicofarre3d.prototype._drawBox = function (w, h, p, r) {
+    this._drawProgram.setAttributeArray('aCoord', this._boxCoord, 0, 3, 0);
+    this._drawProgram.setUniformVector('uColor', this._api.color);
+
+    mat4.scale(this._iMatrix, [w, h, 1.0], this._matrix);
+    mat4.translate(this._matrix, p);
+    if (r) {
+      mat4.rotateX(this._matrix, r[0]);
+      mat4.rotateY(this._matrix, r[1]);
+      mat4.rotateZ(this._matrix, r[2]);
+    }
+    this._drawProgram.setUniformMatrix('uMatrix', this._matrix);
+
+    this._fboRight.bind();
+    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixRight);
+    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixRight);
+    this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+
+    this._fboStage.bind();
+    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixStage);
+    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixStage);
+    this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+
+    this._fboLeft.bind();
+    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixLeft);
+    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixLeft);
+    this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+
+    this._fboBack.bind();
+    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixBack);
+    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixBack);
+    this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+};
+
+/**
+ * Draws a line to all displays.
+ * @param sx source x position
+ * @param sy source y position
+ * @param sz source z position
+ * @param dx destination x position
+ * @param dy destination y position
+ * @param dz destination z position
+ */
 MajVj.frame.nicofarre3d.prototype._drawLine =
         function (sx, sy, sz, dx, dy, dz) {
     var buffer = this._buffer2.buffer();
@@ -174,6 +251,7 @@ MajVj.frame.nicofarre3d.prototype._drawLine =
     this._buffer2.update();
     this._drawProgram.setAttributeArray('aCoord', this._buffer2, 0, 3, 0);
     this._drawProgram.setUniformVector('uColor', this._api.color);
+    this._drawProgram.setUniformMatrix('uMatrix', this._iMatrix);
 
     this._fboRight.bind();
     this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixRight);
@@ -196,12 +274,17 @@ MajVj.frame.nicofarre3d.prototype._drawLine =
     this._drawProgram.drawArrays(Tma3DScreen.MODE_LINES, 0, 2);
 };
 
+/**
+ * Fills display textures.
+ * @param color a color in [r, g, b, a]a
+ */
 MajVj.frame.nicofarre3d.prototype._fill = function (color) {
     var c = color || this._api.color;
     this._drawProgram.setAttributeArray('aCoord', this._bufferICoord, 0, 3, 0);
     this._drawProgram.setUniformVector('uColor', c);
     this._drawProgram.setUniformMatrix('uPMatrix', this._iMatrix);
     this._drawProgram.setUniformMatrix('uMVMatrix', this._iMatrix);
+    this._drawProgram.setUniformMatrix('uMatrix', this._iMatrix);
     this._fboRight.bind();
     this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
     this._fboStage.bind();
@@ -211,4 +294,3 @@ MajVj.frame.nicofarre3d.prototype._fill = function (color) {
     this._fboBack.bind();
     this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
-
