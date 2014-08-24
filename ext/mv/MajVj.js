@@ -54,6 +54,7 @@ MajVj.prototype.loadAllPlugins = function () {
         this.loadPlugin('frame', 'crlogo'),
         this.loadPlugin('frame', 'movie'),
         this.loadPlugin('frame', 'nicofarre'),
+        this.loadPlugin('frame', 'nicofarre3d'),
         this.loadPlugin('frame', 'nico_test'),
         this.loadPlugin('frame', 'sandbox'),
         this.loadPlugin('frame', 'snow'),
