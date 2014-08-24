@@ -24,7 +24,8 @@ MajVj.effect.nicofarre = function (options) {
     this.onresize(this._aspect);
     this._mvMatrix = mat4.create();
     mat4.identity(this._mvMatrix);
-    mat4.translate(this._mvMatrix, [0, 0, -500]);
+    var position = options.position || [0, 0, -500];
+    mat4.translate(this._mvMatrix, position);
     this._coords = this._screen.createBuffer([
             // A (right): 1480x280, x=420
             420, -140, -740,
