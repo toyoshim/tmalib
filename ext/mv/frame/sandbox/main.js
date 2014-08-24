@@ -10,11 +10,15 @@ MajVj.frame.sandbox = function (options) {
     this._aspect = options.aspect;
     this._controller = options.controller;
     this._time = 0;
+    var shader = null;
+    if (options.id)
+        shader = MajVj.frame.sandbox._fragmentShaders[options.id];
+    else if (options.shader)
+        shader = options.shader;
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.sandbox._vertexShader),
-            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
-                    MajVj.frame.sandbox._fragmentShaders[options.id]));
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER, shader));
     this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1])
 };
 
