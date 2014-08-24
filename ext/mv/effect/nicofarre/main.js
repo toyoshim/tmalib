@@ -9,6 +9,7 @@ MajVj.effect.nicofarre = function (options) {
     this._height = options.height;
     this._aspect = options.aspect;
     this._controller = options.controller;
+    this._front = (options.front !== undefined) ? options.front : true;
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.effect.nicofarre._vertexShader),
@@ -170,8 +171,10 @@ MajVj.effect.nicofarre.prototype.draw = function (delta, texture) {
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 4, 4);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 8, 4);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 12, 4);
-    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 16, 4);
-    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 20, 4);
+    if (this._front) {
+        this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 16, 4);
+        this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 20, 4);
+    }
     this._programForCeiling.setAttributeArray('aCoord', this._coords, 0, 3, 0);
     this._programForCeiling.setAttributeArray('aTexCoord', this._texCoords, 0,
             2, 0);
