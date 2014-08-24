@@ -13,6 +13,8 @@ function TmaModelPrimitives() {
     this._vertices = [];
     this._coords = [];
     this._indices = [];
+    this._verticesBuffer = null;
+    this._indicesBuffer = null;
 }
 
 /**
@@ -54,6 +56,28 @@ TmaModelPrimitives.prototype.getCoords = function () {
  */
 TmaModelPrimitives.prototype.getIndices = function () {
     return this._indices;
+};
+
+/**
+ * Gets an array buffer bound to the vertices. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object
+ */
+TmaModelPrimitives.prototype.getVerticesBuffer = function (screen) {
+    if (!this._verticesBuffer)
+        this._verticesBuffer = screen.createBuffer(this.getVertices());
+    return this._verticesBuffer;
+};
+
+/**
+ * Gets an element buffer bound to the indices. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an element buffer object
+ */
+TmaModelPrimitives.prototype.getIndicesBuffer = function (screen) {
+    if (!this._indicesBuffer)
+        this._indicesBuffer = screen.createElementBuffer(this.getIndices());
+    return this._indicesBuffer;
 };
 
 /**
