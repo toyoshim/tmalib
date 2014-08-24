@@ -11,7 +11,10 @@ MajVj.frame.nicofarre3d = function (options) {
     this._controller = options.controller;
     this._draw = options.draw;
     this._api = {
-      drawLine: this._drawLine.bind(this)
+      color: [1, 1, 1, 1],
+      drawLine: this._drawLine.bind(this),
+      gl: this._screen.gl,
+      setAlphaMode: this._screen.setAlphaMode,
     };
 
     this._screenProgram = this._screen.createProgram(
@@ -131,22 +134,12 @@ MajVj.frame.nicofarre3d.prototype.onresize = function (aspect) {
  */
 MajVj.frame.nicofarre3d.prototype.draw = function (delta) {
     this._screen.pushAlphaMode();
-    this._screen.setAlphaMode(false);
-
-    // Clear offscreens.
     var screen = this._fboRight.bind();
-    this._screen.fillColor(0.0, 0.0, 0.0, 1.0);
-    this._fboStage.bind();
-    this._screen.fillColor(0.0, 0.0, 0.0, 1.0);
-    this._fboLeft.bind();
-    this._screen.fillColor(0.0, 0.0, 0.0, 1.0);
-    this._fboBack.bind();
-    this._screen.fillColor(0.0, 0.0, 0.0, 1.0);
 
     this._draw(this._api);
 
-    // Draw screen.
     screen.bind();
+    this._screen.setAlphaMode(false);
     this._screenProgram.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._screenProgram.setAttributeArray('aTexCoord', this._texCoods, 0, 2, 0);
     this._screenProgram.setTexture('uTexture', this._fboRight.texture);
@@ -176,6 +169,7 @@ MajVj.frame.nicofarre3d.prototype._drawLine =
     buffer[3] = dx; buffer[4] = dy; buffer[5] = dz;
     this._buffer2.update();
     this._lineProgram.setAttributeArray('aCoord', this._buffer2, 0, 3, 0);
+    this._lineProgram.setUniformVector('uColor', this._api.color);
 
     this._fboRight.bind();
     this._lineProgram.setUniformMatrix('uPMatrix', this._pMatrixRight);
