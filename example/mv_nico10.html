@@ -72,7 +72,7 @@ Box.prototype.draw = function (api) {
     this._r[i] += rs;
     this._z[i] += speed;
     if (this._z[i] > 10000)
-      this.init(i, -10000);
+      this.init(i, this._z[i] - 20000);
   }
 };
 
