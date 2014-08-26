@@ -107,11 +107,7 @@ MajVj.frame.nicofarre3d = function (options) {
     this._buffer2 = this._screen.createBuffer(new Array(2 * 3));
     this._bufferICoord = this._screen.createBuffer(
             [-1, -1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1]);
-
-    // TODO: Use TmaModelPrimitives even for a box.
-    // It will be nice to support a texture here.
-    this._boxCoord = this._screen.createBuffer(
-            [-0.5, -0.5, 0, -0.5, 0.5, 0, 0.5, 0.5, 0, 0.5, -0.5, 0]);
+    this._box = TmaModelPrimitives.createBox();
     this._cube = TmaModelPrimitives.createCube();
 };
 
@@ -213,40 +209,12 @@ MajVj.frame.nicofarre3d.prototype._clear = function (flag) {
  * @param w width
  * @param h height
  * @param p position in [x, y, z]
- * @param r rotation in [z, y, z] in radian.
+ * @param r rotation in [z, y, z] in radian (optional)
+ * @param texture texture (optional)
  */
-MajVj.frame.nicofarre3d.prototype._drawBox = function (w, h, p, r) {
-    this._drawProgram.setAttributeArray('aCoord', this._boxCoord, 0, 3, 0);
-    this._drawProgram.setUniformVector('uColor', this._api.color);
-
-    mat4.translate(this._iMatrix, p, this._matrix);
-    if (r) {
-      mat4.rotateX(this._matrix, r[0]);
-      mat4.rotateY(this._matrix, r[1]);
-      mat4.rotateZ(this._matrix, r[2]);
-    }
-    mat4.scale(this._matrix, [w, h, 1.0]);
-    this._drawProgram.setUniformMatrix('uMatrix', this._matrix);
-
-    this._fboRight.bind();
-    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixRight);
-    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixRight);
-    this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
-
-    this._fboStage.bind();
-    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixStage);
-    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixStage);
-    this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
-
-    this._fboLeft.bind();
-    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixLeft);
-    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixLeft);
-    this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
-
-    this._fboBack.bind();
-    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixBack);
-    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixBack);
-    this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+MajVj.frame.nicofarre3d.prototype._drawBox = function (w, h, p, r, texture) {
+    this._box.setTexture(texture);
+    return this._drawPrimitive(this._box, w, h, 1.0, p, r);
 };
 
 /**
@@ -255,7 +223,7 @@ MajVj.frame.nicofarre3d.prototype._drawBox = function (w, h, p, r) {
  * @param h height
  * @param d depth
  * @param p position in [x, y, z]
- * @param r rotation in [z, y, z] in radian.
+ * @param r rotation in [z, y, z] in radian (optional)
  */
 MajVj.frame.nicofarre3d.prototype._drawCube = function (w, h, d, p, r) {
     return this._drawPrimitive(this._cube, w, h, d, p, r);
@@ -308,7 +276,7 @@ MajVj.frame.nicofarre3d.prototype._drawLine =
  * @param h height
  * @param d depth
  * @param p position in [x, y, z]
- * @param r rotation in [z, y, z] in radian.
+ * @param r rotation in [z, y, z] in radian (optional)
  */
 MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
     var texture = o.getTexture();

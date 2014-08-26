@@ -110,6 +110,19 @@ TmaModelPrimitives.prototype.getTexture = function () {
 };
 
 /**
+ * Creates a box model.
+ */
+TmaModelPrimitives.prototype._createBox = function () {
+    this._vertices = [
+            -0.5, -0.5, 0,
+             0.5, -0.5, 0,
+             0.5,  0.5, 0,
+            -0.5,  0.5, 0];
+    this._indices = [0, 1, 2, 2, 3, 0];
+    this._coords = [0, 0, 0, 1, 1, 1, 1, 0];
+};
+
+/**
  * Creates a cube model.
  */
 TmaModelPrimitives.prototype._createCube = function () {
@@ -130,12 +143,7 @@ TmaModelPrimitives.prototype._createCube = function () {
           5, 4, 6, 6, 7, 5,
           0, 1, 3, 3, 2, 0];
     this._coords = [
-          0, 0, 0, 1, 1, 1, 1, 0,
-          0, 0, 0, 1, 1, 1, 1, 0,
-          0, 0, 0, 1, 1, 1, 1, 0,
-          0, 0, 0, 1, 1, 1, 1, 0,
-          0, 0, 0, 1, 1, 1, 1, 0,
-          0, 0, 0, 1, 1, 1, 1, 0];
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 };
 
 /**
@@ -208,6 +216,16 @@ TmaModelPrimitives.prototype._createSphereEven = function (resolution) {
 
 TmaModelPrimitives.SPHERE_METHOD_THEODOLITE = 0;
 TmaModelPrimitives.SPHERE_METHOD_EVEN = 1;
+
+/**
+ * Creates a box model.
+ * @return A TmaModelPrimitives object containing a cube model
+ */
+TmaModelPrimitives.createBox = function () {
+    var cube = new TmaModelPrimitives();
+    cube._createBox();
+    return cube;
+};
 
 /**
  * Creates a cube model.
