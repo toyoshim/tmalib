@@ -36,10 +36,10 @@ function _(f){return function(){try{f();}catch(e){console.error(e.stack); }}}
 function draw (api) {
   var p = function () { return (Math.random() - 0.5) * 100000; };
   api.setAlphaMode(true, api.gl.DST_COLOR, api.gl.ZERO);
-  var rate = 0.9;
+  var rate = 0.95;
   api.fill([rate, rate, rate, 1.0]);
   api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
-  for (var i = 0; i < 256; ++i) {
+  for (var i = 0; i < 512; ++i) {
     api.color = [Math.random(), Math.random(), Math.random(), Math.random()];
     api.drawLine([p(), p(), p()], [p(), p(), p()]);
   }
