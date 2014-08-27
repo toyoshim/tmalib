@@ -58,7 +58,8 @@ MajVj.prototype.loadAllPlugins = function () {
         this.loadPlugin('frame', 'nico_test'),
         this.loadPlugin('frame', 'sandbox'),
         this.loadPlugin('frame', 'snow'),
-        this.loadPlugin('frame', 'wired')
+        this.loadPlugin('frame', 'wired'),
+        this.loadPlugin('misc', 'sound')
     ]);
 };
 
@@ -213,3 +214,4 @@ MajVj.loadMovie = function (type, name, path) {
 
 MajVj.effect = {};
 MajVj.frame = {};
+MajVj.misc = {};
