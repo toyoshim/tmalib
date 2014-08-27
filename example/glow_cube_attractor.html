@@ -222,7 +222,7 @@ tma.onload = function () {
     xhr.open('GET', 'data/phsvdist.mp3');
     xhr.responseType = 'arraybuffer';
     xhr.onload = function () {
-        var context = new webkitAudioContext();
+        var context = new AudioContext();
         context.decodeAudioData(this.response, function(buffer) {
             screen.analyser = context.createAnalyser();
             screen.fft = new Uint8Array(
@@ -232,7 +232,9 @@ tma.onload = function () {
             source.loop = true;
             source.connect(screen.analyser);
             screen.analyser.connect(context.destination);
-            source.noteOn(0);
+            if (source.noteOn) source.noteOn(0);
+            if (source.start) source.start();
+            console.log(source)
             setInterval(main, 10);
         });
     };
