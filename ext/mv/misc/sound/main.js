@@ -1,6 +1,6 @@
 /**
  * T'MediaArt library for JavaScript
- *  - MajVj extension - frame plugin - wired -
+ *  - MajVj extension - misc plugin - sound -
  * @param options options (See MajVj.prototype.create)
  */
 MajVj.misc.sound = function (options) {
