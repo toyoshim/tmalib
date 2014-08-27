@@ -19,7 +19,7 @@ MajVj.frame.sandbox = function (options) {
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.sandbox._vertexShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER, shader));
-    this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1])
+    this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1]);
 };
 
 // Shader programs.
