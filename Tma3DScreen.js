@@ -165,12 +165,6 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
     programObject._index = 0;
     programObject._textureId = 0;
     programObject._textureIdMap = {};
-    programObject.assign = function (name) {
-        var index = this._index++;
-        this._owner.gl.bindAttribLocation(this, index, name);
-        this._owner.linkProgram(this);
-        return index;
-    };
     programObject.attributeIndex = function (name) {
         return this._owner.gl.getAttribLocation(this, name);
     };
