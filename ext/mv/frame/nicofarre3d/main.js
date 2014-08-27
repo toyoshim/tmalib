@@ -305,7 +305,6 @@ MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
 
     this._fboStage.bind();
     if (texture) program.setTexture('uTexture', texture);
-    program.setUniformMatrix('uPMatrix', this._pMatrixRight);
     program.setUniformMatrix('uPMatrix', this._pMatrixStage);
     program.setUniformMatrix('uMVMatrix', this._mvMatrixStage);
     program.drawElements(
@@ -314,7 +313,6 @@ MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
 
     this._fboLeft.bind();
     if (texture) program.setTexture('uTexture', texture);
-    program.setUniformMatrix('uPMatrix', this._pMatrixRight);
     program.setUniformMatrix('uPMatrix', this._pMatrixLeft);
     program.setUniformMatrix('uMVMatrix', this._mvMatrixLeft);
     program.drawElements(
@@ -323,7 +321,6 @@ MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
 
     this._fboBack.bind();
     if (texture) program.setTexture('uTexture', texture);
-    program.setUniformMatrix('uPMatrix', this._pMatrixRight);
     program.setUniformMatrix('uPMatrix', this._pMatrixBack);
     program.setUniformMatrix('uMVMatrix', this._mvMatrixBack);
     program.drawElements(
