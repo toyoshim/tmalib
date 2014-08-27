@@ -165,32 +165,42 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
     programObject._index = 0;
     programObject._textureId = 0;
     programObject._textureIdMap = {};
+    programObject._attributes = {};
+    programObject._uniforms = {};
     programObject.attributeIndex = function (name) {
-        return this._owner.gl.getAttribLocation(this, name);
+        if (!this._attributes[name]) {
+            this._attributes[name] =
+                    this._owner.gl.getAttribLocation(this, name);
+        }
+        return this._attributes[name];
     };
     programObject.uniformIndex = function (name) {
-        return this._owner.gl.getUniformLocation(this, name);
+        if (!this._uniforms[name]) {
+            this._uniforms[name] =
+                    this._owner.gl.getUniformLocation(this, name);
+        }
+        return this._uniforms[name];
     };
     programObject.setAttribute = function (name, array) {
-        var index = this._owner.gl.getAttribLocation(this, name);
+        var index = this._attributeIndex(name);
         this._owner.setAttribute(this, index, array);
     };
     programObject.setAttributeArray =
             function (name, buffer, offset, dimension, stride) {
-        var index = this._owner.gl.getAttribLocation(this, name);
+        var index = this.attributeIndex(name);
         buffer.bind();
         this._owner.setAttributeArray(this, index, offset, dimension, stride);
     };
     programObject.setUniformVector = function (name, array) {
-        var index = this._owner.gl.getUniformLocation(this, name);
+        var index = this.uniformIndex(name);
         this._owner.setUniformVector(this, index, array);
     };
     programObject.setUniformMatrix = function (name, array) {
-        var index = this._owner.gl.getUniformLocation(this, name);
+        var index = this.uniformIndex(name);
         this._owner.setUniformMatrix(this, index, array);
     };
     programObject.setTexture = function (name, texture) {
-        var index = this._owner.gl.getUniformLocation(this, name);
+        var index = this.uniformIndex(name);
         var id = this._textureIdMap[name];
         if (!id) {
             id = this._textureId++;
