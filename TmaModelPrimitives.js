@@ -119,7 +119,7 @@ TmaModelPrimitives.prototype._createBox = function () {
              0.5,  0.5, 0,
             -0.5,  0.5, 0];
     this._indices = [0, 1, 2, 2, 3, 0];
-    this._coords = [0, 0, 0, 1, 1, 1, 1, 0];
+    this._coords = [0, 0, 1, 0, 1, 1, 0, 1];
 };
 
 /**
