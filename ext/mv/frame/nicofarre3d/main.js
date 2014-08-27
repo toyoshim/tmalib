@@ -166,7 +166,7 @@ MajVj.frame.nicofarre3d.prototype.draw = function (delta) {
     this._draw(this._api);
 
     screen.bind();
-    this._screen.setAlphaMode(false);
+    this._screen.popAlphaMode();
     this._screenProgram.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._screenProgram.setAttributeArray('aTexCoord', this._texCoods, 0, 2, 0);
     this._screenProgram.setTexture('uTexture', this._fboRight.texture);
@@ -177,8 +177,6 @@ MajVj.frame.nicofarre3d.prototype.draw = function (delta) {
     this._screenProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 8, 4);
     this._screenProgram.setTexture('uTexture', this._fboBack.texture);
     this._screenProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 12, 4);
-
-    this._screen.popAlphaMode();
 };
 
 /**
@@ -194,6 +192,8 @@ MajVj.frame.nicofarre3d.prototype.setController = function (controller) {
  * @param flag flag, e.g., gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
  */
 MajVj.frame.nicofarre3d.prototype._clear = function (flag) {
+    this._screen.gl.clearColor(this._api.color[0], this._api.color[1],
+                               this._api.color[2], this._api.color[3]);
     this._fboRight.bind();
     this._screen.gl.clear(flag);
     this._fboStage.bind();
