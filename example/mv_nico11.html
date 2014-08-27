@@ -51,6 +51,7 @@ var draw = function (api) {
     //s = TmaModelPrimitives.createCube();
     s.setTexture(api.createTexture(img, true, Tma3DScreen.FILTER_LINEAR));
   }
+  api.color = [0.0, 0.0, 0.0, 1.0];
   api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
   var p = [2000 * Math.cos(t), 0, 2000 * Math.sin(t)];
   t += 0.005;

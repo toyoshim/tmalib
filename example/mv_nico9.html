@@ -62,6 +62,7 @@ Box.prototype.init = function (i, z) {
 };
 
 Box.prototype.draw = function (api) {
+  api.color = [0.0, 0.0, 0.0, 1.0];
   api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
   api.setAlphaMode(false);
   var speed = api.delta * 2.0;
