@@ -126,6 +126,7 @@ MajVj.prototype.aspect = function () {
         if (this._timestamp) {
           var delta = time - this._timestamp;
           main(delta);
+          this._screen.gl.flush();
         }
         this._timestamp = time;
         requestAnimationFrame(loop, this._canvas);
