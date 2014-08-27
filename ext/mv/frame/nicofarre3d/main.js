@@ -231,18 +231,13 @@ MajVj.frame.nicofarre3d.prototype._drawCube = function (w, h, d, p, r) {
 
 /**
  * Draws a line to all displays.
- * @param sx source x position
- * @param sy source y position
- * @param sz source z position
- * @param dx destination x position
- * @param dy destination y position
- * @param dz destination z position
+ * @param src source position in [x, y, z]
+ * @param dst destination position in [x, y, z]
  */
-MajVj.frame.nicofarre3d.prototype._drawLine =
-        function (sx, sy, sz, dx, dy, dz) {
+MajVj.frame.nicofarre3d.prototype._drawLine = function (src, dst) {
     var buffer = this._buffer2.buffer();
-    buffer[0] = sx; buffer[1] = sy; buffer[2] = sz;
-    buffer[3] = dx; buffer[4] = dy; buffer[5] = dz;
+    buffer[0] = src[0]; buffer[1] = src[1]; buffer[2] = src[2];
+    buffer[3] = dst[0]; buffer[4] = dst[1]; buffer[5] = dst[2];
     this._buffer2.update();
     this._drawProgram.setAttributeArray('aCoord', this._buffer2, 0, 3, 0);
     this._drawProgram.setUniformVector('uColor', this._api.color);

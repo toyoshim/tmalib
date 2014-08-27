@@ -41,7 +41,7 @@ function draw (api) {
   api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
   for (var i = 0; i < 256; ++i) {
     api.color = [Math.random(), Math.random(), Math.random(), Math.random()];
-    api.drawLine(p(), p(), p(), p(), p(), p());
+    api.drawLine([p(), p(), p()], [p(), p(), p()]);
   }
 }
 

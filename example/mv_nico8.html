@@ -71,8 +71,8 @@ Line.prototype.draw = function (api) {
   api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
   for (var i = 0; i < this._n; ++i) {
     api.color = this._c[i];
-    api.drawLine(this._p1[i][0], this._p1[i][1], this._p1[i][2],
-                 this._p2[i][0], this._p2[i][1], this._p2[i][2]);
+    api.drawLine([this._p1[i][0], this._p1[i][1], this._p1[i][2]],
+                 [this._p2[i][0], this._p2[i][1], this._p2[i][2]]);
     this.update(this._p1[i], this._v1[i], this._size, -this._size);
     this.update(this._p2[i], this._v2[i], this._size, -this._size);
     this.update(this._c[i], this._cv[i], 1.0, 0);

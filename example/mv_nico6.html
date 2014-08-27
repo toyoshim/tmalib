@@ -34,17 +34,17 @@ document.body.addEventListener('keydown', function (e) {
 function _(f){return function(){try{f();}catch(e){console.error(e.stack); }}}
 
 function draw (api) {
-  api.drawLine(420.1, 140, 740, 420.1, -140, -740);
-  api.drawLine(420.1, -140, 740, 420.1, 140, -740);
+  api.drawLine([420.1, 140, 740], [420.1, -140, -740]);
+  api.drawLine([420.1, -140, 740], [420.1, 140, -740]);
 
-  api.drawLine(-420, 140, -740.1, 420, -140, -740.1);
-  api.drawLine(-420, -140, -740.1, 420, 140, -740.1);
+  api.drawLine([-420, 140, -740.1], [420, -140, -740.1]);
+  api.drawLine([-420, -140, -740.1], [420, 140, -740.1]);
 
-  api.drawLine(-420.1, 140, 740, -420.1, -140, -740);
-  api.drawLine(-420.1, -140, 740, -420.1, 140, -740);
+  api.drawLine([-420.1, 140, 740], [-420.1, -140, -740]);
+  api.drawLine([-420.1, -140, 740], [-420.1, 140, -740]);
 
-  api.drawLine(-420, 140, 740.1, 420, -140, 740.1);
-  api.drawLine(-420, -140, 740.1, 420, 140, 740.1);
+  api.drawLine([-420, 140, 740.1], [420, -140, 740.1]);
+  api.drawLine([-420, -140, 740.1], [420, 140, 740.1]);
 }
 
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
