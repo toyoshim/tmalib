@@ -30,6 +30,7 @@ function MajVj (width, height, fullscreen) {
  * @param type 'effect' or 'frame'
  * @param name plugin name
  * @return a Promise object
+ * TODO: This member method can be class method.
  */
 MajVj.prototype.loadPlugin = function (type, name) {
     return new Promise(function (resolve, reject) {
@@ -44,6 +45,7 @@ MajVj.prototype.loadPlugin = function (type, name) {
 /**
  * Loads all MajVj plugins.
  * @return a Promise object
+ * TODO: This member method can be class method.
  */
 MajVj.prototype.loadAllPlugins = function () {
     return Promise.all([
@@ -170,18 +172,27 @@ MajVj.loadScript = function (type, name, src) {
 };
 
 /**
+ * Loads an image file from a url.
+ * @param url a URL to load an image
+ * @return a Promise object
+ */
+MajVj.loadImageFrom = function (url) {
+    return new Promise(function (resolve, reject) {
+        var image = new Image();
+        image.onload = function () { resolve(this); };
+        image.src = url;
+    });
+};
+
+/**
  * Loads an image file.
  * @param type 'effect' or 'frame'
  * @param name plugin name
  * @param path relative file path in plugin directory
  * @return a Promise object
  */
- MajVj.loadImage = function (type, name, path) {
-    return new Promise(function (resolve, reject) {
-        var image = new Image();
-        image.onload = function () { resolve(this); };
-        image.src = MajVj.createPath(type, name, path);
-    });
+MajVj.loadImage = function (type, name, path) {
+    return MajVj.loadImageFrom(MajVj.createPath(type, name, path));
 };
 
 /**
