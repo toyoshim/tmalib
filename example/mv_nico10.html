@@ -59,9 +59,7 @@ Box.prototype.init = function (i, z) {
 
 Box.prototype.draw = function (api) {
   api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
-  // FIXME: Depth test does not work even if the alpha mode is disabled. Why?
-  // api.setAlphaMode(false);
-  api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
+  api.setAlphaMode(false);
   var speed = api.delta * 2.0;
   var rs = speed / 1000.0;
   for (var i = 0; i < this._n; ++i) {

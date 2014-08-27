@@ -274,32 +274,34 @@ Tma3DScreen.prototype.createFrameBuffer = function (width, height) {
     buffer.renderbuffer = null;
     buffer.bind = function () {
         var last = this._owner._lastBoundFrameBuffer;
+        if (last == this)
+            return last;
         this._owner._lastBoundFrameBuffer = this;
         var gl = this._owner.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this);
-        var init = false;
         if (!this.texture) {
             this.texture = gl.createTexture();
-            init = true;
+            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(
+                    gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(
+                    gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texImage2D(
+                    gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0,
+                    gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                    gl.TEXTURE_2D, this.texture, 0);
         }
-        gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        if (init) {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height,
-                    0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-        }
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-                gl.TEXTURE_2D, this.texture, 0);
-        if (!this.renderbuffer)
+        if (!this.renderbuffer) {
             this.renderbuffer = gl.createRenderbuffer();
-        gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderbuffer);
-        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16,
-                this.width, this.height);
-        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
-                gl.RENDERBUFFER, this.renderbuffer);
+            gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderbuffer);
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16,
+                    this.width, this.height);
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
+                    gl.RENDERBUFFER, this.renderbuffer);
+        }
         gl.viewport(0, 0, this.width, this.height);
         return last;
     };
