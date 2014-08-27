@@ -24,7 +24,7 @@ varying vec2 vCoord;
 varying vec2 vPhase;
 
 void main() {
-    gl_FragColor = vec4(texture2D(uTexture, vCoord).rgb, 1.0);
+    gl_FragColor = texture2D(uTexture, vCoord);
 }
 </script>
 
