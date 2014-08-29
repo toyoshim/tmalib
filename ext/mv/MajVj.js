@@ -126,7 +126,7 @@ MajVj.prototype.aspect = function () {
     var requestAnimationFrame = window.requestAnimationFrame ||
             window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame;
-    loop = function (time) {
+    var loop = function (time) {
         if (this._timestamp) {
           var delta = time - this._timestamp;
           main(delta);
