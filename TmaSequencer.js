@@ -321,5 +321,3 @@ TmaSequencer.ParallelTask.prototype.run = function (delta, time) {
     this._active = active;
     return this.spend(delta);
 };
-
-

@@ -34,6 +34,7 @@ document.body.addEventListener('keydown', function (e) {
 function _(f){return function(){try{f();}catch(e){console.error(e.stack); }}}
 
 Line = function () {
+  this._init = false;
   var p = function () { return (Math.random() - 0.5) * 10000; };
   var v = function () { return (Math.random() - 0.5) * 200; };
   var cv = function () { return Math.random() * Math.random() * 0.01; };
@@ -67,6 +68,10 @@ Line.prototype.update = function (p, v, max, min) {
 Line.prototype.draw = function (api) {
   api.setAlphaMode(true, api.gl.DST_COLOR, api.gl.ZERO);
   var rate = 0.91;
+  if (!this._init) {
+    this._init = true;
+    api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
+  }
   api.fill([rate, rate, rate, 1.0]);
   api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
   for (var i = 0; i < this._n; ++i) {
