@@ -179,7 +179,7 @@ TmaSequencer.Task.prototype.duration = function () {
 /**
  * TmaSequencer.SerialTask prototype.
  *
- * This prototype provides a serial task runs registered task in serial.
+ * This prototype provides a task that runs registered task in serial.
  */
 TmaSequencer.SerialTask = function () {
     this.superclass(0);
@@ -251,3 +251,75 @@ TmaSequencer.SerialTask.prototype.run = function (delta, time) {
     }
     return this.spend(delta);
 };
+
+/**
+ * TmaSequencer.ParallelTask prototype.
+ *
+ * This prototype provides a task that runs registered tasks in parallel.
+ */
+TmaSequencer.ParallelTask = function () {
+    this.superclass(0);
+    this._active = [];
+    this._finished = [];
+};
+
+// Inherits TmaSequencer.Task.
+TmaSequencer.ParallelTask.prototype = new TmaSequencer.Task();
+TmaSequencer.ParallelTask.prototype.superclass = TmaSequencer.Task;
+TmaSequencer.ParallelTask.prototype.constructor = TmaSequencer.ParallelTask;
+
+/**
+ * Appends a task.
+ * @param task a task to run
+ */
+TmaSequencer.ParallelTask.prototype.append = function (task) {
+    var duration = task.duration();
+    if (duration == TmaSequencer.Task.INFINITE)
+        this._duration = TmaSequencer.Task.INFINITE;
+    else
+        this._duration = Math.max(this._duration, duration);
+    this._active.push(task);
+};
+
+/**
+ * Starts a task
+ */
+TmaSequencer.ParallelTask.prototype.start = function () {
+    this.stop();
+    this._elapsed = 0;
+};
+
+/**
+ * Stops a task
+ */
+TmaSequencer.ParallelTask.prototype.stop = function () {
+    for (var i = 0; i < this._active.length; ++i) {
+        this._active[i].stop();
+        this._finished.push(this._active[i]);
+    }
+    this._active = this._finished;
+    this._finished = [];
+};
+
+/**
+ * Runs a task.
+ * @param delta delta time in msec from the last call
+ * @param time elapsed time from a task starts
+ * @return 0 if not finished, otherwise a positive time that is not consumed
+ */
+TmaSequencer.ParallelTask.prototype.run = function (delta, time) {
+    var active = [];
+    for (var i = 0; i < this._active.length; ++i) {
+        var result = this._active[i].run(delta, time);
+        if (result > 0) {
+            this._active[i].stop();
+            this._finished.push(this._active[i]);
+        } else {
+            active.push(this._active[i]);
+        }
+    }
+    this._active = active;
+    return this.spend(delta);
+};
+
+
