@@ -1,0 +1,47 @@
+<html>
+<head>
+
+<script id='vColor' type='x-shader/x-vertex'>
+attribute vec2 aCoord;
+
+void main() {
+  gl_Position = vec4(aCoord, 0.0, 1.0);
+}
+</script>
+
+
+<script id='fColor' type='x-shader/x-fragment'>
+precision mediump float;
+uniform vec4 uColor;
+
+void main() {
+  gl_FragColor = uColor;
+}
+</script>
+
+<script id='vTexture' type='x-shader/x-vertex'>
+attribute vec2 aCoord;
+attribute vec2 aTexCoord;
+varying vec2 vCoord;
+
+void main() {
+  gl_Position = vec4(aCoord, 0.0, 1.0);
+  vCoord = aTexCoord;
+}
+</script>
+
+
+<script id='fTexture' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture;
+varying vec2 vCoord;
+
+void main() {
+  gl_FragColor = texture2D(uTexture, vCoord);
+}
+</script>
+
+
+</head>
+</html>
+

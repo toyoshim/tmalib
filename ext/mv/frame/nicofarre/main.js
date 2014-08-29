@@ -225,3 +225,11 @@ MajVj.frame.nicofarre.prototype.draw = function (delta) {
 MajVj.frame.nicofarre.prototype.setController = function (controller) {
     this._controller = controller;
 };
+
+/**
+ * Gets a frame plugin internally created
+ * @return a frame plugin object
+ */
+MajVj.frame.nicofarre.prototype.getFrame = function (i) {
+    return this._frames[i];
+};

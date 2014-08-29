@@ -1,0 +1,192 @@
+<html>
+<head><title>Nicofarre test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script>
+var controller = {};
+controller.volume = [0.0, 0.0];
+var emulate = true;
+var stop = false;
+document.body.addEventListener('keydown', function (e) {
+  switch (e.which) {
+    case 70:  // f
+      document.body.webkitRequestFullscreen();
+      break;
+    case 72:  // h
+      controller.volume[1] -= 0.01;
+      break;
+    case 74:  // j
+      controller.volume[0] -= 0.01;
+      break;
+    case 75:  // k
+      controller.volume[0] += 0.01;
+      break;
+    case 76:  // l
+      controller.volume[1] += 0.01;
+      break;
+    case 88:  // x
+      emulate = !emulate;
+      break;
+    case 90:  // z
+      stop = !stop;
+      break;
+    default:
+      console.log(e.which);
+  }
+});
+function _(f){return function(){try{f();}catch(e){console.error(e.stack);}}}
+var Texture = function (src) {
+  this.image = new Image();
+  this.ready = false;
+  this.onload = null;
+  this.width = 0;
+  this.height = 0;
+  this.image.onload = function() {
+    this.ready = true;
+    this.width = 768 * this.image.width / this.image.height;
+    this.height = 768; // * this.image.height / this.image.width;
+  }.bind(this);
+  this.image.src = src;
+};
+var Pict = function () {
+  this._t = 0;
+  this._n = 12;
+  this._texture = [];
+  this._model = [];
+  var src = [
+      'data/pict1.jpg',
+      'data/pict2.jpg',
+      'data/pict3.jpg',
+      'data/pict4.jpg',
+      'data/pict5.jpg',
+      'data/pict6.jpg',
+      'data/pict7.jpg',
+      'data/pict8.png',
+      'data/pict9.jpg',
+      'data/pict10.jpg',
+      'data/pict11.jpg',
+      'data/pict12.jpg'
+    ];
+  var offset = ~~(Math.random() * 12);
+  for (var i = 0; i < this._n; ++i) {
+    this._model[i] = TmaModelPrimitives.createBox();
+    this._texture[i] = new Texture(src[(i + offset) % 12]);
+  }
+};
+Pict.prototype.draw = function (api) {
+  if (!stop)
+    this._t += api.delta;
+  api.color = [1.0, 1.0, 1.0, 0.0];
+  api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
+  var dr = 2 * Math.PI / this._n;
+  var rate = (this._t - 13000) / 1000;
+  if (this._t < 13000) {
+  } else if (this._t < 14000) {
+    var f = rate;
+    this._filter.setColor([f, f, f, 1]);
+  }
+  for (var i = 0; i < this._n; ++i) {
+    var r = 7000 + 100 * Math.sin(dr * i + this._t / 2000);
+    var t = this._t / -500 + dr * i;
+    var y = -500 + 200 * Math.sin(dr * i + this._t / 1000);
+    var p = [r * Math.cos(t), y, r * Math.sin(t)];
+    var s = [0, -t + Math.PI / 2, 0];
+    var cp = [-300, 0, -2500];
+    var cs = [0, Math.PI / 6, 0];
+    if (this._t < 13000) {
+    } else if (this._t < 14000) {
+      if (i == 0) {
+        p[0] = p[0] * (1 - rate) + cp[0] * rate;
+        p[1] = p[1] * (1 - rate) + cp[1] * rate;
+        p[2] = p[2] * (1 - rate) + cp[2] * rate;
+        s[0] = s[0] * (1 - rate) + cs[0] * rate;
+        s[1] = s[1] * (1 - rate) + cs[1] * rate;
+        s[2] = s[2] * (1 - rate) + cs[2] * rate;
+      } else {
+        p[1] -= this._t * rate;
+      }
+    } else {
+      if (i == 0) {
+        p = cp;
+        s = cs;
+      } else {
+        p[1] = -100000;
+      }
+    }
+    if (this._texture[i].ready) {
+      this._model[i].setTexture(api.createTexture(
+            this._texture[i].image, true, Tma3DScreen.FILTER_LINEAR));
+      this._texture[i].ready = false;
+    }
+    api.drawPrimitive(this._model[i], this._texture[i].width,
+                      this._texture[i].height, 1, p, s);
+  }
+};
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var pict = new Pict();
+  var r = 1;
+  var width = 1920 / r;
+  var height = 1080 / r;
+  var vj = new MajVj(width, height, true);
+  vj.loadAllPlugins().then(_(function () {
+    var play = vj.create('misc', 'sound', { url: 'data/attack_02_02.wav',
+                                            play: true });
+    var ceil = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_CEILING,
+                          frames: [
+                            { name: 'sandbox', options: { id: '18918.0' } }
+                          ]});
+    var wall = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_LEFT_STAGE_RIGHT,
+                          frames: [
+                            { name: 'sandbox', options: { id: '18759.0' } },
+                            { name: 'sandbox', options: { id: '19336.0' } },
+                            { name: 'filter', options:
+                                { filter: MajVj.frame.filter.ADD,
+                                  color: [0, 0, 0, 1] } },
+                            { name: 'filter', options:
+                                { filter: MajVj.frame.filter.MUL,
+                                  texture: 'data/logo11.png',
+                                  zoom: 0.3} }
+                          ]});
+    pict._filter = wall.getFrame(2);
+    var front = vj.create('frame', 'nicofarre',
+                          { led: MajVj.frame.nicofarre.LED_FRONT_BOTH,
+                            frames: [
+                              { name: 'sandbox', options: { id: '18981.0' } }
+                            ]});
+    var nico3d = vj.create('frame', 'nicofarre3d',
+                           { draw: pict.draw.bind(pict) });
+    var fx = vj.create('effect', 'nicofarre', { position: [0, 0, 0] });
+    fx.setController(controller);
+    var fbo = vj.screen().createFrameBuffer(width, height);
+    vj.run(function (delta) {
+      vj.screen().setAlphaMode(false);
+      if (emulate)
+        fbo.bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      wall.draw(delta);
+      vj.screen().setAlphaMode(false);
+      ceil.draw(delta);
+      front.draw(delta);
+      vj.screen().setAlphaMode(true, vj.screen().gl.SRC_ALPHA,
+                               vj.screen().gl.ONE_MINUS_SRC_ALPHA);
+      nico3d.draw(delta);
+      if (emulate) {
+        vj.screen().bind();
+        vj.screen().setAlphaMode(false);
+        vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+        fx.draw(delta, fbo.texture);
+      }
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      vj.onresize();
+      fx.onresize(vj.aspect());
+    };
+  }), function (e) { console.error('plugin load error: ' + e.stack); });
+};
+</script>
+</body>
+</html>
