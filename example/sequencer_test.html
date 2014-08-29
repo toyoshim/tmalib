@@ -1,0 +1,45 @@
+<html>
+<head><title>sequencer test</title></head>
+<script src="../tma.js"></script>
+<script>
+tma.onload = function () {
+  var Count = function (duration, name) {
+    this.superclass(duration);
+    this._last = -1;
+    this._name = name
+  };
+  Count.prototype = new TmaSequencer.Task();
+  Count.prototype.superclass = TmaSequencer.Task;
+  Count.prototype.constructor = Count;
+  Count.prototype.run = function (delta, time) {
+    var t = ~~(time / 1000);
+    if (t != this._last) {
+      this._last = t;
+      tma.log(this._name + ': ' + t);
+    }
+    return this.superclass.prototype.run.apply(this, [delta, time]);
+  };
+  tma.log('tma ready');
+  var timestamp = undefined;
+  var loop = function (time) {
+      if (timestamp) {
+        var delta = time - timestamp;
+        // tma.log('tma delta: ' + delta);
+        seq.run(delta);
+      }
+      timestamp = time;
+      if (seq.active())
+          requestAnimationFrame(loop);
+      else
+          tma.log('tma fininsh');
+  }
+  var seq = new TmaSequencer();
+  seq.register(1000, new Count(10 * 1000, 'A'));
+  seq.register(5000, new Count(3 * 1000, 'B'));
+  seq.register(2000, new Count(4 * 1000, 'C'));
+  seq.start();
+  loop();
+};
+</script>
+</body>
+</html>

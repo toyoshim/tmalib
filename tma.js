@@ -161,6 +161,7 @@ var global = window;
         'Tma2DScreen.js',
         'Tma3DScreen.js',
         'TmaParticle.js',
+        'TmaSequencer.js',
         'TmaMotionBvh.js',
         'TmaModelPly.js',
         'TmaModelPrimitives.js',
