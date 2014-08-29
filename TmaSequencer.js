@@ -108,10 +108,13 @@ TmaSequencer.prototype.active = function () {
 /**
  * TmaSequencer.Task prototype.
  *
- * This prototype provides a task that runs in a sequencer.
+ * This prototype provides a simple task that runs in a sequencer.
+ * @param duration duration time
+ * @param callback a callback to run inside Task.run().
  */
-TmaSequencer.Task = function (duration) {
+TmaSequencer.Task = function (duration, callback) {
     this.reset(duration);
+    this._callback = callback;
 };
 
 // Constant to specify a never ending task.
@@ -160,6 +163,8 @@ TmaSequencer.Task.prototype.spend = function (delta) {
  * @return 0 if not finished, otherwise a positive time that is not consumed
  */
 TmaSequencer.Task.prototype.run = function (delta, time) {
+    if (this._callback)
+      this._callback(delta, time);
     return this.spend(delta);
 };
 
