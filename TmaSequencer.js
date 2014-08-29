@@ -31,6 +31,8 @@ TmaSequencer.prototype.stop = function () {
     for (var i = 0; i < this._active.length; ++i)
         this._active[i].task.stop();
     this._queue = this._finished.concat(this._active, this._queue);
+    this._active = [];
+    this._finished = [];
 };
 
 /**
@@ -128,6 +130,8 @@ TmaSequencer.Task.prototype.reset = function (duration) {
  * Starts a task
  */
 TmaSequencer.Task.prototype.start = function () {
+    this.stop();
+    this._elapsed = 0;
 };
 
 /**
@@ -165,4 +169,76 @@ TmaSequencer.Task.prototype.run = function (delta, time) {
  */
 TmaSequencer.Task.prototype.duration = function () {
     return this._duration;
+};
+
+/**
+ * TmaSequencer.SerialTask prototype.
+ *
+ * This prototype provides a serial task runs registered task in serial.
+ */
+TmaSequencer.SerialTask = function () {
+    this.superclass(0);
+    this._queue = [];
+    this._active = null;
+    this._finished = [];
+    this._start = 0;
+};
+
+// Inherits TmaSequencer.Task.
+TmaSequencer.SerialTask.prototype = new TmaSequencer.Task();
+TmaSequencer.SerialTask.prototype.superclass = TmaSequencer.Task;
+TmaSequencer.SerialTask.prototype.constructor = TmaSequencer.SerialTask;
+
+/**
+ * Appends a task.
+ * @param task a task to run
+ */
+TmaSequencer.SerialTask.prototype.append = function (task) {
+    this._duration += task.duration();
+    this._queue.push(task);
+};
+
+/**
+ * Starts a task
+ */
+TmaSequencer.SerialTask.prototype.start = function () {
+    this.stop();
+    this._elapsed = 0;
+    this._active = this._queue.shift();
+};
+
+/**
+ * Stops a task
+ */
+TmaSequencer.SerialTask.prototype.stop = function () {
+    if (this._active) {
+        this._active.stop();
+        this._finished.push(this._active);
+        this._active = null;
+    }
+    this._queue = this._finished.concat(this._queue);
+    this._finished = [];
+};
+
+/**
+ * Runs a task.
+ * @param delta delta time in msec from the last call
+ * @param time elapsed time from a task starts
+ * @return 0 if not finished, otherwise a positive time that is not consumed
+ */
+TmaSequencer.SerialTask.prototype.run = function (delta, time) {
+    var rest = delta;
+    while (this._active) {
+        var result = this._active.run(rest, time - this._start);
+        if (result == 0)
+            return this.spend(delta);
+        var consume = rest - result;
+        time += consume;
+        rest = result;
+        this._active.stop();
+        this._start += this._active.duration();
+        this._finished.push(this._active);
+        this._active = this._queue.shift();
+    }
+    return this.spend(delta);
 };

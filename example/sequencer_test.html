@@ -37,6 +37,11 @@ tma.onload = function () {
   seq.register(1000, new Count(10 * 1000, 'A'));
   seq.register(5000, new Count(3 * 1000, 'B'));
   seq.register(2000, new Count(4 * 1000, 'C'));
+  var st = new TmaSequencer.SerialTask();
+  st.append(new Count(2 * 1000, 'X'));
+  st.append(new Count(3 * 1000, 'Y'));
+  st.append(new Count(5 * 1000, 'Z'));
+  seq.register(10000, st);
   seq.start();
   loop();
 };
