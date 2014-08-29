@@ -199,7 +199,11 @@ TmaSequencer.SerialTask.prototype.constructor = TmaSequencer.SerialTask;
  * @param task a task to run
  */
 TmaSequencer.SerialTask.prototype.append = function (task) {
-    this._duration += task.duration();
+    var duration = task.duration();
+    if (duration == TmaSequencer.Task.INFINITE)
+        this._duration = TmaSequencer.Task.INFINITE;
+    else
+        this._duration += duration;
     this._queue.push(task);
 };
 
