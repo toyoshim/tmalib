@@ -1,0 +1,58 @@
+<html>
+<head><title>Nicofarre test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script src="mv_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var r = 1;
+  var width = 1920 / r;
+  var height = 1080 / r;
+  var vj = new MajVj(width, height, true);
+  vj.loadAllPlugins().then(_(function () {
+    var ceil = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_FRONT_BOTH,
+                          mirror: MajVj.frame.nicofarre.MIRROR_ON_LEFT,
+                          frames: [
+                            { name: 'filter', options:
+                              { filter: MajVj.frame.filter.SRC,
+                                color: [1.0, 1.0, 1.0, 1.0] } },
+                            { name: 'filter', options:
+                              { filter: MajVj.frame.filter.SRC,
+                                texture: 'data/logo11.png',
+                                zoom: 5,
+                                offset: [1.2, 0.0] } } ] });
+    //var fx = vj.create('effect', 'nicofarre', { position: [0, 0, 0] });
+    var fx = vj.create('effect', 'nicofarre');
+    fx.setController(controller);
+    var fbo = vj.screen().createFrameBuffer(width, height);
+    var filter = ceil.getFrame(1);
+    console.log(filter);
+    var offset = 1.2;
+    vj.run(function (delta) {
+      offset -= delta / 1000;
+      if (offset < -1.2)
+        offset = 1.2;
+      filter.setOffset([offset, 0.0]);
+      if (emulate)
+        fbo.bind();
+      vj.screen().setAlphaMode(false);
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      ceil.draw(delta);
+      if (emulate) {
+        vj.screen().bind();
+        vj.screen().setAlphaMode(false);
+        fx.draw(delta, fbo.texture);
+      }
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      vj.onresize();
+      fx.onresize(vj.aspect());
+    };
+  }), function (e) { console.error('plugin load error: ' + e.stack); });
+};
+</script>
+</body>
+</html>
