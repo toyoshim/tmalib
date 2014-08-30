@@ -1,0 +1,55 @@
+<html>
+<head>
+</head>
+<body>
+<script>
+
+gl = window.open('mv_console_client.html');
+
+function change (i) {
+  var range = document.querySelectorAll('input')[i];
+  gl.postMessage({type: 'range', index: i, value: range.value / 127},
+                 location.origin);
+}
+
+function button (data) {
+  gl.postMessage({type: 'button', value: data}, location.origin);
+}
+
+function nanoKONTROL2 (e) {
+  var data = e.data;
+  if (data[0] == 176 && data[1] < 8) {  // sliders
+    var range = document.querySelectorAll('input')[data[1]];
+    range.value = data[2];
+    gl.postMessage({type: 'range', index: data[1], value: data[2] / 127},
+                   location.origin);
+  } else if (data[0] == 176 && 16 <= data[1] && data[1] < 24) { // knobs
+    gl.postMessage({type: 'range', index: data[1], value: data[2] / 127},
+                   location.origin);
+  } else {
+    console.log(data);
+  }
+}
+
+navigator.requestMIDIAccess().then(function (a) {
+  var inputs = a.inputs();
+  for (var i = 0; i < inputs.length; ++i) {
+    if (inputs[i].name == 'nanoKONTROL2')
+      inputs[i].onmidimessage = nanoKONTROL2;
+    console.log(inputs[i]);
+  }
+}, function (e) { console.log(e); });
+
+</script>
+<input type="range" min="0" max="127" step="1" style="-webkit-appearance: slider-vertical; height: 300px" oninput="change(0);">
+<input type="range" min="0" max="127" step="1" style="-webkit-appearance: slider-vertical; height: 300px" oninput="change(1);">
+<input type="range" min="0" max="127" step="1" style="-webkit-appearance: slider-vertical; height: 300px" oninput="change(2);">
+<input type="range" min="0" max="127" step="1" style="-webkit-appearance: slider-vertical; height: 300px" oninput="change(3);">
+<input type="range" min="0" max="127" step="1" style="-webkit-appearance: slider-vertical; height: 300px" oninput="change(4);">
+<input type="range" min="0" max="127" step="1" style="-webkit-appearance: slider-vertical; height: 300px" oninput="change(5);">
+<input type="range" min="0" max="127" step="1" style="-webkit-appearance: slider-vertical; height: 300px" oninput="change(6);">
+<input type="range" min="0" max="127" step="1" style="-webkit-appearance: slider-vertical; height: 300px" oninput="change(7);">
+
+<input type="button" value="TEST" onclick="button(this.value);">
+</body>
+</html>
