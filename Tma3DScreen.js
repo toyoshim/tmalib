@@ -240,6 +240,8 @@ Tma3DScreen.prototype.createBuffer = function (array) {
     };
     buffer.deleteBuffer = function () {
         this._owner.gl.deleteBuffer(this);
+        this._buffer = null;
+        this._owner = null;
     };
     buffer.update();
     return buffer;
