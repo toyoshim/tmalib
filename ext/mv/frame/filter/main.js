@@ -10,8 +10,9 @@ MajVj.frame.filter = function (options) {
     this._height = options.height;
     this._aspect = options.aspect;
     this._controller = options.controller;
-    this._color = options.color || [0, 0, 0, 1];
+    this._color = options.color || [0.0, 0.0, 0.0, 1.0];
     this._zoom = options.zoom || 1.0;
+    this._offset = options.offset || [0.0, 0.0];
     this._texture = null;
     this._colorProgram = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
@@ -118,15 +119,52 @@ MajVj.frame.filter.prototype.setTexture = function (texture) {
     MajVj.loadImageFrom(texture).then(function (image) {
         this._texture = this._screen.createTexture(
               image, true, Tma3DScreen.FILTER_LINEAR);
-        var aspect = image.width / image.height;
-        var w = this._zoom;
-        var h = this._zoom;
-        if (this._aspect > aspect)
-            w *= aspect / this._aspect;
-        else
-            h *= this._aspect / aspect;
-        this._coords = this._screen.createBuffer([-w, -h, -w, h, w, h, w, -h]);
+        this._resetCoords();
     }.bind(this), function (e) { console.log(e); });
+};
+
+/**
+ * Sets texture zoom ratio.
+ * @param zoom zoom ratio
+ */
+MajVj.frame.filter.prototype.setZoom = function (zoom) {
+    this._zoom = zoom;
+    this._resetCoords();
+};
+
+/**
+ * Sets texture offset.
+ * @param offset texture offset ratio
+ */
+MajVj.frame.filter.prototype.setOffset = function (offset) {
+    this._offset = offset;
+    this._resetCoords();
+};
+
+/**
+ * Resets coords.
+ */
+MajVj.frame.filter.prototype._resetCoords = function () {
+    if (!this._texture)
+        return;
+    var aspect = this._texture.width / this._texture.height;
+    var w = this._zoom;
+    var h = this._zoom;
+    if (this._aspect > aspect)
+        w *= aspect / this._aspect;
+    else
+        h *= this._aspect / aspect;
+    var x = this._offset[0] * this._zoom;
+    var y = this._offset[1] * this._zoom;
+    var coords = [-w + x, -h + y, -w + x, h + y, w + x, h + y, w + x, -h + y];
+    if (!this._coords) {
+        this._coords = this._screen.createBuffer(coords);
+    } else {
+        var buffer = this._coords.buffer();
+        for (var i = 0; i < coords.length; ++i)
+            buffer[i] = coords[i];
+        this._coords.update();
+    }
 };
 
 /**
