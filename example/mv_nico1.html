@@ -2,34 +2,13 @@
 <head><title>Nicofarre test</title></head>
 <body style="margin: 0; cursor: none">
 <script src="../tma.js"></script>
+<script src="mv_common.js"></script>
 <script>
-var controller = {};
-controller.volume = [0.0, 0.0];
-var emulate = true;
-document.body.addEventListener('keydown', function (e) {
-  switch (e.which) {
-    case 72:  // h
-      controller.volume[1] -= 0.01;
-      break;
-    case 74:  // j
-      controller.volume[0] -= 0.01;
-      break;
-    case 75:  // k
-      controller.volume[0] += 0.01;
-      break;
-    case 76:  // l
-      controller.volume[1] += 0.01;
-      break;
-    case 88:  // x
-      emulate = !emulate;
-      break;
-  }
-});
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
   var width = 1920;
   var height = 1080;
-  var vj = new MajVj(width, height, false);
+  var vj = new MajVj(width, height, true);
   vj.loadAllPlugins().then(function () {
       var movie = vj.create('frame', 'movie', {url: 'data/04_space_out.mp4'});
     var fx = vj.create('effect', 'nicofarre');
