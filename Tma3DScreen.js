@@ -238,6 +238,9 @@ Tma3DScreen.prototype.createBuffer = function (array) {
         var gl = this._owner.gl;
         gl.bufferData(gl.ARRAY_BUFFER, buffer._buffer, gl.STATIC_DRAW);
     };
+    buffer.deleteBuffer = function () {
+        this._owner.gl.deleteBuffer(this);
+    };
     buffer.update();
     return buffer;
 };
