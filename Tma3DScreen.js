@@ -336,6 +336,8 @@ Tma3DScreen.prototype.createImage = function (width, height, data) {
  */
 Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
     var texture = this.gl.createTexture();
+    texture.width = image.width;
+    texture.height = image.height;
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
     // TODO: Handles level of detail
