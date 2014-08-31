@@ -14,9 +14,11 @@ tma.onload = function () {
     var nico3d = { name: 'nicofarre3d', options: { module: 'waypoints' } };
     var glowController = { volume: [0.5, 0.0] };
     var glow = { name: 'glow', options: { controller: glowController } };
+    var rgbController = { volume: [0.01] };
+    var rgb = { name: 'rgb', options: { controller: rgbController } };
     var wall = vj.create('frame', 'effect', {
         frames: [nico3d],
-        effects: [glow] });
+        effects: [glow, rgb] });
     var fx = vj.create('effect', 'nicofarre', { front: false,
                                                 position: [0, 0, 0]});
     fx.setController(controller);
