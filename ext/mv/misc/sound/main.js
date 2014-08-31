@@ -7,6 +7,7 @@ MajVj.misc.sound = function (options) {
     if (!MajVj.misc.sound._context)
         MajVj.misc.sound._context = new AudioContext();
     this._audio = MajVj.misc.sound._context;
+    this._gain = this._audio.createGain();
     this._play = options.play || false;
     this._data = null;
     if (options.url)
@@ -58,7 +59,8 @@ MajVj.misc.sound.prototype.play = function (data) {
     this.stop();
     this._buffer = this._audio.createBufferSource();
     this._buffer.buffer = data || this._data;
-    this._buffer.connect(this._audio.destination);
+    this._buffer.connect(this._gain);
+    this._gain.connect(this._audio.destination);
     this._buffer.start(0);
     return true;
 };
@@ -70,6 +72,16 @@ MajVj.misc.sound.prototype.stop = function () {
     if (!this._buffer)
         return;
     this._buffer.stop();
+    this._gain.disconnect();
     this._buffer.disconnect();
     this._buffer = null;
 };
+
+/**
+ * Sets sound gain.
+ * @param gain a gain to set in float from 0.0 to 1.0
+ */
+MajVj.misc.sound.prototype.setGain = function (gain) {
+    this._gain.gain.value = gain;
+};
+

@@ -8,6 +8,7 @@ tma.onload = function () {
   var vj;
   var snd;
   var songs;
+  var gain = 1.0;
 
   document.body.addEventListener('keydown', function (e) {
     switch (e.which) {
@@ -25,6 +26,21 @@ tma.onload = function () {
         break;
       case 53:  // 5
         snd.play(songs[4]);
+        break;
+      case 187:  // +
+        gain += 0.01;
+        if (gain > 1.0)
+          gain = 1.0;
+        snd.setGain(gain);
+        break;
+      case 189:  // -
+        gain -= 0.01;
+        if (gain < 0.0)
+          gain = 0.0;
+        snd.setGain(gain);
+        break;
+      default:
+        tma.log(e.which);
         break;
     }
   });
