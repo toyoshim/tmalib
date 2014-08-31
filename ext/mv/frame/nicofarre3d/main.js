@@ -45,6 +45,11 @@ MajVj.frame.nicofarre3d = function (options) {
                     MajVj.frame.nicofarre3d._vTextureShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.nicofarre3d._fTextureShader));
+    this._pointProgram = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.frame.nicofarre3d._vPointShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.frame.nicofarre3d._fPointShader));
     this._coords = this._screen.createBuffer([
             // A (right): (40, 760) - (1520, 1040) / (1920, 1080)
             40 / 1920 * 2 - 1, 760 / 1080 * 2 - 1,
@@ -127,6 +132,8 @@ MajVj.frame.nicofarre3d._vDrawShader = null;
 MajVj.frame.nicofarre3d._fDrawShader = null;
 MajVj.frame.nicofarre3d._vTextureShader = null;
 MajVj.frame.nicofarre3d._fTextureShader = null;
+MajVj.frame.nicofarre3d._vPointShader = null;
+MajVj.frame.nicofarre3d._fPointShader = null;
 
 /**
  * Loads resources asynchronously.
@@ -143,6 +150,8 @@ MajVj.frame.nicofarre3d.load = function () {
                 MajVj.loadShader('frame', name, path, 'f_draw'),
                 MajVj.loadShader('frame', name, path, 'v_texture'),
                 MajVj.loadShader('frame', name, path, 'f_texture'),
+                MajVj.loadShader('frame', name, path, 'v_point'),
+                MajVj.loadShader('frame', name, path, 'f_point'),
                 MajVj.loadScript('frame', name, 'cube.js'),
                 MajVj.loadScript('frame', name, 'waypoints.js')
         ]).then(function (results) {
@@ -152,6 +161,8 @@ MajVj.frame.nicofarre3d.load = function () {
             MajVj.frame.nicofarre3d._fDrawShader = results[3];
             MajVj.frame.nicofarre3d._vTextureShader = results[4];
             MajVj.frame.nicofarre3d._fTextureShader = results[5];
+            MajVj.frame.nicofarre3d._vPointShader = results[6];
+            MajVj.frame.nicofarre3d._fPointShader = results[7];
             resolve();
         }, function () { reject('nicofarre3d.load fails'); });
     });
@@ -287,13 +298,18 @@ MajVj.frame.nicofarre3d.prototype._drawLine = function (src, dst) {
 MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
     var texture = o.getTexture();
     var mode = o.getDrawMode();
-    var program = texture ? this._textureProgram : this._drawProgram;
+    var point = mode == Tma3DScreen.MODE_POINTS;
+    var program = texture ? this._textureProgram :
+                  point ? this._pointProgram : this._drawProgram;
     program.setAttributeArray(
             'aCoord', o.getVerticesBuffer(this._screen), 0, 3, 0);
     if (texture) {
         program.setAttributeArray(
                'aTexCoord', o.getCoordsBuffer(this._screen), 0, 2, 0);
         program.setTexture('uTexture', texture);
+    } else if (point) {
+        program.setAttributeArray(
+                'aColor', o.getColorsBuffer(this._screen), 0, 4, 0);
     } else {
         program.setUniformVector('uColor', this._api.color);
     }

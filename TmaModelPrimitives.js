@@ -13,9 +13,11 @@ function TmaModelPrimitives() {
     this._vertices = [];
     this._coords = [];
     this._indices = [];
+    this._colors = [];
     this._verticesBuffer = null;
     this._coordsBuffer = null;
     this._indicesBuffer = null;
+    this._colorsBuffer = null;
     this._texture = null;
     this._mode = Tma3DScreen.MODE_TRIANGLES;
 }
@@ -62,6 +64,14 @@ TmaModelPrimitives.prototype.getIndices = function () {
 };
 
 /**
+ * Gets model's colors.
+ * @return model's colors in Array
+ */
+TmaModelPrimitives.prototype.getColors = function () {
+    return this._colors;
+};
+
+/**
  * Gets an array buffer bound to the vertices. It may be created if needed.
  * @param screen a Tma3DScreen object that will be used to create a buffer
  * @return an array buffer object
@@ -93,6 +103,18 @@ TmaModelPrimitives.prototype.getIndicesBuffer = function (screen) {
         this._indicesBuffer = screen.createElementBuffer(this.getIndices());
     return this._indicesBuffer;
 };
+
+/**
+ * Gets an array buffer bound to the colors. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object for colors
+ */
+TmaModelPrimitives.prototype.getColorsBuffer = function (screen) {
+    if (!this._colorsBuffer)
+        this._colorsBuffer = screen.createBuffer(this.getColors());
+    return this._colorsBuffer;
+};
+
 
 /**
  * Sets a texture.
@@ -171,9 +193,15 @@ TmaModelPrimitives.prototype._createPoints = function (points) {
     this._vertices = points;
     var count = points.length / 3;
     this._indices = new Array(count);
+    this._colors = new Array(count * 4);
     this._coords = null;
-    for (var i = 0; i < count; ++i)
+    for (var i = 0; i < count; ++i) {
         this._indices[i] = i;
+        this._colors[i * 4 + 0] = 1.0;
+        this._colors[i * 4 + 1] = 1.0;
+        this._colors[i * 4 + 2] = 1.0;
+        this._colors[i * 4 + 3] = 1.0;
+    }
     this._mode = Tma3DScreen.MODE_POINTS;
 };
 

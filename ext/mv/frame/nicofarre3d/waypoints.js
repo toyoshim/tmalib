@@ -6,12 +6,12 @@ MajVj.frame.nicofarre3d.modules.waypoints = function () {
     this._container = new TmaParticle.Container(
             MajVj.frame.nicofarre3d.modules.waypoints.Particle);
     this._waypoints = [];
-    this._size = 4096;
+    this._size = 2048;
     var speed = 5;
     this._h = 0;
     this._lastParticles = 0;
-    this._maxParticles = 100000;
-    for (var points = 0; points < 8; ++points) {
+    this._maxParticles = 10000;
+    for (var points = 0; points < 16; ++points) {
         this._waypoints.push({
             x: (Math.random() - 0.5) * 2.0 * this._size,
             y: (Math.random() - 0.5) * 2.0 * this._size / 10.0,
@@ -21,10 +21,9 @@ MajVj.frame.nicofarre3d.modules.waypoints = function () {
             vz: (Math.random() * 2 - 1) * speed
         });
     }
-    this._buffer = new Float32Array(this._maxParticles * 3);
-    for (var i = 0; i < this._buffer.length; ++i)
-        this._buffer[i] = 0.0;
-    this._model = TmaModelPrimitives.createPoints(this._buffer);
+    this._waypoints.push({ x: 0.0, y: 0.0, z: 0.0, vx: 0.0, vy: 0.0, vz: 0.0 });
+    this._model = TmaModelPrimitives.createPoints(
+            new Array(this._maxParticles * 3));
     this._tick = 0;
 };
 
@@ -54,11 +53,8 @@ MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.initialize =
     this.ox = this.x;
     this.oy = this.y;
     this.oz = this.z;
-    this.h = h;
-    this.s = 1 - Math.random() / 4;
-    this.v = Math.random() / 2;
     var color = TmaScreen.HSV2RGB(h, 1 - Math.random() / 4, Math.random() / 2);
-    this.color = [color.r, color.g, color.b, 1.0];
+    this.color = [color.r / 255, color.g / 255, color.b / 255, 1.0];
     this.target = 0;
     this.waypoints = waypoints;
     this.size = size;
@@ -73,7 +69,7 @@ MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.update =
     var dx = waypoint.x - this.x;
     var dy = waypoint.y - this.y;
     var dz = waypoint.z - this.z;
-    if (dx * dx + dy * dy + dz * dz < 4096) {
+    if (dx * dx + dy * dy + dz * dz < 100000) {
         this.target++;
         if (this.target == this.waypoints.length)
             return false;
@@ -114,7 +110,6 @@ MajVj.frame.nicofarre3d.modules.waypoints.prototype.draw = function (api) {
     api.color = [0.0, 0.0, 0.0, 1.0];
     api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
     api.setAlphaMode(false);
-    api.color = [1.0, 1.0, 1.0, 1.0];
     api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
 
     // Update waypoints.
@@ -134,36 +129,44 @@ MajVj.frame.nicofarre3d.modules.waypoints.prototype.draw = function (api) {
         if ((waypoint.z > size && waypoint.vz > 0) ||
                 (waypoint.z < -size && waypoint.vz < 0))
             waypoint.vz = -waypoint.vz;
-
-        this._buffer[point * 3 + 0] = waypoint.x;
-        this._buffer[point * 3 + 1] = waypoint.y;
-        this._buffer[point * 3 + 2] = waypoint.z;
     }
 
     // Update particles.
-    var emit = Math.min(16, this._maxParticles - this._container.length);
+    var emit = Math.min(4, this._maxParticles - this._container.length);
     for (var i = 0; i < emit; ++i)
         this._container.add(this._h, this._waypoints, this._size);
     this._h = (this._h + 1) % 360;
     this._container.update();
 
     var n = Math.min(this._maxParticles, this._container.length);
+    var vertices = this._model.getVerticesBuffer(api.screen);
+    var vbuffer = vertices.buffer();
+    var colors = this._model.getColorsBuffer(api.screen);
+    var cbuffer = colors.buffer();
     for (i = 0; i < n; ++i) {
         var particle = this._container.at(i);
-        this._buffer[i * 3 + 0] = particle.x;
-        this._buffer[i * 3 + 1] = particle.y;
-        this._buffer[i * 3 + 2] = particle.z;
-        api.color = particle.color;
+        vbuffer[i * 3 + 0] = particle.x;
+        vbuffer[i * 3 + 1] = particle.y;
+        vbuffer[i * 3 + 2] = particle.z;
+        cbuffer[i * 4 + 0] = particle.color[0];
+        cbuffer[i * 4 + 1] = particle.color[1];
+        cbuffer[i * 4 + 2] = particle.color[2];
+        cbuffer[i * 4 + 3] = particle.color[3];
     }
     for (; i < this._lastParticles; ++i) {
-        this._buffer[i * 3 + 0] = 0.0;
-        this._buffer[i * 3 + 1] = 0.0;
-        this._buffer[i * 3 + 2] = 0.0;
+        vbuffer[i * 3 + 0] = 0.0;
+        vbuffer[i * 3 + 1] = 0.0;
+        vbuffer[i * 3 + 2] = 0.0;
+        cbuffer[i * 4 + 0] = 0.0;
+        cbuffer[i * 4 + 1] = 0.0;
+        cbuffer[i * 4 + 2] = 0.0;
+        cbuffer[i * 4 + 3] = 0.0;
     }
     this._lastParticles = this._container.length;
     this._tick++;
     if ((this._tick % 100) == 0)
         console.log(this._lastParticles);
-    this._model.getVerticesBuffer(api.screen).update();
+    vertices.update();
+    colors.update();
     api.drawPrimitive(this._model, 1.0, 1.0, 1.0, [0.0, 0.0, 0.0]);
 };
