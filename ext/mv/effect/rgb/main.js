@@ -9,6 +9,7 @@ MajVj.effect.rgb = function (options) {
     this._height = options.height;
     this._aspect = options.aspect;
     this._controller = options.controller;
+    this._distance = options.distance || 0.1;
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.effect.rgb._vertexShader),
@@ -50,7 +51,7 @@ MajVj.effect.rgb.prototype.onresize = function (aspect) {
  * @param texture texture data
  */
 MajVj.effect.rgb.prototype.draw = function (delta, texture) {
-    var distance = 0.1;
+    var distance = this._distance;
     if (this._controller && this._controller.volume)
         distance = this._controller.volume[0] / 2;
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
