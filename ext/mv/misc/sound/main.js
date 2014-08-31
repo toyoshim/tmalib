@@ -8,7 +8,10 @@ MajVj.misc.sound = function (options) {
         MajVj.misc.sound._context = new AudioContext();
     this._audio = MajVj.misc.sound._context;
     this._gain = this._audio.createGain();
+    this._splitter = this._audio.createChannelSplitter(2);
     this._analyser = this._audio.createAnalyser();
+    this._leftAnalyser = this._audio.createAnalyser();
+    this._rightAnalyser = this._audio.createAnalyser();
     this._delay = this._audio.createDelay();
     if (options.delay)
         this._delay.delayTime.value = options.delay;
@@ -27,8 +30,8 @@ MajVj.misc.sound.load = function () {
     });
 };
 
+// AudioContext shared in all instances.
 MajVj.misc.sound._context = null;
-
 
 /**
  * Loads a sound data.
@@ -51,7 +54,6 @@ MajVj.misc.sound.prototype.fetch = function (url, play) {
     }.bind(this));
 };
 
-
 /**
  * Plays.
  * @param data an AudioBuffer object (optional: fetched data is used by default)
@@ -66,6 +68,9 @@ MajVj.misc.sound.prototype.play = function (data) {
     this._buffer.connect(this._gain);
     this._gain.connect(this._analyser);
     this._gain.connect(this._delay);
+    this._gain.connect(this._splitter);
+    this._splitter.connect(this._leftAnalyser, 0);
+    this._splitter.connect(this._rightAnalyser, 1);
     this._delay.connect(this._audio.destination);
     this._buffer.start(0);
     return true;
@@ -79,6 +84,7 @@ MajVj.misc.sound.prototype.stop = function () {
         return;
     this._buffer.stop();
     this._delay.disconnect();
+    this._splitter.disconnect();
     this._gain.disconnect();
     this._buffer.disconnect();
     this._buffer = null;
@@ -125,17 +131,29 @@ MajVj.misc.sound.prototype.normalizeFrequencyData = function (data) {
 
 /**
  * Gets FFT results in Uint8Array.
- * @param array an Uint8Array to receive a result
+ * @param laft an Uint8Array to receive a result for left channel, or merged
+ * @param right an Uint8Array to receive a result for right channel (optional)
  */
-MajVj.misc.sound.prototype.getByteFrequencyData = function (array) {
-    this._analyser.getByteFrequencyData(array);
+MajVj.misc.sound.prototype.getByteFrequencyData = function (left, right) {
+    if (!right) {
+      this._analyser.getByteFrequencyData(left);
+    } else {
+      this._leftAnalyser.getByteFrequencyData(left);
+      this._rightAnalyser.getByteFrequencyData(right);
+    }
 };
 
 /**
  * Gets FFT results in Float32Array.
- * @param array an Float32Array to receive a result
+ * @param laft an Float32Array to receive a result for left channel, or merged
+ * @param right an Float32Array to receive a result for right channel (optional)
  */
-MajVj.misc.sound.prototype.getFloatFrequencyData = function (array) {
-    this._analyser.getFloatFrequencyData(array);
+MajVj.misc.sound.prototype.getFloatFrequencyData = function (left, right) {
+    if (!right) {
+        this._analyser.getFloatFrequencyData(left);
+    } else {
+        this._leftAnalyser.getFloatFrequencyData(left);
+        this._rightAnalyser.getFloatFrequencyData(right);
+    }
 };
 
