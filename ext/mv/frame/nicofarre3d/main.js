@@ -10,6 +10,11 @@ MajVj.frame.nicofarre3d = function (options) {
     this._aspect = options.aspect;
     this._controller = options.controller;
     this._draw = options.draw;
+    this._module = null;
+    if (options.module) {
+        this._module = new MajVj.frame.nicofarre3d.modules[options.module]();
+        this._draw = this._module.draw.bind(this._module);
+    }
     this._api = {
       clear: this._clear.bind(this),
       color: [1.0, 1.0, 1.0, 1.0],
@@ -111,6 +116,9 @@ MajVj.frame.nicofarre3d = function (options) {
     this._cube = TmaModelPrimitives.createCube();
 };
 
+// Sub modules that draw frames using nicofarre3d API.
+MajVj.frame.nicofarre3d.modules = {};
+
 // Shader programs.
 MajVj.frame.nicofarre3d._vScreenShader = null;
 MajVj.frame.nicofarre3d._fScreenShader = null;
@@ -133,14 +141,15 @@ MajVj.frame.nicofarre3d.load = function () {
                 MajVj.loadShader('frame', name, path, 'v_draw'),
                 MajVj.loadShader('frame', name, path, 'f_draw'),
                 MajVj.loadShader('frame', name, path, 'v_texture'),
-                MajVj.loadShader('frame', name, path, 'f_texture')
-        ]).then(function (shaders) {
-            MajVj.frame.nicofarre3d._vScreenShader = shaders[0];
-            MajVj.frame.nicofarre3d._fScreenShader = shaders[1];
-            MajVj.frame.nicofarre3d._vDrawShader = shaders[2];
-            MajVj.frame.nicofarre3d._fDrawShader = shaders[3];
-            MajVj.frame.nicofarre3d._vTextureShader = shaders[4];
-            MajVj.frame.nicofarre3d._fTextureShader = shaders[5];
+                MajVj.loadShader('frame', name, path, 'f_texture'),
+                MajVj.loadScript('frame', name, 'cube.js')
+        ]).then(function (results) {
+            MajVj.frame.nicofarre3d._vScreenShader = results[0];
+            MajVj.frame.nicofarre3d._fScreenShader = results[1];
+            MajVj.frame.nicofarre3d._vDrawShader = results[2];
+            MajVj.frame.nicofarre3d._fDrawShader = results[3];
+            MajVj.frame.nicofarre3d._vTextureShader = results[4];
+            MajVj.frame.nicofarre3d._fTextureShader = results[5];
             resolve();
         }, function () { reject('nicofarre3d.load fails'); });
     });
