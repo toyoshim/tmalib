@@ -275,6 +275,7 @@ MajVj.frame.nicofarre3d.prototype._drawLine = function (src, dst) {
  */
 MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
     var texture = o.getTexture();
+    var mode = o.getDrawMode();
     var program = texture ? this._textureProgram : this._drawProgram;
     program.setAttributeArray(
             'aCoord', o.getVerticesBuffer(this._screen), 0, 3, 0);
@@ -299,33 +300,25 @@ MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
     if (texture) program.setTexture('uTexture', texture);
     program.setUniformMatrix('uPMatrix', this._pMatrixRight);
     program.setUniformMatrix('uMVMatrix', this._mvMatrixRight);
-    program.drawElements(
-            Tma3DScreen.MODE_TRIANGLES,
-            o.getIndicesBuffer(this._screen), 0, o.items());
+    program.drawElements(mode, o.getIndicesBuffer(this._screen), 0, o.items());
 
     this._fboStage.bind();
     if (texture) program.setTexture('uTexture', texture);
     program.setUniformMatrix('uPMatrix', this._pMatrixStage);
     program.setUniformMatrix('uMVMatrix', this._mvMatrixStage);
-    program.drawElements(
-            Tma3DScreen.MODE_TRIANGLES,
-            o.getIndicesBuffer(this._screen), 0, o.items());
+    program.drawElements(mode, o.getIndicesBuffer(this._screen), 0, o.items());
 
     this._fboLeft.bind();
     if (texture) program.setTexture('uTexture', texture);
     program.setUniformMatrix('uPMatrix', this._pMatrixLeft);
     program.setUniformMatrix('uMVMatrix', this._mvMatrixLeft);
-    program.drawElements(
-            Tma3DScreen.MODE_TRIANGLES,
-            o.getIndicesBuffer(this._screen), 0, o.items());
+    program.drawElements(mode, o.getIndicesBuffer(this._screen), 0, o.items());
 
     this._fboBack.bind();
     if (texture) program.setTexture('uTexture', texture);
     program.setUniformMatrix('uPMatrix', this._pMatrixBack);
     program.setUniformMatrix('uMVMatrix', this._mvMatrixBack);
-    program.drawElements(
-            Tma3DScreen.MODE_TRIANGLES,
-            o.getIndicesBuffer(this._screen), 0, o.items());
+    program.drawElements(mode, o.getIndicesBuffer(this._screen), 0, o.items());
 };
 
 /**

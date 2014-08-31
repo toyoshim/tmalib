@@ -17,6 +17,7 @@ function TmaModelPrimitives() {
     this._coordsBuffer = null;
     this._indicesBuffer = null;
     this._texture = null;
+    this._mode = Tma3DScreen.MODE_TRIANGLES;
 }
 
 /**
@@ -110,6 +111,22 @@ TmaModelPrimitives.prototype.getTexture = function () {
 };
 
 /**
+ * Sets a recommended drawing mode.
+ * @param mode a drawing mode, e.g. Tma3DScreen.MODE_TRIANGLES
+ */
+TmaModelPrimitives.prototype.setDrawMode = function (mode) {
+    this._mode = mode;
+};
+
+/**
+ * Gets a recommended drawing mode.
+ * @return a drawing mode, e.g. Tma3DScreen.MODE_TRIANGLES
+ */
+TmaModelPrimitives.prototype.getDrawMode = function () {
+    return this._mode;
+};
+
+/**
  * Creates a box model.
  */
 TmaModelPrimitives.prototype._createBox = function () {
@@ -140,7 +157,7 @@ TmaModelPrimitives.prototype._createCube = function () {
           3, 7, 6, 6, 2, 3,
           2, 6, 4, 4, 0, 2,
           0, 4, 5, 5, 1, 0,
-          5, 4, 6, 6, 7, 5,
+          4, 6, 7, 7, 5, 4,
           0, 1, 3, 3, 2, 0];
     this._coords = [
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
