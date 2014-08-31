@@ -105,36 +105,36 @@ MajVj.frame.nicofarre = function (options) {
             2740 / 4640, 0, 2740 / 4640, 1, 4220 / 4640, 1, 4220 / 4640, 0,
             ]);
     var size = [
-      [1480, 280],  // A
-      [840, 280],   // B
-      [1480, 280],  // C
-      [840, 280],   // D
-      [160, 280],   // E
-      [160, 280],   // F
-      [98, 170],    // G
-      // LEFT_STAGE_RIGHT - C, B, A
-      [3800, 280], [], [],
-      // WHOLE WALLS - D, (C, B, A)
-      [4640, 280], [], [], []];
+            [1480, 280],  // A
+            [840, 280],   // B
+            [1480, 280],  // C
+            [840, 280],   // D
+            [160, 280],   // E
+            [160, 280],   // F
+            [98, 170],    // G
+            // LEFT_STAGE_RIGHT - C, B, A
+            [3800, 280], [], [],
+            // WHOLE WALLS - D, (C, B, A)
+            [4640, 280], [], [], []];
     this._led = options.led;
     this._mirror = options.mirror;
     if (this._mirror === undefined)
-      this._mirror = MajVj.frame.nicofarre.MIRROR_OFF;
+        this._mirror = MajVj.frame.nicofarre.MIRROR_OFF;
     var w = size[this._led[0]][0] * this._width / 1920;
     var h = size[this._led[0]][1] * this._height / 1080;
     this._fbo = this._screen.createFrameBuffer(w, h);
     this._frames = [];
     for (var i = 0; i < options.frames.length; ++i) {
-      var frame = options.frames[i];
-      var flags = {};
-      if (typeof frame != 'string') {
-        flags = frame.options;
-        frame = frame.name;
-      }
-      flags.width = flags.width || w;
-      flags.height = flags.height || h;
-      flags.aspect = flags.aspect || w / h;
-      this._frames[i] = options.mv.create('frame', frame, flags);
+        var frame = options.frames[i];
+        var flags = {};
+        if (typeof frame != 'string') {
+            flags = frame.options;
+            frame = frame.name;
+        }
+        flags.width = flags.width || w;
+        flags.height = flags.height || h;
+        flags.aspect = flags.aspect || w / h;
+        this._frames[i] = options.mv.create('frame', frame, flags);
     }
 };
 
@@ -204,17 +204,17 @@ MajVj.frame.nicofarre.prototype.draw = function (delta) {
     this._screen.setAlphaMode(true, this._screen.gl.ONE, this._screen.gl.ONE);
     this._screen.fillColor(0.0, 0.0, 0.0, 1.0);
     for (i = 0; i < this._frames.length; ++i)
-      this._frames[i].draw(delta);
+        this._frames[i].draw(delta);
     this._screen.popAlphaMode();
     fbo.bind();
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setAttributeArray('aTexCoord', this._texCoods, 0, 2, 0);
     this._program.setTexture('uTexture', this._fbo.texture);
     for (i = 0; i < this._led.length; ++i) {
-      var offset = this._led[i] * 4;
-      var mirror = (i == this._mirror) ? 1 : 0;
-      this._program.setUniformVector('uMirror', [mirror]);
-      this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, offset, 4);
+        var offset = this._led[i] * 4;
+        var mirror = (i == this._mirror) ? 1 : 0;
+        this._program.setUniformVector('uMirror', [mirror]);
+        this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, offset, 4);
     }
 };
 
