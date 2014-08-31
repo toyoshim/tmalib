@@ -8,7 +8,6 @@ MajVj.misc.sound = function (options) {
         MajVj.misc.sound._context = new AudioContext();
     this._audio = MajVj.misc.sound._context;
     this._gain = this._audio.createGain();
-    this._play = options.play || false;
     this._data = null;
     if (options.url)
         this.fetch(options.url, options.play);
@@ -34,6 +33,7 @@ MajVj.misc.sound._context = null;
  * @return a Promise object
  */
 MajVj.misc.sound.prototype.fetch = function (url, play) {
+    this._play = play;
     return new Promise(function (resolve, reject) {
         var promise = tma.fetch(url);
         promise.then(function (data) {
