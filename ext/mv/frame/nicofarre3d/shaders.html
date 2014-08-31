@@ -30,6 +30,7 @@ uniform mat4 uMatrix;
 
 void main() {
   gl_Position = uPMatrix * uMVMatrix * uMatrix * vec4(aCoord, 1.0);
+  gl_PointSize = 1.0;
 }
 </script>
 

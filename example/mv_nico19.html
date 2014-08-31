@@ -1,0 +1,43 @@
+<html>
+<head><title>Nicofarre test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script src="mv_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  MajVj.loadAllPlugins().then(_(function () {
+    var r = 1;
+    var width = 1920 / r;
+    var height = 1080 / r;
+    var vj = new MajVj(width, height, true);
+    var nico3d = { name: 'nicofarre3d', options: { module: 'waypoints' } };
+    var wall = vj.create('frame', 'effect', {
+        frames: [nico3d],
+        effects: ['glow']});
+    var fx = vj.create('effect', 'nicofarre', { front: false,
+                                                position: [0, 0, 0]});
+    fx.setController(controller);
+    var fbo = vj.screen().createFrameBuffer(width, height);
+    vj.screen().setAlphaMode(false);
+    vj.run(function (delta) {
+      if (emulate)
+        fbo.bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      wall.draw(delta);
+      if (emulate) {
+        vj.screen().bind();
+        vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+        fx.draw(delta, fbo.texture);
+      }
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      vj.onresize();
+      fx.onresize(vj.aspect());
+    };
+  }), function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

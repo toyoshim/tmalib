@@ -26,6 +26,7 @@ MajVj.frame.nicofarre3d = function (options) {
       drawPrimitive: this._drawPrimitive.bind(this),
       fill: this._fill.bind(this),
       gl: this._screen.gl,
+      screen: this._screen,
       setAlphaMode: this._screen.setAlphaMode,
     };
 
@@ -142,7 +143,8 @@ MajVj.frame.nicofarre3d.load = function () {
                 MajVj.loadShader('frame', name, path, 'f_draw'),
                 MajVj.loadShader('frame', name, path, 'v_texture'),
                 MajVj.loadShader('frame', name, path, 'f_texture'),
-                MajVj.loadScript('frame', name, 'cube.js')
+                MajVj.loadScript('frame', name, 'cube.js'),
+                MajVj.loadScript('frame', name, 'waypoints.js')
         ]).then(function (results) {
             MajVj.frame.nicofarre3d._vScreenShader = results[0];
             MajVj.frame.nicofarre3d._fScreenShader = results[1];
