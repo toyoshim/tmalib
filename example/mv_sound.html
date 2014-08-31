@@ -1,0 +1,59 @@
+<html>
+<head><title>Sound Test</title></head>
+<body>
+<script src="../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj;
+  var snd;
+  var songs;
+
+  document.body.addEventListener('keydown', function (e) {
+    switch (e.which) {
+      case 49:  // 1
+        snd.play(songs[0]);
+        break;
+      case 50:  // 2
+        snd.play(songs[1]);
+        break;
+      case 51:  // 3
+        snd.play(songs[2]);
+        break;
+      case 52:  // 4
+        snd.play(songs[3]);
+        break;
+      case 53:  // 5
+        snd.play(songs[4]);
+        break;
+    }
+  });
+
+  var error = function (e) {
+    console.error('plugin load error: ' + e.stack);
+  };
+
+  var main = function (data) {
+    tma.log(data.length + ' sounds loaded.');
+    songs = data;
+    snd.play(songs[0]);
+  };
+  var start = function () {
+    tma.log('loading sound data...');
+    snd = vj.create('misc', 'sound');
+    var site = 'data/0004/';
+    Promise.all([
+        snd.fetch(site + 'track01.mp3'),
+        snd.fetch(site + 'track03.mp3'),
+        snd.fetch(site + 'track11.mp3'),
+        snd.fetch(site + 'track13.mp3'),
+        snd.fetch(site + 'track16.mp3')
+    ]).then(main, error);
+  };
+
+  vj = new MajVj(0, 0);
+  vj.loadAllPlugins().then(start, error);
+};
+</script>
+</body>
+</html>

@@ -7,7 +7,7 @@ MajVj.misc.sound = function (options) {
     if (!MajVj.misc.sound._context)
         MajVj.misc.sound._context = new AudioContext();
     this._audio = MajVj.misc.sound._context;
-    this._play = false;
+    this._play = options.play || false;
     this._data = null;
     if (options.url)
         this.fetch(options.url, options.play);
@@ -20,7 +20,7 @@ MajVj.misc.sound = function (options) {
 MajVj.misc.sound.load = function () {
     return new Promise(function (resolve, reject) {
         resolve();
-    }, function (error) { reject(error); });
+    });
 };
 
 MajVj.misc.sound._context = null;
@@ -30,35 +30,34 @@ MajVj.misc.sound._context = null;
  * Loads a sound data.
  * @param url url from where a sound data will be loaded
  * @param play automatically once the data is ready
+ * @return a Promise object
  */
 MajVj.misc.sound.prototype.fetch = function (url, play) {
-    this._play = play;
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.responseType = 'arraybuffer';
-    xhr.onload = function () {
-        if (!xhr.response)
-            return;
-        this._audio.decodeAudioData(xhr.response, function (buffer) {
-            this._data = buffer;
-            if (this._play)
-                this.play();
-        }.bind(this), function (e) { console.log(e); });
-    }.bind(this);
-    xhr.send();
+    return new Promise(function (resolve, reject) {
+        var promise = tma.fetch(url);
+        promise.then(function (data) {
+            this._audio.decodeAudioData(data, function (buffer) {
+                this._data = buffer;
+                if (this._play)
+                    this.play();
+                resolve(buffer);
+            }.bind(this), function (e) { console.log(e); });
+        }.bind(this), reject);
+    }.bind(this));
 };
 
 
 /**
  * Plays.
+ * @param data an AudioBuffer object (optional: fetched data is used by default)
  * @return true if succeeded
  */
-MajVj.misc.sound.prototype.play = function () {
-    if (!this._data)
+MajVj.misc.sound.prototype.play = function (data) {
+    if (!this._data && !data)
         return false;
+    this.stop();
     this._buffer = this._audio.createBufferSource();
-    this._buffer.buffer = this._data;
-    // this._buffer.onended
+    this._buffer.buffer = data || this._data;
     this._buffer.connect(this._audio.destination);
     this._buffer.start(0);
     return true;
@@ -68,5 +67,9 @@ MajVj.misc.sound.prototype.play = function () {
  * Stops.
  */
 MajVj.misc.sound.prototype.stop = function () {
+    if (!this._buffer)
+        return;
     this._buffer.stop();
+    this._buffer.disconnect();
+    this._buffer = null;
 };

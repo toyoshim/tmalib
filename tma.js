@@ -143,6 +143,28 @@ tma._load = function (srcs, callback) {
 };
 
 /**
+ * Fetches a data via XMLHttpRequest.
+ * @param url a url to fetch a data
+ * @param type a response type in string (optional: 'arraybuffer' is default)
+ * @return a Primise
+ */
+tma.fetch = function (url, type) {
+    return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = type || 'arraybuffer';
+        xhr.onload = function () {
+            if (!this.response)
+                reject();
+            else
+                resolve(this.response);
+            this.onload = null;
+        }.bind(xhr);
+        xhr.send();
+    });
+};
+
+/**
  * Initializations.
  */
 var exports = {};
