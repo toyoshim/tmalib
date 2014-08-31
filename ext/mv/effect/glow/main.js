@@ -60,11 +60,12 @@ MajVj.effect.glow.prototype.onresize = function (aspect) {
  */
 MajVj.effect.glow.prototype.draw = function (delta, texture) {
     var volume = 1.0;
-    if (this._controller)
-        volume = 3.0 * this._controller.slider;
     var t = 0.0;
-    if (this._controller)
-        t = this._controller.knob;
+    if (this._controller && this._controller.volume) {
+        volume = 3.0 * this._controller.volume[0];
+        if (this._controller.volume.length > 1)
+            t = this._controller.volume[1];
+    }
     if (volume != 0.0) {
         this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
         this._program.setTexture('uTexture', texture);
