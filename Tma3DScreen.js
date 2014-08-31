@@ -220,12 +220,13 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
 
 /**
  * Creates an array buffer from |array| and bind it to WebGL context.
- * @param array data to store
+ * @param array data to store in Array or ArrayBuffer
  * @return created buffer
  */
 Tma3DScreen.prototype.createBuffer = function (array) {
     var buffer = this.gl.createBuffer();
-    buffer._buffer = new Float32Array(array);
+    buffer._buffer = (array.constructor.name == 'Float32Array') ?
+          array : new Float32Array(array);
     buffer._owner = this;
     buffer.bind = function () {
         this._owner.gl.bindBuffer(this._owner.gl.ARRAY_BUFFER, this);

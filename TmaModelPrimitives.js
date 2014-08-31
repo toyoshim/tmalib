@@ -39,7 +39,7 @@ TmaModelPrimitives.prototype.items = function () {
 
 /**
  * Gets model's vertices array.
- * @return model's vertices in Array
+ * @return model's vertices in Array or Float32Array
  */
 TmaModelPrimitives.prototype.getVertices = function () {
     return this._vertices;
@@ -47,7 +47,7 @@ TmaModelPrimitives.prototype.getVertices = function () {
 
 /**
  * Gets texture coord. Address is normalized from 0.0 to 1.0.
- * @return texture coord in Array.
+ * @return texture coord in Array
  */
 TmaModelPrimitives.prototype.getCoords = function () {
     return this._coords;
@@ -164,6 +164,20 @@ TmaModelPrimitives.prototype._createCube = function () {
 };
 
 /**
+ * Creates a model containing points.
+ * @param points an Array containing points, e.g. [x0, y0, z0, x1, y1, z1, ...]
+ */
+TmaModelPrimitives.prototype._createPoints = function (points) {
+    this._vertices = points;
+    var count = points.length / 3;
+    this._indices = new Array(count);
+    this._coords = null;
+    for (var i = 0; i < count; ++i)
+        this._indices[i] = i;
+    this._mode = Tma3DScreen.MODE_POINTS;
+};
+
+/**
  * Creates a sphere model with evenly divided triangles.
  * @param resolution divition depth
  */
@@ -252,6 +266,17 @@ TmaModelPrimitives.createCube = function () {
     var cube = new TmaModelPrimitives();
     cube._createCube();
     return cube;
+};
+
+/**
+ * Creates a model containing points.
+ * @param points an Array containing points, e.g. [x0, y0, z0, x1, y1, z1, ...]
+ * @return A TmaModelPrimitives object containing a points
+ */
+TmaModelPrimitives.createPoints = function (points) {
+    var model = new TmaModelPrimitives();
+    model._createPoints(points);
+    return model;
 };
 
 /**
