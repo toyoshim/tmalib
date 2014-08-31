@@ -25,7 +25,7 @@ MajVj.effect.glow = function (options) {
 // Shader programs.
 MajVj.effect.glow._vertexShader = null;
 MajVj.effect.glow._fragmentShader = null;
-
+MajVj.effect.glow._noEffectFragmentShader = null;
 
 /**
  * Loads resources asynchronously.

@@ -51,6 +51,7 @@ MajVj.prototype.loadAllPlugins = function () {
     return Promise.all([
         this.loadPlugin('effect', 'glow'),
         this.loadPlugin('effect', 'nicofarre'),
+        this.loadPlugin('effect', 'rgb'),
         this.loadPlugin('frame', 'ab2'),
         this.loadPlugin('frame', 'at'),
         this.loadPlugin('frame', 'crlogo'),

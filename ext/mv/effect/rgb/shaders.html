@@ -1,0 +1,30 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+attribute vec2 aCoord;
+varying vec2 vCoord;
+
+void main() {
+    vec2 position = vec2(aCoord.x * 2.0 - 1.0, aCoord.y * 2.0 - 1.0);
+    gl_Position = vec4(position, 0.0, 1.0);
+    vCoord = aCoord;
+}
+</script>
+
+<script id='fragment' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture;
+uniform float uDistance;
+varying vec2 vCoord;
+
+void main() {
+    vec4 r = texture2D(uTexture, vec2(vCoord.x - uDistance, vCoord.y));
+    vec4 g = texture2D(uTexture, vCoord);
+    vec4 b = texture2D(uTexture, vec2(vCoord.x + uDistance, vCoord.y));
+    gl_FragColor = vec4(r.r, g.g, b.b, 1.0);
+}
+</script>
+
+</head>
+</html>
