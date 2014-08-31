@@ -26,46 +26,29 @@ function MajVj (width, height, fullscreen) {
 }
 
 /**
- * Loads a MajVj plugin.
- * @param type 'effect' or 'frame'
- * @param name plugin name
- * @return a Promise object
- * TODO: This member method can be class method.
- */
-MajVj.prototype.loadPlugin = function (type, name) {
-    return new Promise(function (resolve, reject) {
-        MajVj.loadScript(type, name, 'main.js').then(function () {
-            MajVj[type][name].load().then(function () {
-                resolve();
-            }, function (e) { reject(e); });
-        }, function () { reject('plugin load error: ' + name); });
-    });
-};
-
-/**
  * Loads all MajVj plugins.
  * @return a Promise object
  * TODO: This member method can be class method.
  */
 MajVj.prototype.loadAllPlugins = function () {
     return Promise.all([
-        this.loadPlugin('effect', 'glow'),
-        this.loadPlugin('effect', 'nicofarre'),
-        this.loadPlugin('effect', 'rgb'),
-        this.loadPlugin('frame', 'ab2'),
-        this.loadPlugin('frame', 'at'),
-        this.loadPlugin('frame', 'crlogo'),
-        this.loadPlugin('frame', 'effect'),
-        this.loadPlugin('frame', 'filter'),
-        this.loadPlugin('frame', 'morphere'),
-        this.loadPlugin('frame', 'movie'),
-        this.loadPlugin('frame', 'nico_test'),
-        this.loadPlugin('frame', 'nicofarre'),
-        this.loadPlugin('frame', 'nicofarre3d'),
-        this.loadPlugin('frame', 'sandbox'),
-        this.loadPlugin('frame', 'snow'),
-        this.loadPlugin('frame', 'wired'),
-        this.loadPlugin('misc', 'sound')
+        MajVj.loadPlugin('effect', 'glow'),
+        MajVj.loadPlugin('effect', 'nicofarre'),
+        MajVj.loadPlugin('effect', 'rgb'),
+        MajVj.loadPlugin('frame', 'ab2'),
+        MajVj.loadPlugin('frame', 'at'),
+        MajVj.loadPlugin('frame', 'crlogo'),
+        MajVj.loadPlugin('frame', 'effect'),
+        MajVj.loadPlugin('frame', 'filter'),
+        MajVj.loadPlugin('frame', 'morphere'),
+        MajVj.loadPlugin('frame', 'movie'),
+        MajVj.loadPlugin('frame', 'nico_test'),
+        MajVj.loadPlugin('frame', 'nicofarre'),
+        MajVj.loadPlugin('frame', 'nicofarre3d'),
+        MajVj.loadPlugin('frame', 'sandbox'),
+        MajVj.loadPlugin('frame', 'snow'),
+        MajVj.loadPlugin('frame', 'wired'),
+        MajVj.loadPlugin('misc', 'sound')
     ]);
 };
 
@@ -150,6 +133,22 @@ MajVj.prototype.aspect = function () {
  */
 MajVj.createPath = function (type, name, path) {
     return tma.basePath() + 'ext/mv/' + type + '/' + name + '/' + path;
+};
+
+/**
+ * Loads a MajVj plugin.
+ * @param type 'effect' or 'frame'
+ * @param name plugin name
+ * @return a Promise object
+ */
+MajVj.loadPlugin = function (type, name) {
+    return new Promise(function (resolve, reject) {
+        MajVj.loadScript(type, name, 'main.js').then(function () {
+            MajVj[type][name].load().then(function () {
+                resolve();
+            }, function (e) { reject(e); });
+        }, function () { reject('plugin load error: ' + name); });
+    });
 };
 
 /**
