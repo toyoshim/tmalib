@@ -8,6 +8,7 @@ MajVj.misc.sound = function (options) {
         MajVj.misc.sound._context = new AudioContext();
     this._audio = MajVj.misc.sound._context;
     this._gain = this._audio.createGain();
+    this._analyser = this._audio.createAnalyser();
     this._data = null;
     if (options.url)
         this.fetch(options.url, options.play);
@@ -61,6 +62,7 @@ MajVj.misc.sound.prototype.play = function (data) {
     this._buffer.buffer = data || this._data;
     this._buffer.connect(this._gain);
     this._gain.connect(this._audio.destination);
+    this._gain.connect(this._analyser);
     this._buffer.start(0);
     return true;
 };
@@ -83,5 +85,44 @@ MajVj.misc.sound.prototype.stop = function () {
  */
 MajVj.misc.sound.prototype.setGain = function (gain) {
     this._gain.gain.value = gain;
+};
+
+/**
+ * Gets an effective FFT item count.
+ * The result can be used to allocate an ArrayBuffer as;
+ *   var count = sound.getFftCount();
+ *   var buffer = new Float32Array(count);
+ *   sound.getByteFrequencyData(buffer);
+ * buffer[0:count-1] caontains valid data.
+ * @return a FFT length
+ */
+MajVj.misc.sound.prototype.getFftCount = function () {
+    return this._analyser.frequencyBinCount / 2;
+};
+
+/**
+ * Normalizes a FFT result.
+ * @param data a float value from -30 to -100 in dB
+ * @return a float value almost from 0.0 to 0.1
+ */
+MajVj.misc.sound.prototype.normalizeFrequencyData = function (data) {
+    var a = this._analyser;
+    return (data - a.minDecibels) / (a.maxDecibels - a.minDecibels);
+};
+
+/**
+ * Gets FFT results in Uint8Array.
+ * @param array an Uint8Array to receive a result
+ */
+MajVj.misc.sound.prototype.getByteFrequencyData = function (array) {
+    this._analyser.getByteFrequencyData(array);
+};
+
+/**
+ * Gets FFT results in Float32Array.
+ * @param array an Float32Array to receive a result
+ */
+MajVj.misc.sound.prototype.getFloatFrequencyData = function (array) {
+    this._analyser.getFloatFrequencyData(array);
 };
 
