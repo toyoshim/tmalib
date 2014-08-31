@@ -9,7 +9,7 @@ tma.onload = function () {
   var width = 1920;
   var height = 1080;
   var vj = new MajVj(width, height, true);
-  vj.loadAllPlugins().then(function () {
+  MajVj.loadAllPlugins().then(function () {
     var gen = [];
     gen[0] = vj.create('frame', 'nico_test');
     gen[1] = vj.create('frame', 'nicofarre',

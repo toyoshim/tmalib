@@ -28,7 +28,7 @@ tma.onload = function () {
   var width = 1920 / r;
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
-  vj.loadAllPlugins().then(function () {
+  MajVj.loadAllPlugins().then(function () {
     var e18207_0 = document.getElementById('18207.0').text;
     var wall = vj.create('frame', 'nicofarre',
                         { led: MajVj.frame.nicofarre.LED_WHOLE_WALLS,

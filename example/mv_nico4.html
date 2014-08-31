@@ -10,7 +10,7 @@ tma.onload = function () {
   var width = 1920 / r;
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
-  vj.loadAllPlugins().then(function () {
+  MajVj.loadAllPlugins().then(function () {
     var ceil = vj.create('frame', 'nicofarre',
                         { led: MajVj.frame.nicofarre.LED_CEILING,
                           frames: [

@@ -13,7 +13,7 @@ tma.onload = function () {
   var fftController = { volume: [1.0] };
   var fftLeftController = { volume: [1.0] };
   var fftRightController = { volume: [1.0] };
-  vj.loadAllPlugins().then(_(function () {
+  MajVj.loadAllPlugins().then(_(function () {
     var snd = vj.create('misc', 'sound', { delay: 0.0 });
     snd.fetch('data/bustling.mp3', true);
     var fftL = new Float32Array(snd.getFftCount());

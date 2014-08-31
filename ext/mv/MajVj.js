@@ -26,36 +26,9 @@ function MajVj (width, height, fullscreen) {
 }
 
 /**
- * Loads all MajVj plugins.
- * @return a Promise object
- * TODO: This member method can be class method.
- */
-MajVj.prototype.loadAllPlugins = function () {
-    return Promise.all([
-        MajVj.loadPlugin('effect', 'glow'),
-        MajVj.loadPlugin('effect', 'nicofarre'),
-        MajVj.loadPlugin('effect', 'rgb'),
-        MajVj.loadPlugin('frame', 'ab2'),
-        MajVj.loadPlugin('frame', 'at'),
-        MajVj.loadPlugin('frame', 'crlogo'),
-        MajVj.loadPlugin('frame', 'effect'),
-        MajVj.loadPlugin('frame', 'filter'),
-        MajVj.loadPlugin('frame', 'morphere'),
-        MajVj.loadPlugin('frame', 'movie'),
-        MajVj.loadPlugin('frame', 'nico_test'),
-        MajVj.loadPlugin('frame', 'nicofarre'),
-        MajVj.loadPlugin('frame', 'nicofarre3d'),
-        MajVj.loadPlugin('frame', 'sandbox'),
-        MajVj.loadPlugin('frame', 'snow'),
-        MajVj.loadPlugin('frame', 'wired'),
-        MajVj.loadPlugin('misc', 'sound')
-    ]);
-};
-
-/**
  * Handles screen resize.
  */
- MajVj.prototype.onresize = function () {
+MajVj.prototype.onresize = function () {
     if (!this._fullscreen)
         return;
     this._screen.canvas.style.width = window.innerWidth + 'px';
@@ -136,6 +109,33 @@ MajVj.createPath = function (type, name, path) {
 };
 
 /**
+ * Loads all MajVj plugins.
+ * @return a Promise object
+ */
+MajVj.loadAllPlugins = function () {
+    return Promise.all([
+        MajVj.loadPlugin('effect', 'glow'),
+        MajVj.loadPlugin('effect', 'nicofarre'),
+        MajVj.loadPlugin('effect', 'rgb'),
+        MajVj.loadPlugin('frame', 'ab2'),
+        MajVj.loadPlugin('frame', 'at'),
+        MajVj.loadPlugin('frame', 'crlogo'),
+        MajVj.loadPlugin('frame', 'effect'),
+        MajVj.loadPlugin('frame', 'filter'),
+        MajVj.loadPlugin('frame', 'morphere'),
+        MajVj.loadPlugin('frame', 'movie'),
+        MajVj.loadPlugin('frame', 'nico_test'),
+        MajVj.loadPlugin('frame', 'nicofarre'),
+        MajVj.loadPlugin('frame', 'nicofarre3d'),
+        MajVj.loadPlugin('frame', 'sandbox'),
+        MajVj.loadPlugin('frame', 'snow'),
+        MajVj.loadPlugin('frame', 'wired'),
+        MajVj.loadPlugin('misc', 'sound')
+    ]);
+};
+
+
+/**
  * Loads a MajVj plugin.
  * @param type 'effect' or 'frame'
  * @param name plugin name
@@ -143,6 +143,10 @@ MajVj.createPath = function (type, name, path) {
  */
 MajVj.loadPlugin = function (type, name) {
     return new Promise(function (resolve, reject) {
+        if (MajVj[type][name]) {
+            resolve();
+            return;
+        }
         MajVj.loadScript(type, name, 'main.js').then(function () {
             MajVj[type][name].load().then(function () {
                 resolve();

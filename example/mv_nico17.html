@@ -61,7 +61,7 @@ tma.onload = function () {
   var width = 1920 / r;
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
-  vj.loadAllPlugins().then(_(function () {
+  MajVj.loadAllPlugins().then(_(function () {
     var nico3d = { name: 'nicofarre3d', options: { draw: box.draw.bind(box) } };
     var wall = vj.create('frame', 'effect', {
         frames: [nico3d],

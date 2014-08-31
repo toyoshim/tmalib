@@ -99,7 +99,7 @@ tma.onload = function () {
   var width = 1920 / r;
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
-  vj.loadAllPlugins().then(_(function () {
+  MajVj.loadAllPlugins().then(_(function () {
     var play = vj.create('misc', 'sound', { url: 'data/attack_02_02.wav',
                                             play: true });
     var ceil = vj.create('frame', 'nicofarre',

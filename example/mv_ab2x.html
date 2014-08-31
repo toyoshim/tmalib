@@ -8,7 +8,7 @@ tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
 	var resolution = 512;
 	var vj = new MajVj(resolution, resolution);
-	vj.loadAllPlugins().then(function () {
+	MajVj.loadAllPlugins().then(function () {
 		MajVj.frame.ab2.resolution = 2;
 		var ab2 = vj.create('frame', 'ab2');
 		var wired = vj.create('frame', 'wired');

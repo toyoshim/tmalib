@@ -11,7 +11,7 @@ tma.onload = function () {
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
   var nano2 = { volume: [0.0, 0.0] };
-  vj.loadAllPlugins().then(_(function () {
+  MajVj.loadAllPlugins().then(_(function () {
     var rgb = { name: 'rgb', options: { distance: 0.002 } };
     var glow = { name: 'glow', options: { controller: nano2 } };
     var effect = { name: 'effect', options: {

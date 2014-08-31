@@ -9,7 +9,7 @@ tma.onload = function () {
   var width = 1920;
   var height = 1080;
   var vj = new MajVj(width, height, true);
-  vj.loadAllPlugins().then(function () {
+  MajVj.loadAllPlugins().then(function () {
       var movie = vj.create('frame', 'movie', {url: 'data/04_space_out.mp4'});
     var fx = vj.create('effect', 'nicofarre');
     fx.setController(controller);

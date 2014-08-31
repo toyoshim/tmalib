@@ -5,7 +5,7 @@
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
 	var vj = new MajVj(512, 512);
-	vj.loadAllPlugins().then(function () {
+	MajVj.loadAllPlugins().then(function () {
 		var effect = vj.create('effect', 'glow');
 		var wired = vj.create('frame', 'wired');
 		var fbo = vj.screen().createFrameBuffer(512, 512);
