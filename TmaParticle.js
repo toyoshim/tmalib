@@ -22,8 +22,10 @@ function TmaParticle (container, offset) {
     this._offset = offset;
     this.x = 0;
     this.y = 0;
+    this.z = 0;
     this.vx = 0;
     this.vy = 0;
+    this.vz = 0;
 }
 
 /**
