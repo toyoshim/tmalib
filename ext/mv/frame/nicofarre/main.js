@@ -128,7 +128,7 @@ MajVj.frame.nicofarre = function (options) {
         var frame = options.frames[i];
         var flags = {};
         if (typeof frame != 'string') {
-            flags = frame.options;
+            flags = frame.options || {};
             frame = frame.name;
         }
         flags.width = flags.width || w;
