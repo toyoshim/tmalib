@@ -47,6 +47,8 @@ tma.onload = function () {
   pt.append(new Count(2 * 1000, '2'));
   pt.append(new Count(3 * 1000, '3'));
   seq.register(20000, pt);
+  seq.register(25000,
+      new TmaSequencer.RepeatTask(new Count(2 * 1000, '@'), 5));
   seq.start();
   loop();
 };

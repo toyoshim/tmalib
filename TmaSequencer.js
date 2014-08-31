@@ -319,5 +319,68 @@ TmaSequencer.ParallelTask.prototype.run = function (delta, time) {
         }
     }
     this._active = active;
+    this._timeBase = 0;
+    return this.spend(delta);
+};
+
+/**
+ * TmaSequencer.RepeatTask prototype.
+ *
+ * This prototype provides a task that runs a registered task in a loop.
+ * @param task a task to run in a loop
+ * @param iteration an iteration count to repeat
+ */
+TmaSequencer.RepeatTask = function (task, iteration) {
+    var duration = TmaSequencer.Task.INFINITE;
+    if (iteration != TmaSequencer.RepeatTask.INFINITE)
+        duration = task.duration() * iteration;
+    this.superclass(duration);
+    this._task = task;
+};
+
+// Constant to specify a never ending task.
+TmaSequencer.RepeatTask.INFINITE = -1;
+
+// Inherits TmaSequencer.Task.
+TmaSequencer.RepeatTask.prototype = new TmaSequencer.Task();
+TmaSequencer.RepeatTask.prototype.superclass = TmaSequencer.Task;
+TmaSequencer.RepeatTask.prototype.constructor = TmaSequencer.RepeatTask;
+
+/**
+ * Starts a task
+ */
+TmaSequencer.RepeatTask.prototype.start = function () {
+    this.stop();
+    this._elapsed = 0;
+    this._task.start();
+};
+
+/**
+ * Stops a task
+ */
+TmaSequencer.RepeatTask.prototype.stop = function () {
+    this._task.stop();
+    this._repeat = 0;
+};
+
+/**
+ * Runs a task.
+ * @param delta delta time in msec from the last call
+ * @param time elapsed time from a task starts
+ * @return 0 if not finished, otherwise a positive time that is not consumed
+ */
+TmaSequencer.RepeatTask.prototype.run = function (delta, time) {
+    var rest = delta;
+    var diffTime = time - this._timeBase;
+    while (rest > 0) {
+        var result = this._task.run(rest, diffTime);
+        if (result != 0) {
+            this._task.stop();
+            this._task.start();
+            this._timeBase = time - result;
+            time = result;
+        }
+        rest = result;
+    }
     return this.spend(delta);
 };
