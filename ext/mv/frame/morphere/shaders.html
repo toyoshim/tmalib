@@ -1,0 +1,28 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+attribute vec3 aVertexPosition;
+uniform mat4 uPMatrix;
+uniform vec3 uColor;
+varying vec3 vColor;
+
+void main() {
+    gl_Position = uPMatrix * vec4(aVertexPosition, 1.0);
+    float weight =
+            max(dot(normalize(aVertexPosition), vec3(-0.5, 0.5, 1.0)), 0.0);
+    vColor = uColor + vec3(0.9, 0.3, 0.3) * weight;
+}
+</script>
+
+<script id='fragment' type='x-shader/x-fragment'>
+precision mediump float;
+varying vec3 vColor;
+
+void main() {
+    gl_FragColor = vec4(vColor, 1.0);
+}
+</script>
+
+</head>
+</html>
