@@ -85,7 +85,7 @@ MajVj.frame.morphere.prototype.draw = function (delta) {
     buffer.update();
     var size = 2.0;
     if (this._controller && this._controller.volume)
-        size *= this._controller;
+        size *= this._controller.volume[0];
     this._screen.pushAlphaMode();
     this._screen.setAlphaMode(false);
     var matrix = mat4.create();
