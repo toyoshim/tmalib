@@ -1,5 +1,6 @@
 var controller = {};
 controller.volume = [0.0, 0.0];
+controller.nano2 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
 var emulate = true;
 document.body.addEventListener('keydown', function (e) {
   switch (e.which) {
@@ -25,6 +26,32 @@ document.body.addEventListener('keydown', function (e) {
       console.log(e.which);
   }
 });
+
+function nanoKONTROL2 (e) {
+  var data = e.data;
+  if (data[0] == 176 && data[1] < 8) {  // sliders
+    controller.nano2[data[1]] = data[2] / 127;
+  } else if (data[0] == 176 && 16 <= data[1] && data[1] < 24) { // knobs
+    // Do something here.
+  } else {
+    console.log(data);
+  }
+}
+
+
+navigator.requestMIDIAccess().then(function (a) {
+  var inputs = a.inputs();
+  for (var i = 0; i < inputs.length; ++i) {
+    if (inputs[i].name == 'nanoKONTROL2') {
+      inputs[i].onmidimessage = nanoKONTROL2;
+      console.log(inputs[i].name + ' found.');
+      window.nano2 = inputs[i];  // make it alive
+    } else {
+      console.log(inputs[i]);
+    }
+  }
+}, function (e) { console.log(e); });
+
 
 window.addEventListener('message', function (e) {
   console.log(e.data);
