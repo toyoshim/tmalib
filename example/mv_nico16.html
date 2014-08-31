@@ -10,11 +10,13 @@ tma.onload = function () {
   var width = 1920 / r;
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
+  var nano2 = { volume: [0.0, 0.0] };
   vj.loadAllPlugins().then(_(function () {
     var rgb = { name: 'rgb', options: { distance: 0.002 } };
+    var glow = { name: 'glow', options: { controller: nano2 } };
     var effect = { name: 'effect', options: {
-        frames: [ 'wired', 'at' ],
-        effects: [ rgb, 'glow' ] } };
+        frames: [ 'wired', 'crlogo' ],
+        effects: [ rgb, glow ] } };
     var stage = vj.create('frame', 'nicofarre', {
         led: MajVj.frame.nicofarre.LED_LEFT_STAGE_RIGHT,
         frames: [ effect ] });
@@ -22,6 +24,8 @@ tma.onload = function () {
     emu.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.run(function (delta) {
+      nano2.volume[0] = controller.nano2[0];
+      nano2.volume[1] = controller.nano2[1];
       if (emulate)
         fbo.bind();
       vj.screen().setAlphaMode(false);
