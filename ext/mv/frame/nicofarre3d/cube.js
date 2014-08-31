@@ -3,14 +3,14 @@
  *  - MajVj extension - frame plugin - nicofarre3d - cube module
  */
 MajVj.frame.nicofarre3d.modules.cube = function () {
-  this._n = 256;
-  this._objects = new Array(this._n);
-  for (var i = 0; i < this._n; ++i) {
-      this._objects[i] = new MajVj.frame.nicofarre3d.modules.cube.object(
-          (Math.random() - 0.5) * 20000);
-  }
-  this._cube = TmaModelPrimitives.createCube();
-  this._cube.setDrawMode(Tma3DScreen.MODE_LINE_LOOP);
+    this._n = 256;
+    this._objects = new Array(this._n);
+    for (var i = 0; i < this._n; ++i) {
+        this._objects[i] = new MajVj.frame.nicofarre3d.modules.cube.object(
+            (Math.random() - 0.5) * 20000);
+    }
+    this._cube = TmaModelPrimitives.createCube();
+    this._cube.setDrawMode(Tma3DScreen.MODE_LINE_LOOP);
 };
 
 /**
