@@ -12,7 +12,7 @@ tma.onload = function () {
   var vj = new MajVj(width, height, true);
   var fftController = { volume: [1.0] };
   vj.loadAllPlugins().then(_(function () {
-    var snd = vj.create('misc', 'sound');
+    var snd = vj.create('misc', 'sound', { delay: 0.0 });
     snd.fetch('data/0004/track13.mp3', true);
     var fft = new Float32Array(snd.getFftCount());
     var led = vj.create('frame', 'nicofarre',

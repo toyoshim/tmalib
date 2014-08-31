@@ -9,6 +9,9 @@ MajVj.misc.sound = function (options) {
     this._audio = MajVj.misc.sound._context;
     this._gain = this._audio.createGain();
     this._analyser = this._audio.createAnalyser();
+    this._delay = this._audio.createDelay();
+    if (options.delay)
+        this._delay.delayTime.value = options.delay;
     this._data = null;
     if (options.url)
         this.fetch(options.url, options.play);
@@ -61,8 +64,9 @@ MajVj.misc.sound.prototype.play = function (data) {
     this._buffer = this._audio.createBufferSource();
     this._buffer.buffer = data || this._data;
     this._buffer.connect(this._gain);
-    this._gain.connect(this._audio.destination);
     this._gain.connect(this._analyser);
+    this._gain.connect(this._delay);
+    this._delay.connect(this._audio.destination);
     this._buffer.start(0);
     return true;
 };
@@ -74,6 +78,7 @@ MajVj.misc.sound.prototype.stop = function () {
     if (!this._buffer)
         return;
     this._buffer.stop();
+    this._delay.disconnect();
     this._gain.disconnect();
     this._buffer.disconnect();
     this._buffer = null;
@@ -85,6 +90,14 @@ MajVj.misc.sound.prototype.stop = function () {
  */
 MajVj.misc.sound.prototype.setGain = function (gain) {
     this._gain.gain.value = gain;
+};
+
+/**
+ * Sets sound delay.
+ * @param delay a delay time in second.
+ */
+MajVj.misc.sound.prototype.setDelay = function (delay) {
+    this._delay.delayTime.value = delay;
 };
 
 /**
