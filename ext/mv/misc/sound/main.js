@@ -4,10 +4,13 @@
  * @param options options (See MajVj.prototype.create)
  */
 MajVj.misc.sound = function (options) {
+    this._channel = options.channel || 1;
     if (!MajVj.misc.sound._context)
         MajVj.misc.sound._context = new AudioContext();
     this._audio = MajVj.misc.sound._context;
-    this._gain = this._audio.createGain();
+    this._gain = new Array(this._channel);
+    for (var ch = 0; ch < this._channel; ++ch)
+        this._gain[ch] = this._audio.createGain();
     this._splitter = this._audio.createChannelSplitter(2);
     this._analyser = this._audio.createAnalyser();
     this._leftAnalyser = this._audio.createAnalyser();
@@ -15,7 +18,8 @@ MajVj.misc.sound = function (options) {
     this._delay = this._audio.createDelay();
     if (options.delay)
         this._delay.delayTime.value = options.delay;
-    this._data = null;
+    this._buffer = new Array(this._channel);
+    this._playing = 0;
     if (options.url)
         this.fetch(options.url, options.play);
 };
@@ -40,7 +44,8 @@ MajVj.misc.sound._context = null;
  * @return a Promise object
  */
 MajVj.misc.sound.prototype.fetch = function (url, play) {
-    this._play = play;
+    // FIXME: |play| does not work when multiple fetch requests run.
+    this._play = play || false;
     return new Promise(function (resolve, reject) {
         var promise = tma.fetch(url);
         promise.then(function (data) {
@@ -57,45 +62,64 @@ MajVj.misc.sound.prototype.fetch = function (url, play) {
 /**
  * Plays.
  * @param data an AudioBuffer object (optional: fetched data is used by default)
+ * @param channel a channel to play (optional: 0)
  * @return true if succeeded
  */
-MajVj.misc.sound.prototype.play = function (data) {
+MajVj.misc.sound.prototype.play = function (data, channel) {
     if (!this._data && !data)
         return false;
-    this.stop();
-    this._buffer = this._audio.createBufferSource();
-    this._buffer.buffer = data || this._data;
-    this._buffer.connect(this._gain);
-    this._gain.connect(this._analyser);
-    this._gain.connect(this._delay);
-    this._gain.connect(this._splitter);
-    this._splitter.connect(this._leftAnalyser, 0);
-    this._splitter.connect(this._rightAnalyser, 1);
-    this._delay.connect(this._audio.destination);
-    this._buffer.start(0);
+    var ch = channel || 0;
+    if (ch >= this._channel)
+        return false;
+    this.stop(ch);
+    this._buffer[ch] = this._audio.createBufferSource();
+    this._buffer[ch].buffer = data || this._data;
+    this._buffer[ch].connect(this._gain[ch]);
+    this._gain[ch].connect(this._analyser);
+    this._gain[ch].connect(this._delay);
+    this._gain[ch].connect(this._splitter);
+    if (this._playing == 0) {
+        this._splitter.connect(this._leftAnalyser, 0);
+        this._splitter.connect(this._rightAnalyser, 1);
+        this._delay.connect(this._audio.destination);
+    }
+    this._buffer[ch].start(0);
+    this._playing++;
     return true;
 };
 
 /**
  * Stops.
+ * @param channel a channel to stop (optional: 0)
  */
-MajVj.misc.sound.prototype.stop = function () {
-    if (!this._buffer)
+MajVj.misc.sound.prototype.stop = function (channel) {
+    var ch = channel || 0;
+    if (ch > this._channel)
         return;
-    this._buffer.stop();
-    this._delay.disconnect();
-    this._splitter.disconnect();
-    this._gain.disconnect();
-    this._buffer.disconnect();
-    this._buffer = null;
+    if (!this._buffer[ch])
+        return;
+    console.log(this);
+    this._buffer[ch].stop();
+    this._buffer[ch].disconnect();
+    this._gain[ch].disconnect();
+    this._buffer[ch] = null;
+    this._playing--;
+    if (this._playing == 0) {
+        this._splitter.disconnect();
+        this._delay.disconnect();
+    }
 };
 
 /**
  * Sets sound gain.
  * @param gain a gain to set in float from 0.0 to 1.0
+ * @param channel a channel to set (optional: 0)
  */
-MajVj.misc.sound.prototype.setGain = function (gain) {
-    this._gain.gain.value = gain;
+MajVj.misc.sound.prototype.setGain = function (gain, channel) {
+    var ch = channel || 0;
+    if (ch > this._channel)
+        return;
+    this._gain[ch].gain.value = gain;
 };
 
 /**
