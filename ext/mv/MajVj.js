@@ -130,6 +130,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'nicofarre3d'),
         MajVj.loadPlugin('frame', 'sandbox'),
         MajVj.loadPlugin('frame', 'snow'),
+        MajVj.loadPlugin('frame', 'specticle'),
         MajVj.loadPlugin('frame', 'wired'),
         MajVj.loadPlugin('misc', 'sound')
     ]);

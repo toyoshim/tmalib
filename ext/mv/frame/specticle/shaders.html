@@ -1,0 +1,28 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+attribute vec3 aCoord;
+uniform mat4 uMatrix;
+
+void main() {
+  vec4 position = uMatrix * vec4(aCoord, 1.0);
+  gl_Position = position;
+  gl_PointSize = 500.0 / position.z;
+}
+</script>
+
+<script id='fragment' type='x-shader/x-fragment'>
+precision mediump float;
+uniform vec4 uColor;
+
+void main() {
+  vec2 coord = gl_PointCoord * 2.0 - vec2(1.0, 1.0);
+  float l = 1.0 / length(coord) - 1.0;
+  gl_FragColor = uColor * vec4(l, l, l, 1.0);
+}
+</script>
+
+</head>
+</html>
+
