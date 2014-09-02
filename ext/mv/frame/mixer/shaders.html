@@ -1,0 +1,61 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+attribute vec2 aCoord;
+varying vec2 vCoord;
+
+void main() {
+    vec2 position = vec2(aCoord.x * 2.0 - 1.0, aCoord.y * 2.0 - 1.0);
+    gl_Position = vec4(position, 0.0, 1.0);
+    vCoord = aCoord;
+}
+</script>
+
+<script id='fragment1' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture0;
+uniform float uVolume0;
+varying vec2 vCoord;
+
+void main() {
+    vec4 color0 = texture2D(uTexture0, vCoord) * uVolume0;
+    gl_FragColor = vec4(color0.rgb, 1.0);
+}
+</script>
+
+<script id='fragment2' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture0;
+uniform sampler2D uTexture1;
+uniform float uVolume0;
+uniform float uVolume1;
+varying vec2 vCoord;
+
+void main() {
+    vec4 color0 = texture2D(uTexture0, vCoord) * uVolume0;
+    vec4 color1 = texture2D(uTexture1, vCoord) * uVolume1;
+    gl_FragColor = vec4(color0.rgb + color1.rgb, 1.0);
+}
+</script>
+
+<script id='fragment3' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture0;
+uniform sampler2D uTexture1;
+uniform sampler2D uTexture2;
+uniform float uVolume0;
+uniform float uVolume1;
+uniform float uVolume2;
+varying vec2 vCoord;
+
+void main() {
+    vec4 color0 = texture2D(uTexture0, vCoord) * uVolume0;
+    vec4 color1 = texture2D(uTexture1, vCoord) * uVolume1;
+    vec4 color2 = texture2D(uTexture2, vCoord) * uVolume2;
+    gl_FragColor = vec4(color0.rgb + color1.rgb + color2.rgb, 1.0);
+}
+</script>
+
+</head>
+</html>
