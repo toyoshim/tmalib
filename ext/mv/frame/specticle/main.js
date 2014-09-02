@@ -10,7 +10,7 @@ MajVj.frame.specticle = function (options) {
     this._height = options.height;
     this._aspect = options.aspect;
     this._controller = options.controller;
-    this._color = options.color || [0.1, 0.2, 0.5, 1.0];
+    this._color = options.color || [0.7, 0.2, 0.5, 1.0];
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.specticle._vertexShader),
@@ -31,7 +31,7 @@ MajVj.frame.specticle = function (options) {
         this._dv[i] = Math.random() * Math.PI * 2;
         this._r[i] = Math.random() * 6 + 2;
         this._sv[i] = Math.random() * 10 + 10;
-        this._sh[i] = Math.random() * 30 + 30;
+        this._sh[i] = Math.random() * 20 + 20;
     }
     console.log(this);
 };
@@ -74,13 +74,20 @@ MajVj.frame.specticle.prototype.draw = function (delta) {
     this._t += delta;
     var t = this._t / 10000;
     var buffer = this._coords.buffer();
+    var fft = this._controller && this._controller.sound &&
+          this._controller.sound.fftDb;
     for (var i = 0; i < this._n; ++i) {
+        var y = Math.sin(t * this._sv[i] + this._dv[i]) * 10;
+        var r = 1.0;
+        if (fft) {
+            var n = 0 | (this._controller.sound.fftDb.length * (y + 10) / 20);
+            r = (100.0 + this._controller.sound.fftDb[n]) / 50;
+        }
         buffer[i * 3 + 0] =
-            Math.cos(t * this._sh[i] + this._dh[i]) * this._r[i];
-        buffer[i * 3 + 1] =
-            Math.sin(t * this._sv[i] + this._dv[i]) * 10;
+            Math.cos(t * this._sh[i] + this._dh[i]) * this._r[i] * r;
+        buffer[i * 3 + 1] = y;
         buffer[i * 3 + 2] =
-            Math.sin(t * this._sh[i] + this._dh[i]) * this._r[i] - 40;
+            Math.sin(t * this._sh[i] + this._dh[i]) * this._r[i] * r - 40;
     }
     //console.log(buffer);
     this._coords.update();

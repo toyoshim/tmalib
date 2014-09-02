@@ -6,11 +6,17 @@
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
-  var r = 1;
-  var width = 1920 / r;
-  var height = 1080 / r;
-  var vj = new MajVj(width, height, true);
   MajVj.loadAllPlugins().then(_(function () {
+    var r = 1;
+    var width = 1920 / r;
+    var height = 1080 / r;
+    var vj = new MajVj(width, height, true);
+    var snd = vj.create('misc', 'sound', { delay: 0.0 });
+    snd.fetch('data/bustling.mp3', true);
+    var fft = new Float32Array(snd.getFftCount());
+    controller.sound = {
+        fftDb: fft
+    };
     var panel = vj.create('frame', 'nicofarre', {
         led: MajVj.frame.nicofarre.LED_FRONT_BOTH,
         mirror: MajVj.frame.nicofarre.MIRROR_ON_LEFT,
@@ -21,6 +27,7 @@ tma.onload = function () {
     fx.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.run(function (delta) {
+      snd.getFloatFrequencyData(fft);
       if (emulate)
         fbo.bind();
       vj.screen().setAlphaMode(false);
