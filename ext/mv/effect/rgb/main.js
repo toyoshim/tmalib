@@ -1,6 +1,6 @@
 /**
  * T'MediaArt library for JavaScript
- *  - MajVj extension - frame plugin - wired -
+ *  - MajVj extension - effect plugin - rgb -
  * @param options options (See MajVj.prototype.create)
  */
 MajVj.effect.rgb = function (options) {
@@ -29,7 +29,7 @@ MajVj.effect.rgb.load = function () {
     return new Promise(function (resolve, reject) {
         Promise.all([
             MajVj.loadShader('effect', 'rgb', 'shaders.html', 'vertex'),
-            MajVj.loadShader('effect', 'rgb', 'shaders.html', 'fragment'),
+            MajVj.loadShader('effect', 'rgb', 'shaders.html', 'fragment')
         ]).then(function (shaders) {
             MajVj.effect.rgb._vertexShader = shaders[0];
             MajVj.effect.rgb._fragmentShader = shaders[1];

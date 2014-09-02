@@ -1,6 +1,6 @@
 /**
  * T'MediaArt library for JavaScript
- *  - MajVj extension - frame plugin - nicofarre -
+ *  - MajVj extension - effect plugin - nicofarre -
  * @param options options (See MajVj.prototype.create)
  */
 MajVj.effect.nicofarre = function (options) {

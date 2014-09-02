@@ -1,6 +1,6 @@
 /**
  * T'MediaArt library for JavaScript
- *  - MajVj extension - frame plugin - wired -
+ *  - MajVj extension - effect plugin - glow -
  * @param options options (See MajVj.prototype.create)
  */
 MajVj.effect.glow = function (options) {
