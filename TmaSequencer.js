@@ -292,7 +292,7 @@ TmaSequencer.ParallelTask.prototype.append = function (task) {
     var duration = task.duration();
     if (duration == TmaSequencer.Task.INFINITE)
         this._duration = TmaSequencer.Task.INFINITE;
-    else
+    else if (this._duration != TmaSequencer.Task.INFINITE)
         this._duration = Math.max(this._duration, duration);
     this._active.push(task);
 };
