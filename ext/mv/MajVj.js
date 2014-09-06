@@ -22,6 +22,9 @@ function MajVj (width, height, fullscreen) {
     this._screen.setAlphaMode(
             true, this._screen.gl.SRC_ALPHA, this._screen.gl.ONE);
     this._screen.attachTo(TmaScreen.BODY);
+    this._fps = new Array(60);
+    this._fpsCount = 0;
+    this._fpsAvg = 0.0;
     this.onresize();
 }
 
@@ -78,6 +81,14 @@ MajVj.prototype.aspect = function () {
 };
 
 /**
+ * Returns frame rate in fps.
+ * @return a frame rate in fps
+ */
+MajVj.prototype.fps = function () {
+    return this._fpsAvg;
+};
+
+/**
  * Run the main function periodically.
  * @param main a function to run periodically
  */
@@ -87,6 +98,15 @@ MajVj.prototype.aspect = function () {
             window.mozRequestAnimationFrame;
     var loop = function (time) {
         var delta = time - this._timestamp;
+        this._fps[this._fpsCount] = 1000 / delta;
+        this._fpsCount++;
+        if (this._fpsCount == 60) {
+            this._fpsCount = 0;
+            var fps = 0.0;
+            for (var i = 0; i < 60; ++i)
+                fps += this._fps[i];
+            this._fpsAvg = fps / 60.0;
+        }
         main(delta);
         this._screen.gl.flush();
         this._timestamp = time;

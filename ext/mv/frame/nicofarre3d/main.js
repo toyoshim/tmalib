@@ -12,7 +12,8 @@ MajVj.frame.nicofarre3d = function (options) {
     this._draw = options.draw;
     this._module = null;
     if (options.module) {
-        this._module = new MajVj.frame.nicofarre3d.modules[options.module]();
+        var opt = options.options || {};
+        this._module = new MajVj.frame.nicofarre3d.modules[options.module](opt);
         this._draw = this._module.draw.bind(this._module);
     }
     this._api = {
@@ -153,7 +154,8 @@ MajVj.frame.nicofarre3d.load = function () {
                 MajVj.loadShader('frame', name, path, 'v_point'),
                 MajVj.loadShader('frame', name, path, 'f_point'),
                 MajVj.loadScript('frame', name, 'cube.js'),
-                MajVj.loadScript('frame', name, 'waypoints.js')
+                MajVj.loadScript('frame', name, 'waypoints.js'),
+                MajVj.loadScript('frame', name, 'beams.js')
         ]).then(function (results) {
             MajVj.frame.nicofarre3d._vScreenShader = results[0];
             MajVj.frame.nicofarre3d._fScreenShader = results[1];
@@ -350,7 +352,7 @@ MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
 
 /**
  * Fills display textures.
- * @param color a color in [r, g, b, a]a
+ * @param color a color in [r, g, b, a]
  */
 MajVj.frame.nicofarre3d.prototype._fill = function (color) {
     var c = color || this._api.color;
