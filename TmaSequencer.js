@@ -148,7 +148,8 @@ TmaSequencer.Task.prototype.stop = function () {
  * @param delta delta time in msec from the last call
  */
 TmaSequencer.Task.prototype.atEnd = function () {
-    return this._elapsed >= this._duration;
+    return this._duration != TmaSequencer.Task.INFINITE &&
+            this._elapsed >= this._duration;
 };
 
 /**
