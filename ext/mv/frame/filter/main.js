@@ -113,14 +113,21 @@ MajVj.frame.filter.prototype.setColor = function (color) {
 
 /**
  * Sets a texture.
- * @param texture a URL to point a image data for textrue
+ * @param texture a URL to point a image data for textrue, or Image object
  */
 MajVj.frame.filter.prototype.setTexture = function (texture) {
-    MajVj.loadImageFrom(texture).then(function (image) {
+    if (typeof texture === 'object' &&
+        texture.constructor.name === 'HTMLImageElement') {
         this._texture = this._screen.createTexture(
-              image, true, Tma3DScreen.FILTER_LINEAR);
+              texture, true, Tma3DScreen.FILTER_LINEAR);
         this._resetCoords();
-    }.bind(this), function (e) { console.log(e); });
+    } else {
+        MajVj.loadImageFrom(texture).then(function (image) {
+            this._texture = this._screen.createTexture(
+                    image, true, Tma3DScreen.FILTER_LINEAR);
+            this._resetCoords();
+        }.bind(this), function (e) { console.log(e); });
+    }
 };
 
 /**
