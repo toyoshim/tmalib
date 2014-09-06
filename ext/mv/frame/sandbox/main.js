@@ -10,15 +10,11 @@ MajVj.frame.sandbox = function (options) {
     this._aspect = options.aspect;
     this._controller = options.controller;
     this._time = 0;
-    var shader = null;
+    this._program = null;
     if (options.id)
-        shader = MajVj.frame.sandbox._fragmentShaders[options.id];
+        this.setShader(options.id);
     else if (options.shader)
-        shader = options.shader;
-    this._program = this._screen.createProgram(
-            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.frame.sandbox._vertexShader),
-            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER, shader));
+        this.setShader(options.shader);
     this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1]);
 };
 
@@ -46,7 +42,8 @@ MajVj.frame.sandbox.load = function () {
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18759.0'),
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19336.0'),
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18981.0'),
-            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18543.2')
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18543.2'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19674.0')
         ]).then(function (results) {
             MajVj.frame.sandbox._vertexShader = results[0];
             MajVj.frame.sandbox._fragmentShaders['19291.0'] = results[1];
@@ -62,6 +59,7 @@ MajVj.frame.sandbox.load = function () {
             MajVj.frame.sandbox._fragmentShaders['19336.0'] = results[11];
             MajVj.frame.sandbox._fragmentShaders['18981.0'] = results[12];
             MajVj.frame.sandbox._fragmentShaders['18543.2'] = results[13];
+            MajVj.frame.sandbox._fragmentShaders['19674.0'] = results[14];
             resolve();
         }, function (error) { console.log(error); });
     });
@@ -91,7 +89,23 @@ MajVj.frame.sandbox.prototype.draw = function (delta) {
 
 /**
  * Sets a controller.
+ * @param controller a controller object
  */
 MajVj.frame.sandbox.prototype.setController = function (controller) {
     this._controller = controller;
 };
+
+/**
+ * Sets a fragment shader.
+ * @param shader a fragment shader or preset name
+ */
+MajVj.frame.sandbox.prototype.setShader = function (name) {
+    var shader = MajVj.frame.sandbox._fragmentShaders[name];
+    if (!shader)
+        shader = name;
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.frame.sandbox._vertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER, shader));
+};
+
