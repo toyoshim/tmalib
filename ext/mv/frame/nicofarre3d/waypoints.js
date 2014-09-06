@@ -24,7 +24,6 @@ MajVj.frame.nicofarre3d.modules.waypoints = function () {
     this._waypoints.push({ x: 0.0, y: 0.0, z: 0.0, vx: 0.0, vy: 0.0, vz: 0.0 });
     this._model = TmaModelPrimitives.createPoints(
             new Array(this._maxParticles * 3));
-    this._tick = 0;
 };
 
 /**
@@ -163,9 +162,6 @@ MajVj.frame.nicofarre3d.modules.waypoints.prototype.draw = function (api) {
         cbuffer[i * 4 + 3] = 0.0;
     }
     this._lastParticles = this._container.length;
-    this._tick++;
-    if ((this._tick % 100) == 0)
-        console.log(this._lastParticles);
     vertices.update();
     colors.update();
     api.drawPrimitive(this._model, 1.0, 1.0, 1.0, [0.0, 0.0, 0.0]);
