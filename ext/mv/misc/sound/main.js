@@ -98,7 +98,6 @@ MajVj.misc.sound.prototype.stop = function (channel) {
         return;
     if (!this._buffer[ch])
         return;
-    console.log(this);
     this._buffer[ch].stop();
     this._buffer[ch].disconnect();
     this._gain[ch].disconnect();
