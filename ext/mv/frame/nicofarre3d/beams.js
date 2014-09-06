@@ -9,7 +9,7 @@ MajVj.frame.nicofarre3d.modules.beams = function (options) {
     this._period = options.period || 1000;
     this._unit = options.unit = 20;
     this._tick = 0;
-    this._nextTime = this._period;
+    this._nextTime = 0;
     this._beams = [];
     this._size = 8192 * 2;
     this._speed = this._size / 200;
