@@ -11,12 +11,13 @@ MajVj.frame.signal = function (options) {
     this._aspect = options.aspect;
     this._controller = options.controller;
     this._color = options.color || [1.0, 0.0, 0.0, 1.0];
+    this._coord = options.coord || [0.0, 0.0, 0.001];
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.signal._vertexShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.signal._fragmentShader));
-    this._coords = this._screen.createBuffer([0.0, 0.0, 0.001]);
+    this._coords = this._screen.createBuffer(this._coord);
 };
 
 // Shader programs.
