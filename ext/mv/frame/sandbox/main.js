@@ -44,7 +44,9 @@ MajVj.frame.sandbox.load = function () {
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18981.0'),
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18543.2'),
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19674.0'),
-            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19624.0')
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19624.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18357.1'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18794.0')
         ]).then(function (results) {
             MajVj.frame.sandbox._vertexShader = results[0];
             MajVj.frame.sandbox._fragmentShaders['19291.0'] = results[1];
@@ -62,6 +64,8 @@ MajVj.frame.sandbox.load = function () {
             MajVj.frame.sandbox._fragmentShaders['18543.2'] = results[13];
             MajVj.frame.sandbox._fragmentShaders['19674.0'] = results[14];
             MajVj.frame.sandbox._fragmentShaders['19624.0'] = results[15];
+            MajVj.frame.sandbox._fragmentShaders['18357.1'] = results[16];
+            MajVj.frame.sandbox._fragmentShaders['18794.0'] = results[17];
             resolve();
         }, function (error) { console.log(error); });
     });
