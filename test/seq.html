@@ -48,6 +48,8 @@ tma.onload = function () {
   seq.run(300);
   seq.run(300);
   seq.run(300);
+
+  console.log('TmaSequencer.SerialTask count');
   seq = new TmaSequencer();
   task = new TmaSequencer.SerialTask();
   task.append(new TmaSequencer.Task(0, dump));
@@ -57,6 +59,7 @@ tma.onload = function () {
   seq.run(900);
   seq.run(900);
   seq.run(900);
+  seq.run(2000);
 };
 </script>
 </body>

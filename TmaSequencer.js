@@ -259,12 +259,9 @@ TmaSequencer.SerialTask.prototype.run = function (delta, time) {
         rest = result;
         this._active.stop();
         this._finished.push(this._active);
-        if (this._queue.length == 0) {
-            this._queue = this._finished;
-            this._finished = [];
-        }
         this._active = this._queue.shift();
-        this._active.start();
+        if (this._active)
+            this._active.start();
     }
     return this.spend(delta);
 };
