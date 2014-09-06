@@ -86,15 +86,22 @@ MajVj.prototype.aspect = function () {
             window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame;
     var loop = function (time) {
-        if (this._timestamp) {
-          var delta = time - this._timestamp;
-          main(delta);
-          this._screen.gl.flush();
-        }
+        var delta = time - this._timestamp;
+        main(delta);
+        this._screen.gl.flush();
         this._timestamp = time;
         requestAnimationFrame(loop, this._canvas);
     }.bind(this);
-    loop();
+    var stabilize = function (time) {
+        if (this._timestamp) {
+            var delta = time - this._timestamp;
+            if (delta < 100)
+                return loop(time);
+        }
+        this._timestamp = time;
+        requestAnimationFrame(stabilize, this._canvas);
+    }.bind(this);
+    stabilize();
 };
 
 /**
