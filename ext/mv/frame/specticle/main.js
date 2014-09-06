@@ -33,7 +33,6 @@ MajVj.frame.specticle = function (options) {
         this._sv[i] = Math.random() * 10 + 10;
         this._sh[i] = Math.random() * 20 + 20;
     }
-    console.log(this);
 };
 
 // Shader programs.
@@ -89,7 +88,6 @@ MajVj.frame.specticle.prototype.draw = function (delta) {
         buffer[i * 3 + 2] =
             Math.sin(t * this._sh[i] + this._dh[i]) * this._r[i] * r - 40;
     }
-    //console.log(buffer);
     this._coords.update();
     this._screen.setAlphaMode(true, this._screen.gl.ONE, this._screen.gl.ONE);
     this._program.setAttributeArray('aCoord', this._coords, 0, 3, 0);
@@ -100,6 +98,7 @@ MajVj.frame.specticle.prototype.draw = function (delta) {
 
 /**
  * Sets a controller.
+ * @param controller a controller object
  */
 MajVj.frame.specticle.prototype.setController = function (controller) {
     this._controller = controller;
