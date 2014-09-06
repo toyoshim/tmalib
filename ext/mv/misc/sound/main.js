@@ -63,9 +63,10 @@ MajVj.misc.sound.prototype.fetch = function (url, play) {
  * Plays.
  * @param data an AudioBuffer object (optional: fetched data is used by default)
  * @param channel a channel to play (optional: 0)
+ * @param offset in sec (optional: 0)
  * @return true if succeeded
  */
-MajVj.misc.sound.prototype.play = function (data, channel) {
+MajVj.misc.sound.prototype.play = function (data, channel, offset) {
     if (!this._data && !data)
         return false;
     var ch = channel || 0;
@@ -83,7 +84,7 @@ MajVj.misc.sound.prototype.play = function (data, channel) {
         this._splitter.connect(this._rightAnalyser, 1);
         this._delay.connect(this._audio.destination);
     }
-    this._buffer[ch].start(0);
+    this._buffer[ch].start(0, offset || 0);
     this._playing++;
     return true;
 };
