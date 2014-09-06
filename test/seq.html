@@ -1,0 +1,63 @@
+<html>
+<head><title>sequencer test</title></head>
+<script src="../tma.js"></script>
+<script>
+tma.onload = function () {
+  var dump = function (delta, time) {
+    console.log('@: ' + (time - delta) + ', delta: ' + delta + ', time: ' + time);
+  };
+  // TmsSequencer
+  console.log('TmaSequencer');
+  var seq = new TmaSequencer();
+  seq.register(0, new TmaSequencer.Task(0, dump));
+  seq.register(33, new TmaSequencer.Task(10, dump));
+  seq.register(40, new TmaSequencer.Task(20, dump));
+  seq.run(10);
+  seq.run(10);
+  seq.run(10);
+  seq.run(10);
+  seq.run(10);
+  seq.run(10);
+  seq.start();
+  seq.run(100);
+
+  // TmaSequencer.RepeatTask
+  console.log('TmaSequencer.RepeatTask');
+  seq = new TmaSequencer();
+  var task = new TmaSequencer.Task(10, dump);
+  seq.register(5, new TmaSequencer.RepeatTask(task, 2));
+  seq.run(100);
+  seq = new TmaSequencer();
+  seq.register(10, new TmaSequencer.RepeatTask(task, 2));
+  seq.run(10);
+  seq.run(10);
+  seq.run(10);
+  seq.run(10);
+  seq = new TmaSequencer();
+  seq.register(10, new TmaSequencer.RepeatTask(task));
+  seq.run(100);
+
+  // TmaSequencer.SerialTask
+  console.log('TmaSequencer.SerialTask');
+  seq = new TmaSequencer();
+  task = new TmaSequencer.SerialTask();
+  task.append(new TmaSequencer.Task(0, dump));
+  task.append(new TmaSequencer.Task(1000));
+  seq.register(0, task);
+  seq.run(300);
+  seq.run(300);
+  seq.run(300);
+  seq.run(300);
+  seq = new TmaSequencer();
+  task = new TmaSequencer.SerialTask();
+  task.append(new TmaSequencer.Task(0, dump));
+  task.append(new TmaSequencer.Task(1000));
+  seq.register(0, new TmaSequencer.RepeatTask(task));
+  seq.run(900);
+  seq.run(900);
+  seq.run(900);
+  seq.run(900);
+};
+</script>
+</body>
+</html>

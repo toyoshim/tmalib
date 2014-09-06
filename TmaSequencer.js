@@ -44,8 +44,7 @@ TmaSequencer.prototype.run = function (delta) {
 
     var active = [];
     for (var i = 0; i < this._active.length; ++i) {
-        var result = this._active[i].task.run(
-                delta, this._elapsed - this._active[i].when);
+        var result = this._active[i].task.run(delta, this._elapsed);
         if (result == 0) {
             active.push(this._active[i]);
         } else {
@@ -58,7 +57,7 @@ TmaSequencer.prototype.run = function (delta) {
     while (this._queue.length > 0 && this._queue[0].when < this._elapsed) {
         var item = this._queue.shift();
         item.task.start();
-        var result = item.task.run(this._elapsed - item.when);
+        var result = item.task.run(this._elapsed - item.when, this._elapsed);
         if (result == 0) {
             active.push(item);
         } else {
@@ -144,6 +143,15 @@ TmaSequencer.Task.prototype.stop = function () {
 };
 
 /**
+ * Checks if the task ends.
+ * @return true if task ends
+ * @param delta delta time in msec from the last call
+ */
+TmaSequencer.Task.prototype.atEnd = function () {
+    return this._elapsed >= this._duration;
+};
+
+/**
  * Helper function to calculate return value for run().
  * @param delta delta time in msec from the last call
  */
@@ -159,7 +167,7 @@ TmaSequencer.Task.prototype.spend = function (delta) {
 /**
  * Runs a task.
  * @param delta delta time in msec from the last call
- * @param time elapsed time from a task starts
+ * @param time elapsed time in a parent task
  * @return 0 if not finished, otherwise a positive time that is not consumed
  */
 TmaSequencer.Task.prototype.run = function (delta, time) {
@@ -205,6 +213,7 @@ TmaSequencer.SerialTask.prototype.append = function (task) {
     else
         this._duration += duration;
     this._queue.push(task);
+    this._timeBase = -1;
 };
 
 /**
@@ -213,7 +222,9 @@ TmaSequencer.SerialTask.prototype.append = function (task) {
 TmaSequencer.SerialTask.prototype.start = function () {
     this.stop();
     this._elapsed = 0;
+    this._timeBase = -1;
     this._active = this._queue.shift();
+    this._active.start();
 };
 
 /**
@@ -236,18 +247,24 @@ TmaSequencer.SerialTask.prototype.stop = function () {
  * @return 0 if not finished, otherwise a positive time that is not consumed
  */
 TmaSequencer.SerialTask.prototype.run = function (delta, time) {
+    if (this._timeBase < 0)
+        this._timeBase = time - delta;
     var rest = delta;
+    var localTime = time - this._timeBase;
     while (this._active) {
-        var result = this._active.run(rest, time - this._start);
+        var result = this._active.run(rest, localTime);
         if (result == 0)
-            return this.spend(delta);
+            return this.spend(rest);
         var consume = rest - result;
-        time += consume;
         rest = result;
         this._active.stop();
-        this._start += this._active.duration();
         this._finished.push(this._active);
+        if (this._queue.length == 0) {
+            this._queue = this._finished;
+            this._finished = [];
+        }
         this._active = this._queue.shift();
+        this._active.start();
     }
     return this.spend(delta);
 };
@@ -261,6 +278,7 @@ TmaSequencer.ParallelTask = function () {
     this.superclass(0);
     this._active = [];
     this._finished = [];
+    this._timeBase = -1;
 };
 
 // Inherits TmaSequencer.Task.
@@ -287,6 +305,9 @@ TmaSequencer.ParallelTask.prototype.append = function (task) {
 TmaSequencer.ParallelTask.prototype.start = function () {
     this.stop();
     this._elapsed = 0;
+    this._timeBase = -1;
+    for (var i = 0; i < this._active.length; ++i)
+        this._active[i].start();
 };
 
 /**
@@ -308,10 +329,13 @@ TmaSequencer.ParallelTask.prototype.stop = function () {
  * @return 0 if not finished, otherwise a positive time that is not consumed
  */
 TmaSequencer.ParallelTask.prototype.run = function (delta, time) {
+    if (this._timeBase < 0)
+        this._timeBase = time - delta;
     var active = [];
+    var localTime = time - this._timeBase;
     for (var i = 0; i < this._active.length; ++i) {
-        var result = this._active[i].run(delta, time);
-        if (result > 0) {
+        var result = this._active[i].run(delta, localTime);
+        if (this._active[i].atEnd()) {
             this._active[i].stop();
             this._finished.push(this._active[i]);
         } else {
@@ -319,7 +343,6 @@ TmaSequencer.ParallelTask.prototype.run = function (delta, time) {
         }
     }
     this._active = active;
-    this._timeBase = 0;
     return this.spend(delta);
 };
 
@@ -332,10 +355,15 @@ TmaSequencer.ParallelTask.prototype.run = function (delta, time) {
  */
 TmaSequencer.RepeatTask = function (task, iteration) {
     var duration = TmaSequencer.Task.INFINITE;
+    if (typeof iteration === 'undefined')
+      iteration = TmaSequencer.RepeatTask.INFINITE;
     if (iteration != TmaSequencer.RepeatTask.INFINITE)
         duration = task.duration() * iteration;
     this.superclass(duration);
     this._task = task;
+    this._iteration = iteration;
+    this._count = 0;
+    this._timeBase = -1;
 };
 
 // Constant to specify a never ending task.
@@ -352,6 +380,8 @@ TmaSequencer.RepeatTask.prototype.constructor = TmaSequencer.RepeatTask;
 TmaSequencer.RepeatTask.prototype.start = function () {
     this.stop();
     this._elapsed = 0;
+    this._timeBase = -1;
+    this._count = 0;
     this._task.start();
 };
 
@@ -360,7 +390,6 @@ TmaSequencer.RepeatTask.prototype.start = function () {
  */
 TmaSequencer.RepeatTask.prototype.stop = function () {
     this._task.stop();
-    this._repeat = 0;
 };
 
 /**
@@ -370,17 +399,23 @@ TmaSequencer.RepeatTask.prototype.stop = function () {
  * @return 0 if not finished, otherwise a positive time that is not consumed
  */
 TmaSequencer.RepeatTask.prototype.run = function (delta, time) {
+    if (this._count == this._iteration)
+        return delta;
+    if (this._timeBase < 0)
+        this._timeBase = time - delta;
+    var localTime = time - this._timeBase;
     var rest = delta;
-    var diffTime = time - this._timeBase;
     while (rest > 0) {
-        var result = this._task.run(rest, diffTime);
-        if (result != 0) {
+        var result = this._task.run(rest, localTime);
+        this.spend(rest - result);
+        if (this._task.atEnd()) {
             this._task.stop();
+            this._count++;
+            if (this._count == this._iteration)
+              return result;
             this._task.start();
-            this._timeBase = time - result;
-            time = result;
         }
         rest = result;
     }
-    return this.spend(delta);
+    return 0;
 };
