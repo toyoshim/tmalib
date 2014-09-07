@@ -4,6 +4,19 @@
 <script src="../tma.js"></script>
 <script src="mv_common.js"></script>
 <script>
+
+var snd;
+document.body.addEventListener('keydown', function (e) {
+  switch (e.which) {
+    case 49:  // 1
+      snd.fetch('data/bustling.mp3', true);
+      break;
+    case 50:  // 2
+      snd.capture();
+      break;
+  }
+});
+
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
   MajVj.loadAllPlugins().then(_(function () {
@@ -11,7 +24,7 @@ tma.onload = function () {
     var width = 1920 / r;
     var height = 1080 / r;
     var vj = new MajVj(width, height, true);
-    var snd = vj.create('misc', 'sound', { delay: 0.0 });
+    snd = vj.create('misc', 'sound', { delay: 0.0 });
     snd.fetch('data/bustling.mp3', true);
     var fft = new Float32Array(snd.getFftCount());
     controller.sound = {

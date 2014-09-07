@@ -30,11 +30,21 @@ MajVj.misc.sound = function (options) {
  */
 MajVj.misc.sound.load = function () {
     return new Promise(function (resolve, reject) {
-        resolve();
+        if (!MajVj.misc.sound.useMicrophone)
+            resolve();
+
+        navigator.webkitGetUserMedia({audio: true}, function (a) {
+            MajVj.misc.sound._microphone = a;
+            resolve();
+        }.bind(this), function (e) {
+            reject(e);
+        });
     });
 };
 
 // AudioContext shared in all instances.
+MajVj.misc.sound.useMicrophone = true;
+MajVj.misc.sound._microphone = null;
 MajVj.misc.sound._context = null;
 
 /**
@@ -75,6 +85,35 @@ MajVj.misc.sound.prototype.play = function (data, channel, offset) {
     this.stop(ch);
     this._buffer[ch] = this._audio.createBufferSource();
     this._buffer[ch].buffer = data || this._data;
+    this._connect(ch, true, offset);
+    return true;
+};
+
+/**
+ * Capture from microphone.
+ * @param chananel a channel for using a capture (optional: 0)
+ * @return true if succeeded
+ */
+MajVj.misc.sound.prototype.capture = function (channel) {
+    var ch = channel || 0;
+    if (ch >= this._channel)
+        return false;
+    this.stop(ch);
+    this._buffer[ch] =
+            this._audio.createMediaStreamSource(MajVj.misc.sound._microphone);
+    this._connect(ch, false);
+    return true;
+};
+
+/**
+ * Connects nodes for play or record.
+ * (Restriction: on using multiple channels, audio destination will be
+ * connected if one or more channels are used for audio playback)
+ * @aram channel a channel to connect
+ * @param play a flag to connect to the audio destination
+ * @param offset in sec (optional: 0)
+ */
+MajVj.misc.sound.prototype._connect = function (ch, play, offset) {
     this._buffer[ch].connect(this._gain[ch]);
     this._gain[ch].connect(this._analyser);
     this._gain[ch].connect(this._delay);
@@ -82,11 +121,12 @@ MajVj.misc.sound.prototype.play = function (data, channel, offset) {
     if (this._playing == 0) {
         this._splitter.connect(this._leftAnalyser, 0);
         this._splitter.connect(this._rightAnalyser, 1);
-        this._delay.connect(this._audio.destination);
+        if (play)
+            this._delay.connect(this._audio.destination);
     }
-    this._buffer[ch].start(0, offset || 0);
+    if (play)
+        this._buffer[ch].start(0, offset || 0);
     this._playing++;
-    return true;
 };
 
 /**
@@ -99,7 +139,8 @@ MajVj.misc.sound.prototype.stop = function (channel) {
         return;
     if (!this._buffer[ch])
         return;
-    this._buffer[ch].stop();
+    if (this._buffer[ch].stop)
+      this._buffer[ch].stop();
     this._buffer[ch].disconnect();
     this._gain[ch].disconnect();
     this._buffer[ch] = null;
