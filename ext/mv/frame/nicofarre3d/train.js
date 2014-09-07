@@ -7,6 +7,8 @@ MajVj.frame.nicofarre3d.modules.train = function (options) {
     this._container = new TmaParticle.Container(
             MajVj.frame.nicofarre3d.modules.train.Particle);
     this._period = options.period || 500;
+    this._controller = options.controller;
+    console.log(this._controller);
     this._tick = 0;
     this._nextTime = 0;
     this._frontRails = [];
@@ -15,6 +17,7 @@ MajVj.frame.nicofarre3d.modules.train = function (options) {
     this._houseL = 0;
     this._offset = 0;
     this._r = 0.0;
+    this._fly = 0.0;
     for (var i = 0; i < 30; ++i) {
         this._frontRails.push(this._newRail());
         this._backRails.push(this._newRail());
@@ -28,11 +31,13 @@ MajVj.frame.nicofarre3d.modules.train = function (options) {
  * @param api nicofarre3d interfaces
  */
 MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
-    if (this._controller && this._controller.volume)
-        this._r = this._controller.volume - 0.5;
+    if (this._controller && this._controller.volume) {
+        this._r = this._controller.volume[0] - 0.5;
+        this._fly = 10000 * this._controller.volume[1];
+    }
     api.clear(api.gl.DEPTH_BUFFER_BIT);
     api.setAlphaMode(true, api.gl.ONE, api.gl.SRC_ALPHA);
-    api.fill([0.0, 0.0, 0.0, 0.85]);
+    api.fill([0.0, 0.0, 0.0, 0.7]);
     api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
 
     this._tick += api.delta;
@@ -48,19 +53,19 @@ MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
     var r = 0.0;
     for (var i = 0; i < this._frontRails.length; ++i) {
         var rail = this._frontRails[i];
-        api.drawBox(500, 200, [x, -500.0, z],
+        api.drawBox(500, 200, [x, -500.0 - this._fly, z],
                 [-Math.PI / 2.0, r, 0.0]);
         var xdiff = 250.0 * Math.cos(r);
         var zdiff = 250.0 * Math.sin(r);
-        api.drawBox(800, 10, [x + xdiff, -450.0, z - zdiff],
+        api.drawBox(800, 10, [x + xdiff, -450.0 - this._fly, z - zdiff],
                 [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
-        api.drawBox(800, 10, [x - xdiff, -450.0, z + zdiff],
+        api.drawBox(800, 10, [x - xdiff, -450.0 - this._fly, z + zdiff],
                 [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
         if (rail.houseR) {
             api.color = rail.houseRC;
             api.drawPrimitive(this._box,
                     2000, rail.houseRH, rail.houseR,
-                    [x + xdiff * 20, -500.0, z - zdiff * 20],
+                    [x + xdiff * 20, -500.0 - this._fly, z - zdiff * 20],
                     [0, -r, 0]);
             api.color = color;
 
@@ -69,7 +74,7 @@ MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
             api.color = rail.houseLC;
             api.drawPrimitive(this._box,
                     2000, rail.houseLH, rail.houseL,
-                    [x - xdiff * 20, -500.0, z + zdiff * 20],
+                    [x - xdiff * 20, -500.0 - this._fly, z + zdiff * 20],
                     [0, -r, 0]);
             api.color = color;
         }
@@ -82,19 +87,19 @@ MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
     r = 0.0;
     for (i = this._backRails.length - 1; i >= 0; --i) {
         var rail = this._backRails[i];
-        api.drawBox(500, 200, [x, -500.0, z],
+        api.drawBox(500, 200, [x, -500.0 - this._fly, z],
                 [-Math.PI / 2.0, r, 0.0]);
         var xdiff = 250.0 * Math.cos(r);
         var zdiff = 250.0 * Math.sin(r);
-        api.drawBox(800, 10, [x + xdiff, -450.0, z - zdiff],
+        api.drawBox(800, 10, [x + xdiff, -450.0 - this._fly, z - zdiff],
                 [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
-        api.drawBox(800, 10, [x - xdiff, -450.0, z + zdiff],
+        api.drawBox(800, 10, [x - xdiff, -450.0 - this._fly, z + zdiff],
                 [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
         if (rail.houseR) {
             api.color = rail.houseRC;
             api.drawPrimitive(this._box,
                     2000, rail.houseRH, rail.houseR,
-                    [x + xdiff * 20, -500.0, z - zdiff * 20],
+                    [x + xdiff * 20, -500.0 - this._fly, z - zdiff * 20],
                     [0, -r, 0]);
             api.color = color;
 
@@ -103,7 +108,7 @@ MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
             api.color = rail.houseLC;
             api.drawPrimitive(this._box,
                     2000, rail.houseLH, rail.houseL,
-                    [x - xdiff * 20, -500.0, z + zdiff * 20],
+                    [x - xdiff * 20, -500.0 - this._fly, z + zdiff * 20],
                     [0, -r, 0]);
             api.color = color;
         }
