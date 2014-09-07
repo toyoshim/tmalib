@@ -335,6 +335,21 @@ Tma3DScreen.prototype.createImage = function (width, height, data) {
 };
 
 /**
+ * Converts Image object to ImageData object.
+ * @param image Image object
+ * @return a new ImageData object
+ */
+Tma3DScreen.prototype.convertImage = function (image) {
+    if (this.context.canvas.width < image.width)
+        this.context.canvas.width = image.width;
+    if (this.context.canvas.height < image.height)
+        this.context.canvas.height = image.height;
+    this.context.drawImage(image, 0, 0);
+    var src = this.context.getImageData(0, 0, image.width, image.height);
+    return this.createImage(src.width, src.height, src.data);
+};
+
+/**
  * Create texture buffer from Image object.
  * @param image Image object or ImageData object
  * @param flip image flip flag

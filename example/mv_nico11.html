@@ -19,8 +19,17 @@ var draw = function (api) {
     init = true;
     s = TmaModelPrimitives.createSphere(
         4, TmaModelPrimitives.SPHERE_METHOD_EVEN);
-    //s = TmaModelPrimitives.createCube();
-    s.setTexture(api.createTexture(img, true, Tma3DScreen.FILTER_LINEAR));
+    // We can pass the |img| directly to api.createTexture(), but once it is
+    // converted to ImageData, we can modify it arbitorary.
+    var imageData = api.screen.convertImage(img);
+    console.log(imageData);
+    for (var i = 0; i < imageData.width * imageData.height; ++i) {
+      // imageData.data[i * 4 + 0] = 0;
+      // imageData.data[i * 4 + 1] = 0;
+      imageData.data[i * 4 + 2] *= 2;
+      //imageData.data[i * 4 + 3] = 255;
+    }
+    s.setTexture(api.createTexture(imageData, true, Tma3DScreen.FILTER_LINEAR));
   }
   api.color = [0.0, 0.0, 0.0, 1.0];
   api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
