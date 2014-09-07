@@ -75,12 +75,16 @@ MajVj.frame.specticle.prototype.draw = function (delta) {
     var buffer = this._coords.buffer();
     var fft = this._controller && this._controller.sound &&
           this._controller.sound.fftDb;
+    var useLength = this._controller.sound.fftDb.length - 128;
     for (var i = 0; i < this._n; ++i) {
         var y = Math.sin(t * this._sv[i] + this._dv[i]) * 10;
         var r = 1.0;
         if (fft) {
-            var n = 0 | (this._controller.sound.fftDb.length * (y + 10) / 20);
-            r = (100.0 + this._controller.sound.fftDb[n]) / 50;
+            var n = 0 | (useLength * (y + 10) / 20);
+            var d = 80.0 + this._controller.sound.fftDb[128 + n];
+            if (d < 0)
+                d = 0;
+            r = d / 20;
         }
         buffer[i * 3 + 0] =
             Math.cos(t * this._sh[i] + this._dh[i]) * this._r[i] * r;
