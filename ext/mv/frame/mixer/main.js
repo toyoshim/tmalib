@@ -94,8 +94,9 @@ MajVj.frame.mixer.prototype.setController = function (controller) {
 /**
  * Bind an offscreen buffer.
  * @param channel a channel to bind
+ * @return a previous fbo bount to the context
  */
 MajVj.frame.mixer.prototype.bind = function (channel) {
-    this._fbo[channel].bind();
+    return this._fbo[channel].bind();
 };
 
