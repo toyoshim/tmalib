@@ -53,7 +53,18 @@ MajVj.frame.sandbox.load = function () {
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19698.3'),
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19454.0'),
             MajVj.loadShader('frame', 'sandbox', 'shaders.html', '14282.0'),
-            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '14373.1')
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '14373.1'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19512.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19150.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '19136.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18981.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18873.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18770.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18760.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18602.4'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18602.4t'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '18142.0'),
+            MajVj.loadShader('frame', 'sandbox', 'shaders.html', '17945.0')
         ]).then(function (results) {
             MajVj.frame.sandbox._vertexShader = results[0];
             MajVj.frame.sandbox._fragmentShaders['19291.0'] = results[1];
@@ -80,6 +91,17 @@ MajVj.frame.sandbox.load = function () {
             MajVj.frame.sandbox._fragmentShaders['19454.0'] = results[22];
             MajVj.frame.sandbox._fragmentShaders['14282.0'] = results[23];
             MajVj.frame.sandbox._fragmentShaders['14373.1'] = results[24];
+            MajVj.frame.sandbox._fragmentShaders['19512.0'] = results[25];
+            MajVj.frame.sandbox._fragmentShaders['19150.0'] = results[26];
+            MajVj.frame.sandbox._fragmentShaders['19136.0'] = results[27];
+            MajVj.frame.sandbox._fragmentShaders['18981.0'] = results[28];
+            MajVj.frame.sandbox._fragmentShaders['18873.0'] = results[29];
+            MajVj.frame.sandbox._fragmentShaders['18770.0'] = results[30];
+            MajVj.frame.sandbox._fragmentShaders['18760.0'] = results[31];
+            MajVj.frame.sandbox._fragmentShaders['18602.4'] = results[32];
+            MajVj.frame.sandbox._fragmentShaders['18602.4t'] = results[33];
+            MajVj.frame.sandbox._fragmentShaders['18142.0'] = results[34];
+            MajVj.frame.sandbox._fragmentShaders['17945.0'] = results[35];
             resolve();
         }, function (error) { console.log(error); });
     });

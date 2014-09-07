@@ -2220,3 +2220,1084 @@ void main()
         gl_FragColor = vec4(col, 1.0);
         }
 </script>
+
+<!-- http://glsl.heroku.com/e#19512.0 -->
+<script id='19512.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+//more hexagon stuff :D
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+varying vec2 surfacePosition;
+
+const float pi=3.14159265359;
+
+vec2 hexify(vec2 p,float hexCount){
+        p*=hexCount;
+        vec3 p2=floor(vec3(p.x/0.86602540378,p.y+0.57735026919*p.x,p.y-0.57735026919*p.x));
+        float y=floor((p2.y+p2.z)/3.0);
+        float x=floor((p2.x+(1.0-mod(y,2.0)))/2.0);
+        return vec2(x,y)/hexCount;
+}
+
+void main( void ) {
+        vec2 p=gl_FragCoord.xy/resolution.xy-0.5;
+        float l=length(p);
+        p.x*=resolution.x/resolution.y;
+        p=vec2(1.0/length(p)+time,fract((atan(p.y,p.x)+pi/2.0)/pi+0.5));
+        p.y=1.0+8.25*abs(p.y-0.5);
+        p=hexify(p,8.0);
+        gl_FragColor = pow(l,0.5)*vec4(sin(p.x)*cos(p.y-time*sin(p.y-p.x)),sin(p.y*(1.0-p.x))+cos(sin(p.x+time)+p.x*p.y),cos(sin(p.y+time-sin(p.x))),1);
+}
+</script>
+
+<!-- http://glsl.heroku.com/e#19150.0 -->
+<script id='19150.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision highp float;
+#endif
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+float gc=fract(time*3.2/90.),
+gb=fract(gc*2.),
+PI=3.14159;
+vec3 ff(vec2 p){
+    vec2 q=vec2(sin(.08*p.x),4.*p.y);
+    vec3 c=vec3(0);
+    for(float i=0.;i<10.;i++)
+      c+=(1.+sin(i*sin(time)+vec3(0.,1.3,2.2)))*.2/length(q-vec2(sin(i),12.*sin(.3*time+i)));
+    return c+vec3(mix(mod(floor(p.x*.2)+floor(p.y*2.2),2.),.2,gc));
+}
+vec3 ft(vec3 o,vec3 d){
+    d.y*=.65+.1*sin(.5*time);
+    float D=1./(d.y*d.y+d.z*d.z),
+          a=(o.y*d.y+o.z*d.z)*D,
+          b=(o.y*o.y+o.z*o.z-36.)*D,
+          t=-a-sqrt(a*a-b);
+    o+=t*d;
+    return ff(vec2(o.x,atan(o.y,o.z)))*(1.+.01*t);
+}
+void main(){
+    vec2 p=(2.*gl_FragCoord.xy-resolution)/resolution.y,
+         q=2.*gl_FragCoord.xy/resolution-1.;
+    vec3 cp=vec3(-time*20.+1.,1.6*sin(time*1.2),2.+2.*cos(time*.3)),
+         ct=cp+vec3(1.,.3*cos(time),-.2),
+         cd=normalize(ct-cp),
+         cr=normalize(cross(cd,vec3(.5*cos(.3*time),0.,1.))),
+         cu=cross(cr,cd),
+         rd=normalize(2.*cd+cr*p.x+cu*p.y),
+         c=ft(cp,rd)*
+           min(1.,1.8-dot(q,q))*(.9+.1*sin(3.*sin(gc)*gl_FragCoord.y));
+    gl_FragColor=vec4(c,1);
+}
+</script>
+
+<!-- http://glsl.heroku.com/e#19136.0 -->
+<script id='19136.0' type='x-shader/x-fragment'>
+precision mediump float;
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+vec3 sind(vec2 pos, float amp, float freq, float wavw, float pown, vec3 col){
+
+        float xd = pow(wavw - (abs(pos.y - sin(pos.x * freq) * amp)),pown);
+        
+        return xd * col;
+        
+}
+
+float d(vec2 pos, float wavw){
+        return wavw - abs(pos.y - pos.x);
+}
+
+void main( void ) {
+
+        vec2 p = (gl_FragCoord.xy * 2. - resolution) / max(resolution.x, resolution.y);
+
+        vec3 col =      sind(vec2(time*.3 + p.x, p.y), .1, 10. , 1.01, 30., vec3(.6,1.,1.));
+        col +=          sind(vec2(time*.4+ p.x, p.y),  .1, 6.  , 1.01, 30., vec3(.6,.3,1.));
+
+        col +=          sind(vec2(time*.4+ p.y, p.y),  .2, 20.  , 1.001, 30., vec3(.2,.7,.5));
+        col +=          sind(vec2(time*.4+ p.x, p.x),  1., 20.  , 1.001, 30., vec3(.2,.7,.5));
+
+
+        col +=          sind(vec2(time*.3 + pow(p.x + 1., .1), p.y),  .2, 6.  , 1.01, 30., vec3(.1,1.,.7));
+        col +=  sind(vec2(time*.3 + p.x, p.y + p.x), .3, 10. , 1.01, 30., vec3(.6,1.,1.));
+
+        
+
+        col +=          sind(vec2(time*.2 + p.y, mod(time * .2, p.x) * p.x), .3, 10. , 1.01, 30., vec3(1.,.5,1.));
+        col +=          sind(vec2(time*.2+ p.y, p.x),  .2, 6.  , 1.01, 30., vec3(1.,1.,.2));
+
+        col +=          sind(vec2(p.x, p.y)          , 1., 2., 1.01, 20., vec3(.6,1.,.8));
+        col +=          sind(vec2(p.y, p.x)          , 1., 2., 1.01, 20., vec3(.6,1.,.8));
+        
+        gl_FragColor = vec4(vec3(col), 1.);
+
+}
+</script>
+
+<!-- http://glsl.heroku.com/e#18981.0 -->
+<script id='18981.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+void main(void)
+{
+        vec2 uv = -1.0 + 2.0*gl_FragCoord.xy / resolution.xy;
+        uv.x *=  resolution.x / resolution.y;
+        
+    // background        
+        vec3 color = vec3(0.8 + 0.4*uv.y);
+
+    // bubbles  
+        for( int i=0; i<40; i++ )
+        {
+        // bubble seeds
+                float pha =      sin(float(i)*546.13+1.0)*0.5 + 0.5;
+                float siz = pow( sin(float(i)*651.74+5.0)*0.5 + 0.5, 4.0 );
+                float pox =      sin(float(i)*321.55+4.1) * resolution.x / resolution.y;
+                
+        // buble size, position and color
+                float rad = 0.1 + 0.5*siz;
+                vec2  pos = vec2( pox + siz*sin(time+float(i)), -1.0-rad + (2.0+2.0*rad)*mod(pha+0.4*time*(0.2+0.8*siz),1.0));
+                float dis = length( uv - pos );
+                vec3  col = mix( vec3(0.94,0.3,0.0), vec3(0.1,0.4,0.8), 0.5+0.5*sin(float(i)*1.2+1.9));
+                //    col+= 8.0*smoothstep( rad*0.95, rad, dis );
+                
+        // render
+                float f = length(uv-pos)/rad;
+                f = sqrt(clamp(1.0-f*f,0.0,1.0));
+                color -= col.zyx *(1.0-smoothstep( rad*0.95, rad, dis )) * f;
+        }
+
+    // vigneting        
+        color *= sqrt(1.8-0.7*length(uv));
+
+        gl_FragColor = vec4(color,1.0);
+}
+</script>
+
+<!-- http://glsl.heroku.com/e#18873.0 -->
+<script id='18873.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+#define PI 3.1415926535897932384626433832795
+
+uniform float time;
+uniform vec2 resolution;
+
+const float scale = 1.0;
+
+varying vec2 surfacePosition;
+
+float band(vec2 pos, float amplitude, float frequency) {
+        float wave = scale * amplitude * sin(1.0 * PI * frequency * pos.x + time) / 3.0;
+        float light = clamp(amplitude * frequency * 0.02, 0.001 + 0.001 / scale, 5.0) * scale / abs(wave - pos.y);
+        return light;
+}
+
+void main( void ) {
+        
+
+        vec3 color = vec3(1.1+cos(time), sin(time)+1.2, sin(3.14*time));
+        vec2 pos = surfacePosition;//(gl_FragCoord.xy / resolution.xy);
+        //pos.y += - 0.5 - position;
+        
+        // +pk
+        float spectrum = 0.0;
+        const float lim = 28.;
+        #define time time*0.037 + pos.x*100.
+        spectrum += band(pos, cos(sin(31.4*time)), sin(cos(31.4*time)));
+        
+        gl_FragColor = vec4(color * spectrum, spectrum);
+        
+}
+</script>
+
+<!-- http://glsl.heroku.com/e#18770.0 -->
+<script id='18770.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+float rand(int seed, float ray) {
+        return mod(sin(float(seed)*363.5346+ray*674.2454)*6743.4365, 1.0);
+}
+
+void main( void ) {
+        float pi = 3.14159265359;
+        vec2 position = ( gl_FragCoord.xy / resolution.xy ) - mouse;
+        position.y *= resolution.y/resolution.x;
+        float ang = atan(position.y, position.x);
+        float dist = length(position);
+        gl_FragColor.rgb = vec3(0.3, 0.5, 0.7) * (pow(dist, -1.0) * 0.05);
+        for (float ray = 0.0; ray < 60.0; ray += 1.0) {
+                //float rayang = rand(5234, ray)*6.2+time*5.0*(rand(2534, ray)-rand(3545, ray));
+                float rayang = rand(5234, ray)*6.2+(mouse.x+time*0.01)*10.0*(rand(2546, ray)-rand(5785, ray))-mouse.y*10.0*(rand(3545, ray)-rand(5467, ray));
+                rayang = mod(rayang, pi*2.0);
+                if (rayang < ang - pi) {rayang += pi*2.0;}
+                if (rayang > ang + pi) {rayang -= pi*2.0;}
+                float brite = .3 - abs(ang - rayang);
+                brite -= dist * 0.2;
+                if (brite > 0.0) {
+                        gl_FragColor.rgb += vec3(0.2+0.4*rand(8644, ray), 0.4+0.4*rand(4567, ray), 0.5+0.4*rand(7354, ray)) * brite;
+                }
+        }
+        gl_FragColor.a = 1.0;
+}
+</script>
+
+<!-- http://glsl.heroku.com/e#18760.0 -->
+<script id='18760.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+float PI  = 4.0*atan(1.0);
+
+vec3 sunLight  = normalize( vec3(  0.35, 0.2,  0.3 ) );
+vec3 cameraPos;
+vec3 sunColour = vec3(1.0, .75, .6);
+const mat2 rotate2D = mat2(1.932, 1.623, -1.623, 1.952);
+float gTime = 0.0;
+
+//--------------------------------------------------------------------------
+// Noise functions...
+float Hash( float n )
+{
+    return fract(sin(n)*0.002);
+}
+
+//--------------------------------------------------------------------------
+float Hash(vec2 p)
+{
+        return fract(sin(dot(p, vec2(0.002, 0.0233))) * 0.0003);
+}
+
+//--------------------------------------------------------------------------
+float Noise( in vec2 x )
+{
+    vec2 p = floor(x);
+    vec2 f = fract(x);
+    f = f*f*(3.0-2.0*f);
+    float n = p.x + p.y*57.0;
+    float res = mix(mix( Hash(n+  0.0), Hash(n+  1.0),f.x),
+                    mix( Hash(n+ 57.0), Hash(n+ 58.0),f.x),f.y);
+    return res;
+}
+
+vec2 Voronoi( in vec2 x )
+{
+        vec2 p = floor( x );
+        vec2 f = fract( x );
+        float res=100.0,id;
+        for( int j=-1; j<=1; j++ )
+        for( int i=-1; i<=1; i++ )
+        {
+                vec2 b = vec2( float(i), float(j) );
+                vec2 r = vec2( b ) - f  + Hash( p + b );
+                float d = dot(r,r);
+                if( d < res )
+                {
+                        res = d;
+                        id  = Hash(p+b);
+                }                       
+    }
+        return vec2(max(.4-sqrt(res), 0.0),id);
+}
+
+
+//--------------------------------------------------------------------------
+vec2 Terrain( in vec2 p)
+{
+        float type = 0.0;
+        vec2 pos = p*0.003;
+        float w = 50.0;
+        float f = .0;
+        for (int i = 0; i < 3; i++)
+        {
+                f += Noise(pos) * w;
+                w = w * 0.62;
+                pos *= 2.5;
+        }
+
+        return vec2(f, type);
+}
+
+//--------------------------------------------------------------------------
+vec2 Map(in vec3 p)
+{
+        vec2 h = Terrain(p.xz);
+    return vec2(p.y - h.x, h.y);
+}
+
+//--------------------------------------------------------------------------
+float FractalNoise(in vec2 xy)
+{
+        float w = .7;
+        float f = 0.0;
+
+        for (int i = 0; i < 3; i++)
+        {
+                f += Noise(xy) * w;
+                w = w*0.6;
+                xy = 2.0 * xy;
+        }
+        return f;
+}
+
+//--------------------------------------------------------------------------
+// Grab all sky information for a given ray from camera
+vec3 GetSky(in vec3 rd)
+{
+        float sunAmount = max( dot( rd, sunLight), 0.0 );
+        float v = pow(1.0-max(rd.y,0.0),6.);
+        vec3  sky = mix(vec3(.1, .2, .3), vec3(.32, .32, .32), v);
+        sky = sky + sunColour * sunAmount * sunAmount * .25;
+        sky = sky + sunColour * min(pow(sunAmount, 800.0)*1.5, .3);
+        return clamp(sky, 0.0, 1.0);
+}
+
+//--------------------------------------------------------------------------
+// Merge grass into the sky background for correct fog colouring...
+vec3 ApplyFog( in vec3  rgb, in float dis, in vec3 dir)
+{
+        float fogAmount = clamp(dis*dis* 0.0000012, 0.0, 1.0);
+        return mix( rgb, GetSky(dir), fogAmount );
+}
+
+//--------------------------------------------------------------------------
+vec3 DE(vec3 p)
+{
+        float base = Terrain(p.xz).x - 1.9;
+        float height = Noise(p.xz*2.0)*.75 + Noise(p.xz)*.35 + Noise(p.xz*.5)*.2;
+        //p.y += height;
+        float y = p.y - base-height;
+        y = y*y;
+        vec2 ret = Voronoi((p.xz*2.5+sin(y*4.0+p.zx*12.3)*.12+vec2(sin(time*2.3+1.5*p.z),sin(time*3.6+1.5*p.x))*y*.5));
+        float f = ret.x * .6 + y * .58;
+        return vec3( y - f*1.4, clamp(f * 1.5, 0.0, 1.0), ret.y);
+}
+
+//--------------------------------------------------------------------------
+// eiffie's code for calculating the aperture size for a given distance...
+float CircleOfConfusion(float t)
+{
+        return max(t * .04, (2.0 / resolution.y) * (1.0+t));
+}
+
+//--------------------------------------------------------------------------
+float Linstep(float a, float b, float t)
+{
+        return clamp((t-a)/(b-a),0.,1.);
+}
+
+//--------------------------------------------------------------------------
+vec3 GrassBlades(in vec3 rO, in vec3 rD, in vec3 mat, in float dist)
+{
+        float d = 0.0;
+        float f;
+        // Only calculate cCoC once is enough here...
+        float rCoC = CircleOfConfusion(dist*.3);
+        float alpha = 0.0;
+        
+        vec4 col = vec4(mat*0.15, 0.0);
+
+        for (int i = 0; i < 15; i++)
+        {
+                if (col.w > .99) break;
+                vec3 p = rO + rD * d;
+                
+                vec3 ret = DE(p);
+                ret.x += .5 * rCoC;
+
+                if (ret.x < rCoC)
+                {
+                        alpha = (1.0 - col.y) * Linstep(-rCoC, rCoC, -ret.x);//calculate the mix like cloud density
+                        f = clamp(ret.y, 0.0, 1.0);
+                        // Mix material with white tips for grass...
+                        vec3 gra = mix(mat, vec3(.35, .35, min(pow(ret.z, 4.0)*35.0, .35)), pow(ret.y, 9.0)*.7) * ret.y;
+                        col += vec4(gra * alpha, alpha);
+                }
+                d += max(ret.x * .7, .1);
+        }
+        if(col.w < .2)
+                col.xyz = vec3(0.1, .15, 0.05);
+        return col.xyz;
+}
+
+//--------------------------------------------------------------------------
+// Calculate sun light...
+void DoLighting(inout vec3 mat, in vec3 pos, in vec3 normal, in vec3 eyeDir, in float dis)
+{
+        float h = dot(sunLight,normal);
+        mat = mat * sunColour*(max(h, 0.0)+.2);
+}
+
+//--------------------------------------------------------------------------
+vec3 TerrainColour(vec3 pos, vec3 dir,  vec3 normal, float dis, float type)
+{
+        vec3 mat;
+        if (type == 0.0)
+        {
+                // Random colour...
+                mat = mix(vec3(.0,.3,.0), vec3(.2,.3,.0), Noise(pos.xz*.025));
+                // Random shadows...
+                float t = FractalNoise(pos.xz * .1)+.5;
+                // Do grass blade tracing...
+                mat = GrassBlades(pos, dir, mat, dis) * t;
+                DoLighting(mat, pos, normal,dir, dis);
+        }
+        mat = ApplyFog(mat, dis, dir);
+        return mat;
+}
+
+//--------------------------------------------------------------------------
+// Home in on the surface by dividing by two and split...
+float BinarySubdivision(in vec3 rO, in vec3 rD, float t, float oldT)
+{
+        float halfwayT = 0.0;
+        for (int n = 0; n < 5; n++)
+        {
+                halfwayT = (oldT + t ) * .5;
+                if (Map(rO + halfwayT*rD).x < .05)
+                {
+                        t = halfwayT;
+                }else
+                {
+                        oldT = halfwayT;
+                }
+        }
+        return t;
+}
+
+//--------------------------------------------------------------------------
+bool Scene(in vec3 rO, in vec3 rD, out float resT, out float type )
+{
+    float t = 5.;
+        float oldT = 0.0;
+        float delta = 0.;
+        vec2 h = vec2(1.0, 1.0);
+        bool hit = false;
+        for( int j=0; j < 80; j++ )
+        {
+            vec3 p = rO + t*rD;
+                if (p.y < 105.0 && !hit)
+                {
+                        h = Map(p); // ...Get this position's height mapping.
+        
+                        // Are we inside, and close enough to fudge a hit?...
+                        if( h.x < 0.05)
+                        {
+                                // Yes! So home in on height map...
+                                resT = BinarySubdivision(rO, rD, t, oldT);
+                                type = h.y;
+                                hit = true;
+                        }else
+                        {
+                                // Delta ray advance - a fudge between the height returned
+                                // and the distance already travelled.
+                                // Compromise between speed and accuracy...
+                                delta = max(0.04, 0.35*h.x) + (t*0.04);
+                                oldT = t;
+                                t += delta;
+                        }
+                }
+        }
+
+        return hit;
+}
+
+//--------------------------------------------------------------------------
+vec3 CameraPath( float t )
+{
+        //t = time + t;
+    vec2 p = vec2(200.0 * sin(3.54*t), 200.0 * cos(2.0*t) );
+        return vec3(p.x+55.0,  12.0+sin(t*.3)*6.5, -94.0+p.y);
+} 
+
+//--------------------------------------------------------------------------
+vec3 PostEffects(vec3 rgb, vec2 xy)
+{
+        // Gamma first...
+        rgb = pow(rgb, vec3(0.45));
+        
+        // Then...
+        #define CONTRAST 1.1
+        #define SATURATION 1.3
+        #define BRIGHTNESS 1.3
+        rgb = mix(vec3(.5), mix(vec3(dot(vec3(.2125, .7154, .0721), rgb*BRIGHTNESS)), rgb*BRIGHTNESS, SATURATION), CONTRAST);
+        // Vignette...
+        rgb *= .4+0.5*pow(40.0*xy.x*xy.y*(1.0-xy.x)*(1.0-xy.y), 0.2 );  
+        return rgb;
+}
+
+//--------------------------------------------------------------------------
+void main(void)
+{
+        float m = (mouse.x/resolution.x)*300.0;
+        float gTime = (time*5.0+m+2352.0)*.006;
+    vec2 xy = gl_FragCoord.xy / resolution.xy;
+        vec2 uv = (-1.0 + 2.0 * xy) * vec2(resolution.x/resolution.y,1.0);
+        vec3 camTar;
+        
+        if (xy.y < .13 || xy.y >= .87)
+        {
+                // Top and bottom cine-crop - what a waste! :)
+                gl_FragColor=vec4(vec4(0.0));
+                return;
+        }
+
+        #ifdef STEREO
+        float isCyan = mod(gl_FragCoord.x + mod(gl_FragCoord.y,2.0),2.0);
+        #endif
+
+        cameraPos = CameraPath(gTime + 0.0);
+        camTar   = CameraPath(gTime + .009);
+        cameraPos.y += Terrain(CameraPath(gTime + .009).xz).x;
+        camTar.y = cameraPos.y;
+        
+        float roll = .4*sin(gTime+.5);
+        vec3 cw = normalize(camTar-cameraPos);
+        vec3 cp = vec3(sin(roll), cos(roll),0.0);
+        vec3 cu = cross(cw,cp);
+        vec3 cv = cross(cu,cw);
+        vec3 dir = normalize(uv.x*cu + uv.y*cv + 1.3*cw);
+        mat3 camMat = mat3(cu, cv, cw);
+
+        #ifdef STEREO
+        cameraPos += .85*cu*isCyan; // move camera to the right - the rd vector is still good
+        #endif
+
+        vec3 col;
+        float distance;
+        float type;
+        if( !Scene(cameraPos, dir, distance, type) )
+        {
+                // Missed scene, now just get the sky...
+                col = GetSky(dir);
+        }
+        else
+        {
+                // Get world coordinate of landscape...
+                vec3 pos = cameraPos + distance * dir;
+                // Get normal from sampling the high definition height map
+                // Use the distance to sample larger gaps to help stop aliasing...
+                vec2 p = vec2(0.1, 0.0);
+                vec3 nor        = vec3(0.0,             Terrain(pos.xz).x, 0.0);
+                vec3 v2         = nor-vec3(p.x, Terrain(pos.xz+p).x, 0.0);
+                vec3 v3         = nor-vec3(0.0, Terrain(pos.xz-p.yx).x, -p.x);
+                nor = cross(v2, v3);
+                nor = normalize(nor);
+
+                // Get the colour using all available data...
+                col = TerrainColour(pos, dir, nor, distance, type);
+        }
+        
+        // bri is the brightness of sun at the centre of the camera direction.
+        // Yeah, the lens flares is not exactly subtle, but it was good fun making it.
+        float bri = dot(cw, sunLight)*.75;
+        if (bri > 0.0)
+        {
+                vec2 sunPos = vec2( dot( sunLight, cu ), dot( sunLight, cv ) );
+                vec2 uvT = uv-sunPos;
+                uvT = uvT*(length(uvT));
+                bri = pow(bri, 6.0)*.8;
+
+                // glare = the red shifted blob...
+                float glare1 = max(dot(normalize(vec3(dir.x, dir.y+.3, dir.z)),sunLight),0.0)*1.4;
+                // glare2 is the yellow ring...
+                float glare2 = max(1.0-length(uvT+sunPos*.5)*4.0, 0.0);
+                uvT = mix (uvT, uv, -2.3);
+                // glare3 is a purple splodge...
+                float glare3 = max(1.0-length(uvT+sunPos*5.0)*1.2, 0.0);
+
+                col += bri * vec3(1.0, .0, .0)  * pow(glare1, 12.5)*.05;
+                col += bri * vec3(1.0, 1.0, 0.2) * pow(glare2, 2.0)*2.5;
+                col += bri * sunColour * pow(glare3, 2.0)*3.0;
+        }
+        col = PostEffects(col, xy);     
+        
+        #ifdef STEREO   
+        col *= vec3( isCyan, 1.0-isCyan, 1.0-isCyan );  
+        #endif
+        
+        gl_FragColor=vec4(col,1.0);
+}
+
+//--------------------------------------------------------------------------
+</script>
+
+<!-- http://glslsandbox.com/e#18602.4 -->
+<script id='18602.4' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+// xray by Jaksa
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+float sphere(vec3 p, vec3 o, float r) {
+        return distance(p,o) - r;
+}
+
+float cube(vec3 p, vec3 o, float side) {
+        vec3 d = abs(p - o);
+        return max(d.x, max(d.y, d.z)) - side;
+}
+
+float map(vec3 p) {
+        p.z += time*10.0;
+        p.x += -cos(time/4.)*10.;
+        p.y += 30.*sin(time/10.)+10.;
+        p.xz = mod(p.xz+10., 20.0)-10.;
+        float d = p.y + 30.;
+//      d = min(d, sphere(p, vec3(0,0,6), 3.0));
+//      d = min(d, sphere(p, vec3(1,5,10), 2.0));
+        d = min(d, cube(p, vec3(2,-10,7), 4.0));
+        d = min(d, cube(p, vec3(2,10,7), 2.0));
+        d = min(d, cube(p, vec3(2,30,7), 1.0));
+        return d;
+}
+
+vec3 grad(vec3 p) {
+        vec2 d = vec2(0.01,0.0);
+        
+        return (map(p) - vec3(map(p + d.xyy), map(p + d.yxy), map(p+d.yyx)))/d.x;
+}
+
+void main( void ) {
+        vec2 pix = (2.*gl_FragCoord.xy/resolution.y-1.);
+        vec3 cam = vec3(0,10.0,0);
+        vec3 camDir = normalize(vec3(sin(time/4.)*.2,0,1));
+        vec3 screenCenter = cam + camDir;
+        vec3 up = vec3(0,1,0);
+        vec3 u = -normalize(cross(up, camDir));
+        vec3 v = normalize(cross(u, camDir));
+        vec3 uv = u * pix.x + v * pix.y;
+        vec3 p = vec3(uv+screenCenter); 
+        vec3 dir = normalize(p-cam);
+
+        float delta = 0.001;
+        float d = 0.0;
+        float dist = 0.0;
+        
+        float volume = 0.0;
+        float angle = 0.0;
+        
+        for (int i = 0; i < 128; i++) {
+                d = map(p);
+                volume += max(-clamp(d, -.01, .01), 0.0);
+                dist += max(max(0.0, d), .2);
+                if (dist > 500.) break;
+                p = dir*dist;
+        }
+        
+        angle = dot(dir, grad(p));
+        float c = log(1.0 + volume)/(1.0 + log(1.0 + volume));
+        c *= 2.6;
+        gl_FragColor = vec4(c * vec3(.6*c,.6*c,1.0), 1.0 );
+}
+</script>
+
+<!-- http://glslsandbox.com/e#18602.4 -->
+<script id='18602.4t' type='x-shader/x-fragment'>
+// slightly modified to change the color to green
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+// xray by Jaksa
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+float sphere(vec3 p, vec3 o, float r) {
+        return distance(p,o) - r;
+}
+
+float cube(vec3 p, vec3 o, float side) {
+        vec3 d = abs(p - o);
+        return max(d.x, max(d.y, d.z)) - side;
+}
+
+float map(vec3 p) {
+        p.z += time*10.0;
+        p.x += -cos(time/4.)*10.;
+        p.y += 30.*sin(time/10.)+10.;
+        p.xz = mod(p.xz+10., 20.0)-10.;
+        float d = p.y + 30.;
+//      d = min(d, sphere(p, vec3(0,0,6), 3.0));
+//      d = min(d, sphere(p, vec3(1,5,10), 2.0));
+        d = min(d, cube(p, vec3(2,-10,7), 4.0));
+        d = min(d, cube(p, vec3(2,10,7), 2.0));
+        d = min(d, cube(p, vec3(2,30,7), 1.0));
+        return d;
+}
+
+vec3 grad(vec3 p) {
+        vec2 d = vec2(0.01,0.0);
+        
+        return (map(p) - vec3(map(p + d.xyy), map(p + d.yxy), map(p+d.yyx)))/d.x;
+}
+
+void main( void ) {
+        vec2 pix = (2.*gl_FragCoord.xy/resolution.y-1.);
+        vec3 cam = vec3(0,10.0,0);
+        vec3 camDir = normalize(vec3(sin(time/4.)*.2,0,1));
+        vec3 screenCenter = cam + camDir;
+        vec3 up = vec3(0,1,0);
+        vec3 u = -normalize(cross(up, camDir));
+        vec3 v = normalize(cross(u, camDir));
+        vec3 uv = u * pix.x + v * pix.y;
+        vec3 p = vec3(uv+screenCenter); 
+        vec3 dir = normalize(p-cam);
+
+        float delta = 0.001;
+        float d = 0.0;
+        float dist = 0.0;
+        
+        float volume = 0.0;
+        float angle = 0.0;
+        
+        for (int i = 0; i < 128; i++) {
+                d = map(p);
+                volume += max(-clamp(d, -.01, .01), 0.0);
+                dist += max(max(0.0, d), .2);
+                if (dist > 500.) break;
+                p = dir*dist;
+        }
+        
+        angle = dot(dir, grad(p));
+        float c = log(1.0 + volume)/(1.0 + log(1.0 + volume));
+        c *= 2.6;
+        gl_FragColor = vec4(c * vec3(.6*c,1.0,.6*c), 1.0 );
+}
+</script>
+
+<!-- http://glslsandbox.com/e#18142.0 -->
+<script id='18142.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+// rotate position around axis
+vec2 rotate(vec2 p, float a)
+{
+        return vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
+}
+
+// 1D random numbers
+float rand(float n)
+{
+    return fract(sin(n) * 43758.5453123);
+}
+
+// 2D random numbers
+vec2 rand2(in vec2 p)
+{
+        return fract(vec2(sin(p.x * 591.32 + p.y * 154.077 + time), cos(p.x * 391.32 + p.y * 49.077 + time)));
+}
+
+// 1D noise
+float noise1(float p)
+{
+        float fl = floor(p);
+        float fc = fract(p);
+        return mix(rand(fl), rand(fl + 1.0), fc);
+}
+
+// voronoi distance noise, based on iq's articles
+float voronoi(in vec2 x)
+{
+        vec2 p = floor(x);
+        vec2 f = fract(x);
+        
+        vec2 res = vec2(8.0);
+        for(int j = -1; j <= 1; j ++)
+        {
+                for(int i = -1; i <= 1; i ++)
+                {
+                        vec2 b = vec2(i, j);
+                        vec2 r = vec2(b) - f + rand2(p + b);
+                        
+                        // chebyshev distance, one of many ways to do this
+                        float d = max(abs(r.x), abs(r.y));
+                        
+                        if(d < res.x)
+                        {
+                                res.y = res.x;
+                                res.x = d;
+                        }
+                        else if(d < res.y)
+                        {
+                                res.y = d;
+                        }
+                }
+        }
+        return res.y - res.x;
+}
+
+
+float flicker = noise1(time * 1.0) * 0.8 + 0.;
+
+void main(void)
+{
+        vec2 uv = gl_FragCoord.xy / resolution.xy;
+        uv = (uv - 0.5) * 2.0;
+        vec2 suv = uv;
+        uv.x *= resolution.x / resolution.y;
+        
+        
+        float v = 0.0;
+        
+        // that looks highly interesting:
+        //v = 1.0 - length(uv) * 1.3;
+        
+        
+        // a bit of camera movement
+        //uv *= 0.6 + sin(time * 0.1) * 0.4;
+        uv = rotate(uv, sin(0.0 * 0.3) * 1.0);
+        //uv += time * 0.4;
+        
+        
+        // add some noise octaves
+        float a = 0.6, f = 1.0;
+        
+        for(int i = 0; i < 3; i ++) // 4 octaves also look nice, its getting a bit slow though
+        {       
+                float v1 = voronoi(uv * f + 5.0);
+                float v2 = 0.0;
+                
+                // make the moving electrons-effect for higher octaves
+                if(i > 0)
+                {
+                        // of course everything based on voronoi
+                        v2 = voronoi(uv * f * 0.5 + 50.0 + time);
+                        
+                        float va = 0.0, vb = 0.0;
+                        va = 1.0 - smoothstep(0.0, 0.1, v1);
+                        vb = 1.0 - smoothstep(0.0, 0.08, v2);
+                        v += a * pow(va * (0.5 + vb), 2.0);
+                }
+                
+                // make sharp edges
+                v1 = 1.0 - smoothstep(0.0, 0.3, v1);
+                
+                // noise is used as intensity map
+                v2 = a * (noise1(v1 * 5.5 + 0.1));
+                
+                // octave 0's intensity changes a bit
+                if(i == 0)
+                        v += v2 * flicker;
+                else
+                        v += v2;
+                
+                f *= 3.0;
+                a *= 0.7;
+        }
+
+        // slight vignetting
+        v *= exp(-0.6 * length(suv)) * 1.2;
+        
+        // use texture channel0 for color? why not.
+        //vec3 cexp = texture2D(iChannel0, uv * 0.001).xyz * 3.0 + texture2D(iChannel0, uv * 0.01).xyz;//vec3(1.0, 2.0, 4.0);
+        
+        // old blueish color set
+        vec3 cexp = vec3(3.0, 2.0, 4.0);
+                cexp *= 1.3;
+
+        vec3 col = vec3(pow(v, cexp.x), pow(v, cexp.y), pow(v, cexp.z)) * 2.0;
+        
+        gl_FragColor = vec4(col, 1.0);
+}
+</script>
+
+<!-- http://glslsandbox.com/e#17945.0 -->
+<script id='17945.0' type='x-shader/x-fragment'>
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+// srtuss, 2014
+// Ported from www.shadertoy.com
+
+#define PI 3.1415926535897932384626433832795
+
+#define ITER 20
+
+vec2 rotate(vec2 p, float a)
+        {
+        return vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
+        }
+
+vec2 circuit(vec2 p)
+        {
+        p = fract(p);
+        float r = 0.223;
+        float v = 0.0, g = 0.0;
+        float test = 0.0;
+        r = fract(r * 9184.928);
+        float cp, d;
+        
+        d = p.x;
+        g += pow(clamp(1.0 - abs(d), 0.0, 1.0), 1000.0);
+        d = p.y;
+        g += pow(clamp(1.0 - abs(d), 0.0, 1.0), 1000.0);
+        d = p.x - 1.0;
+        g += pow(clamp(1.0 - abs(d), 0.0, 1.0), 1000.0);
+        d = p.y - 1.0;
+        g += pow(clamp(1.0 - abs(d), 0.0, 1.0), 10000.0);
+        
+        for(int i = 0; i < ITER; i ++)
+                {
+                cp = 0.5 + (r - 0.5) * 0.9;
+                d = p.x - cp;
+                g += pow(clamp(1.0 - abs(d), 0.0, 1.0), 160.0);
+                if(d > 0.0)
+                        {
+                        r = fract(r * 4829.013);
+                        p.x = (p.x - cp) / (1.0 - cp);
+                        v += 1.0;
+                        test = r;
+                        }
+                else
+                        {
+                        r = fract(r * 1239.528);
+                        p.x = p.x / cp;
+                        test = r;
+                        }
+                p = p.yx;
+                }
+        v /= float(ITER);
+        return vec2(v, g);
+        }
+
+float box(vec2 p, vec2 b, float r)
+        {
+        return length(max(abs(p) - b, 0.0)) -r ;
+        }
+
+float rand(float p)
+        {
+        return fract(sin(p * 591.32) * 43758.5357);
+        }
+
+float rand2(vec2 p)
+        {
+        return fract(sin(dot(p.xy, vec2(12.9898, 78.233))) * 43758.5357);
+        }
+
+vec2 rand2(float p)
+        {
+        return fract(vec2(sin(p * 591.32), cos(p * 391.32)));
+        }
+
+vec3 sky(vec3 rd, float t)
+        {
+        float u = atan(rd.z, rd.x) / PI / 2.0;
+        float v = rd.y / length(rd.xz);
+        float fg = exp(-0.04 * abs(v));
+        vec2 ca = circuit(vec2(u, (v - t * 3.0) * 0.03));
+        vec2 cb = circuit(vec2(-u, (v - t * 4.0) * 0.06));
+        float c = (ca.x - ca.y * 0.2) + cb.y * 0.7;
+        vec3 glow = pow(vec3(c), vec3(0.9, 0.5, .3) * 2.0);
+        vec2 cr = vec2(u, (v - t * 5.0) * 0.03);
+        float crFr = fract(cr.y);
+        float r = smoothstep(1.8, 0.82, abs(crFr * 2.0 - 1.0));
+        float vo = 0.0, gl = 0.0;
+        for(int i = 0; i < 6; i ++)
+                {
+                float id = float(i);
+                vec2 off = rand2(id);
+                vec2 pp = vec2(fract(cr.x * 5.0 + off.x + t * 8.0 * (0.5 + rand(id))) - 0.5, fract(cr.y * 12.0 + off.y * 0.2) - 0.5);
+                float di = box(pp, vec2(0.2, 0.01), 0.02);
+                vo += smoothstep(0.999, 1.0, 1.0 - di);
+                gl += exp(max(di, 0.0) * -16.0);
+                }
+        vo = pow(vo * 0.4, 2.0);
+        vec3 qds = vec3(1.0);
+        vec3 col = mix(glow, qds, clamp(vo, 0.0, 1.0)) + vec3(0.05, 0.05, 0.05) * gl * 0.5;
+        return col + (1.0 - fg);
+        }
+
+vec3 colorset(float v)
+        {
+        return pow(vec3(v), vec3(0.4, 0.4, 0.4) * 10.0);
+        }
+
+
+
+vec3 pixel(vec2 uv)
+        {
+        uv /= resolution.xy;
+        uv = uv * 2.0 - 1.0;
+        uv.x *= resolution.x / resolution.y;
+        vec3 ro = vec3(0.0, 0.0, -0.0);
+        vec3 rd = normalize(vec3(uv, 1.6));
+        float t = time* 1.25;
+        float down = PI / 2.0;
+        rd.yz = rotate(rd.yz, 0.0);
+        rd.xz = rotate(rd.xz, down);
+        rd.xy = rotate(rd.xy, down);
+        vec3 col = sky(rd, t);
+        return pow(col, vec3(1.9)) * 1.3;
+        }
+
+
+
+void main()
+        {
+        vec2 uv = gl_FragCoord.xy;
+        vec3 col;
+        vec2 h = vec2(0.0, 0.0);
+        col = pixel(uv);
+        col += pixel(uv + h.xy);
+        col += pixel(uv + h.yx);
+        col += pixel(uv + h.xx);
+        col /= 4.0;
+        gl_FragColor = vec4(col, 1.0);
+        gl_FragColor.b *= 0.36;
+        gl_FragColor.g *= 0.36;
+        gl_FragColor.r *= 0.1;
+                
+        }
+</script>
+
