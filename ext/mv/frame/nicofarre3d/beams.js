@@ -7,7 +7,8 @@ MajVj.frame.nicofarre3d.modules.beams = function (options) {
     this._container = new TmaParticle.Container(
             MajVj.frame.nicofarre3d.modules.beams.Particle);
     this._period = options.period || 1000;
-    this._unit = options.unit = 20;
+    this._unit = options.unit || 20;
+    this._dir = options.dir || MajVj.frame.nicofarre3d.modules.beams.DIR_ALL;
     this._tick = 0;
     this._nextTime = 0;
     this._beams = [];
@@ -34,13 +35,21 @@ MajVj.frame.nicofarre3d.modules.beams.Particle.prototype =
 MajVj.frame.nicofarre3d.modules.beams.Particle.prototype.constructor =
         MajVj.frame.nicofarre3d.modules.beams.Particle;
 
+MajVj.frame.nicofarre3d.modules.beams.DIR_ALL = [0, 1, 2, 3];
+MajVj.frame.nicofarre3d.modules.beams.DIR_Z = [0, 1];
+MajVj.frame.nicofarre3d.modules.beams.DIR_F2B = [0];
+MajVj.frame.nicofarre3d.modules.beams.DIR_B2F = [1];
+MajVj.frame.nicofarre3d.modules.beams.DIR_X = [2, 3];
+MajVj.frame.nicofarre3d.modules.beams.DIR_L2R = [2];
+MajVj.frame.nicofarre3d.modules.beams.DIR_R2L = [3];
+
 /**
  *
  */
 MajVj.frame.nicofarre3d.modules.beams.Particle.prototype.initialize =
-        function (size, speed) {
-    var pattern = (0|(4 * Math.random())) % 4;
-    switch (pattern) {
+        function (size, speed, dir) {
+    var pattern = (0|(dir.length * Math.random())) % dir.length;
+    switch (dir[pattern]) {
       case 0:
         this.x = (Math.random() - 0.5) * size;
         this.y = (Math.random() - 0.5) * size / 10;
@@ -122,7 +131,7 @@ MajVj.frame.nicofarre3d.modules.beams.prototype.draw = function (api) {
         var emit = Math.min(
                 this._unit, this._maxParticles - this._container.length);
         for (var i = 0; i < emit; ++i)
-            this._container.add(this._size, this._speed);
+            this._container.add(this._size, this._speed, this._dir);
     }
     this._container.update();
 
