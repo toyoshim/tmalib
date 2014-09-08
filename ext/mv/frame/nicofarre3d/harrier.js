@@ -9,6 +9,7 @@ MajVj.frame.nicofarre3d.modules.harrier = function (options) {
   this._xinterval = options.xinterval || 0.0;
   this._alpha = options.alpha || 0.1;
   this._color = options.color || [0.4, 0.4, 0.6];
+  this._ceil = options.ceil || true;
   this._t = 0.0;
 };
 
@@ -38,6 +39,8 @@ MajVj.frame.nicofarre3d.modules.harrier.prototype.draw = function (api) {
     api.color =
         [this._color[0] * c, this._color[1] * c, this._color[2] * c, 1.0];
     api.drawLine([-l, -5000, z], [l, -5000, z]);
+    if (this._ceil)
+      api.drawLine([-l, 5000, z], [l, 5000, z]);
   }
   t = this._t / 1000 * this._xspeed;
   for (var x = -s; x < s; x += 10000) {
@@ -46,5 +49,7 @@ MajVj.frame.nicofarre3d.modules.harrier.prototype.draw = function (api) {
     api.color =
         [this._color[0] * c, this._color[1] * c, this._color[2] * c, 1.0];
     api.drawLine([x, -5000, -l], [x, -5000, l]);
+    if (this._ceil)
+      api.drawLine([x, 5000, -l], [x, 5000, l]);
   }
 };
