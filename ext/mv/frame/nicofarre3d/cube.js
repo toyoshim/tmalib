@@ -70,7 +70,6 @@ MajVj.frame.nicofarre3d.modules.cube.object.prototype.draw =
 MajVj.frame.nicofarre3d.modules.cube.prototype.clear = function (api) {
     api.color = [0.0, 0.0, 0.0, 1.0];
     api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
-    api.setAlphaMode(false);
 };
 
 /**
