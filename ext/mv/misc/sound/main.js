@@ -187,7 +187,7 @@ MajVj.misc.sound.prototype.getFftCount = function () {
 /**
  * Normalizes a FFT result.
  * @param data a float value from -30 to -100 in dB
- * @return a float value almost from 0.0 to 0.1
+ * @return a float value almost from 0.0 to 1.0
  */
 MajVj.misc.sound.prototype.normalizeFrequencyData = function (data) {
     var a = this._analyser;

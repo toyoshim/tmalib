@@ -37,7 +37,7 @@ MajVj.frame.nicofarre3d.modules.harrier.prototype.draw = function (api) {
   var t = this._t / 1000 * this._zspeed;
   var y = 5000;
   if (this._controller && this._controller.volume)
-    y *= (1 + this._controller.value[0] * 10);
+    y *= (1 + this._controller.volume[0] * 10);
   for (var z = -s; z < s; z += 10000) {
     c = (1.0 + Math.sin(t + z / s * this._zinterval)) / 2.0;
     api.color =
