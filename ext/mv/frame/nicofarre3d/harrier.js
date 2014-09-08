@@ -3,6 +3,7 @@
  *  - MajVj extension - frame plugin - nicofarre3d - harrier module
  */
 MajVj.frame.nicofarre3d.modules.harrier = function (options) {
+  this._controller = options.controller;
   this._zspeed = options.zspeed || 10.0;
   this._xspeed = options.xspeed || 0.00;
   this._zinterval = options.zinterval || 50.0;
@@ -34,13 +35,16 @@ MajVj.frame.nicofarre3d.modules.harrier.prototype.draw = function (api) {
   var l = 1000000;
   var c = 0;
   var t = this._t / 1000 * this._zspeed;
+  var y = 5000;
+  if (this._controller && this._controller.volume)
+    y *= (1 + this._controller.value[0] * 10);
   for (var z = -s; z < s; z += 10000) {
     c = (1.0 + Math.sin(t + z / s * this._zinterval)) / 2.0;
     api.color =
         [this._color[0] * c, this._color[1] * c, this._color[2] * c, 1.0];
-    api.drawLine([-l, -5000, z], [l, -5000, z]);
+    api.drawLine([-l, -y, z], [l, -y, z]);
     if (this._ceil)
-      api.drawLine([-l, 5000, z], [l, 5000, z]);
+      api.drawLine([-l, y, z], [l, y, z]);
   }
   t = this._t / 1000 * this._xspeed;
   for (var x = -s; x < s; x += 10000) {
@@ -48,8 +52,8 @@ MajVj.frame.nicofarre3d.modules.harrier.prototype.draw = function (api) {
     c = (1.0 + Math.sin(t + x / s * this._xinterval)) / 2.0;
     api.color =
         [this._color[0] * c, this._color[1] * c, this._color[2] * c, 1.0];
-    api.drawLine([x, -5000, -l], [x, -5000, l]);
+    api.drawLine([x, -y, -l], [x, -y, l]);
     if (this._ceil)
-      api.drawLine([x, 5000, -l], [x, 5000, l]);
+      api.drawLine([x, y, -l], [x, y, l]);
   }
 };
