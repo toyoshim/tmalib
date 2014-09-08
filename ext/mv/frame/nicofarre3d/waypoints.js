@@ -2,23 +2,28 @@
  * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - nicofarre3d - waypoints module
  */
-MajVj.frame.nicofarre3d.modules.waypoints = function () {
+MajVj.frame.nicofarre3d.modules.waypoints = function (options) {
     this._container = new TmaParticle.Container(
             MajVj.frame.nicofarre3d.modules.waypoints.Particle);
     this._waypoints = [];
-    this._size = 2048;
-    var speed = 5;
+    this._size = options.size || 4096;
+    this._height = options.height || 2048;
+    this._gravity = options.gravity / 1000 || 0.002;
     this._h = 0;
     this._lastParticles = 0;
-    this._maxParticles = 10000;
-    for (var points = 0; points < 16; ++points) {
+    this._maxParticles = options.particles || 10000;
+    this._range = options.range || 100000;
+    this._emit = options.emit || 4;
+    var waypoints = options.waypoints || 32;
+    var wayspeed = options.wayspeed || 10;
+    for (var points = 0; points < waypoints; ++points) {
         this._waypoints.push({
             x: (Math.random() - 0.5) * 2.0 * this._size,
-            y: (Math.random() - 0.5) * 2.0 * this._size / 10.0,
+            y: (Math.random() - 0.5) * 2.0 * this._height,
             z: (Math.random() - 0.5) * 2.0 * this._size,
-            vx: (Math.random() * 2 - 1) * speed,
-            vy: (Math.random() * 2 - 1) * speed,
-            vz: (Math.random() * 2 - 1) * speed
+            vx: (Math.random() * 2 - 1) * wayspeed,
+            vy: (Math.random() * 2 - 1) * wayspeed,
+            vz: (Math.random() * 2 - 1) * wayspeed
         });
     }
     this._waypoints.push({ x: 0.0, y: 0.0, z: 0.0, vx: 0.0, vy: 0.0, vz: 0.0 });
@@ -45,10 +50,10 @@ MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.constructor =
  *
  */
 MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.initialize =
-        function (h, waypoints, size) {
-    this.x = Math.random() * 100;
-    this.y = Math.random() * 100;
-    this.z = Math.random() * 100;
+        function (h, waypoints, size, gravity, range) {
+    this.x = Math.random() * 1000;
+    this.y = Math.random() * 1000;
+    this.z = Math.random() * 1000;
     this.ox = this.x;
     this.oy = this.y;
     this.oz = this.z;
@@ -57,6 +62,8 @@ MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.initialize =
     this.target = 0;
     this.waypoints = waypoints;
     this.size = size;
+    this.gravity = gravity;
+    this.range = range;
 };
 
 /**
@@ -68,7 +75,7 @@ MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.update =
     var dx = waypoint.x - this.x;
     var dy = waypoint.y - this.y;
     var dz = waypoint.z - this.z;
-    if (dx * dx + dy * dy + dz * dz < 100000) {
+    if (dx * dx + dy * dy + dz * dz < this.range) {
         this.target++;
         if (this.target == this.waypoints.length)
             return false;
@@ -76,9 +83,9 @@ MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.update =
         this.vy += Math.random() * 2 - 1;
         this.vz += Math.random() * 2 - 1;
     }
-    this.vx += dx / 512;
-    this.vy += dy / 512;
-    this.vz += dz / 512;
+    this.vx += dx * this.gravity;
+    this.vy += dy * this.gravity;
+    this.vz += dz * this.gravity;
     this.vx *= 0.97;
     this.vy *= 0.97;
     this.vz *= 0.97;
@@ -88,17 +95,19 @@ MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.update =
     this.x += this.vx;
     this.y += this.vy;
     this.z += this.vz;
-    var ysize = this.size / 10;
-    if ((this.x > this.size && this.vx > 0) ||
-            (this.x < -this.size && this.vx < 0))
-        this.vx = -this.vx;
-    if ((this.y > ysize && this.vy > 0) ||
-            (this.y < -ysize && this.vy < 0))
-        this.vy = -this.vy;
-    if ((this.z > this.size && this.vz > 0) ||
-            (this.z < -this.size && this.vz < 0))
-        this.vz = -this.vz;
     return true;
+};
+
+/**
+ * Clears screen.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.waypoints.prototype.clear = function (api) {
+  //api.color = [0.0, 0.0, 0.0, 1.0];
+  //api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
+  api.clear(api.gl.DEPTH_BUFFER_BIT);
+  api.setAlphaMode(true, api.gl.ONE, api.gl.SRC_ALPHA);
+  api.fill([0.0, 0.0, 0.0, 0.8]);
 };
 
 /**
@@ -106,14 +115,11 @@ MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.update =
  * @param api nicofarre3d interfaces
  */
 MajVj.frame.nicofarre3d.modules.waypoints.prototype.draw = function (api) {
-    api.color = [0.0, 0.0, 0.0, 1.0];
-    api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
-    api.setAlphaMode(false);
     api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
 
     // Update waypoints.
     var size = this._size;
-    var ysize = size / 10.0;
+    var ysize = this._height;
     for (var point = 0; point < this._waypoints.length; ++point) {
         var waypoint = this._waypoints[point];
         waypoint.x += waypoint.vx;
@@ -131,9 +137,12 @@ MajVj.frame.nicofarre3d.modules.waypoints.prototype.draw = function (api) {
     }
 
     // Update particles.
-    var emit = Math.min(4, this._maxParticles - this._container.length);
-    for (var i = 0; i < emit; ++i)
-        this._container.add(this._h, this._waypoints, this._size);
+    var emit = Math.min(
+        this._emit, this._maxParticles - this._container.length);
+    for (var i = 0; i < emit; ++i) {
+        this._container.add(this._h, this._waypoints, this._size,
+                            this._gravity, this._range);
+    }
     this._h = (this._h + 1) % 360;
     this._container.update();
 

@@ -8,7 +8,6 @@ MajVj.frame.nicofarre3d.modules.train = function (options) {
             MajVj.frame.nicofarre3d.modules.train.Particle);
     this._period = options.period || 500;
     this._controller = options.controller;
-    console.log(this._controller);
     this._tick = 0;
     this._nextTime = 0;
     this._frontRails = [];
@@ -27,6 +26,16 @@ MajVj.frame.nicofarre3d.modules.train = function (options) {
 };
 
 /**
+ * Clears.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.train.prototype.clear = function (api) {
+    api.clear(api.gl.DEPTH_BUFFER_BIT);
+    api.setAlphaMode(true, api.gl.ONE, api.gl.SRC_ALPHA);
+    api.fill([0.0, 0.0, 0.0, 0.7]);
+};
+
+/**
  * Draws.
  * @param api nicofarre3d interfaces
  */
@@ -35,9 +44,6 @@ MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
         this._r = this._controller.volume[0] - 0.5;
         this._fly = 10000 * this._controller.volume[1];
     }
-    api.clear(api.gl.DEPTH_BUFFER_BIT);
-    api.setAlphaMode(true, api.gl.ONE, api.gl.SRC_ALPHA);
-    api.fill([0.0, 0.0, 0.0, 0.7]);
     api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
 
     this._tick += api.delta;

@@ -64,12 +64,21 @@ MajVj.frame.nicofarre3d.modules.cube.object.prototype.draw =
 };
 
 /**
+ * Clears screen.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.cube.prototype.clear = function (api) {
+    api.color = [0.0, 0.0, 0.0, 1.0];
+    api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
+    api.setAlphaMode(false);
+};
+
+/**
  * Draws.
  * @param api nicofarre3d interfaces
  */
 MajVj.frame.nicofarre3d.modules.cube.prototype.draw = function (api) {
     api.color = [0.0, 0.0, 0.0, 1.0];
-    api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
     api.setAlphaMode(false);
     var speed = api.delta * 2.0;
     var rotate = speed / 1000.0;

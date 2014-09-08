@@ -9,7 +9,8 @@ MajVj.frame.nicofarre3d = function (options) {
     this._height = options.height;
     this._aspect = options.aspect;
     this._controller = options.controller;
-    this._draw = options.draw;
+    this._clearCallback = options.clear;
+    this._drawCallback = options.draw;
     this._modules = [];
     if (options.module) {
         var opt = options.options || {};
@@ -195,10 +196,14 @@ MajVj.frame.nicofarre3d.prototype.draw = function (delta) {
     var screen = this._fboRight.bind();
 
     this._api.delta = delta;
+    if (this._clearCallback)
+        this._clearCallback(this._api)
+    else if (this._modules.length > 0)
+        this._modules[0].clear(this._api);
     for (var i = 0; i < this._modules.length; ++i)
         this._modules[i].draw(this._api);
-    if (this._draw)
-        this._draw(this._api);
+    if (this._drawCallback)
+        this._drawCallback(this._api);
 
     screen.bind();
     this._screen.popAlphaMode();

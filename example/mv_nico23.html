@@ -1,0 +1,62 @@
+<html>
+<head><title>Nicofarre test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script src="mv_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  MajVj.loadAllPlugins().then(_(function () {
+    var r = 1;
+    var width = 1920 / r;
+    var height = 1080 / r;
+    var vj = new MajVj(width, height, true);
+    nico3d = vj.create('frame', 'nicofarre3d', {
+      modules: [
+        { name: 'waypoints',
+          options: {
+            size: 8192 * 2,
+            height: 4096,
+            particles: 10000,
+            waypoints: 32,
+            wayspeed: 70,
+            gravity: 20,
+            range: 1000000,
+            emit: 1
+          }
+        },
+        { name: 'cube' }
+      ]
+    });
+    var fbo = vj.screen().createFrameBuffer(width, height);
+    var fx = vj.create('effect', 'nicofarre');
+    fx.setController(controller);
+    vj.screen().setAlphaMode(false);
+    var c = 0;
+    vj.run(function (delta) {
+      c++;
+      if (0 == c % 40) {
+        c = 0;
+        tma.log('fps: ' + vj.fps());
+      }
+      if (emulate)
+        fbo.bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      vj.screen().setAlphaMode(true, vj.screen().gl.ONE, vj.screen().gl.ONE);
+      nico3d.draw(delta);
+      if (emulate) {
+        vj.screen().bind();
+        vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+        fx.draw(delta, fbo.texture);
+      }
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      vj.onresize();
+      fx.onresize(vj.aspect());
+    };
+  }), function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

@@ -112,14 +112,20 @@ MajVj.frame.nicofarre3d.modules.beams.Particle.prototype.update =
 };
 
 /**
+ * Clears screen.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.beams.prototype.clear = function (api) {
+    api.clear(api.gl.DEPTH_BUFFER_BIT);
+    api.setAlphaMode(true, api.gl.ONE, api.gl.SRC_ALPHA);
+    api.fill([0.0, 0.0, 0.0, 0.92]);
+};
+
+/**
  * Draws.
  * @param api nicofarre3d interfaces
  */
 MajVj.frame.nicofarre3d.modules.beams.prototype.draw = function (api) {
-    api.clear(api.gl.DEPTH_BUFFER_BIT);
-    api.setAlphaMode(true, api.gl.ONE, api.gl.SRC_ALPHA);
-    api.fill([0.0, 0.0, 0.0, 0.92]);
-
     // Update beams.
     var size = this._size;
     var ysize = size / 10.0;
