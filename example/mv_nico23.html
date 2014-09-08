@@ -6,11 +6,19 @@
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
-  MajVj.loadAllPlugins().then(_(function () {
+  Promise.all([
+    MajVj.loadImageFrom('data/moon.png'),
+    MajVj.loadAllPlugins()
+  ]).then(function (resources) {
     var r = 1;
     var width = 1920 / r;
     var height = 1080 / r;
     var vj = new MajVj(width, height, true);
+    var moon = TmaModelPrimitives.createSphere(
+        3, TmaModelPrimitives.SPHERE_METHOD_EVEN);
+    rrr = [0, Math.PI / 2, 0];
+    moon.setTexture(vj.screen().createTexture(
+        resources[0], true, Tma3DScreen.FILTER_LINEAR));
     nico3d = vj.create('frame', 'nicofarre3d', {
       modules: [
         { name: 'waypoints',
@@ -20,13 +28,17 @@ tma.onload = function () {
             particles: 10000,
             waypoints: 32,
             wayspeed: 70,
-            gravity: 20,
+            gravity: 100,
             range: 1000000,
             emit: 1
           }
         },
-        { name: 'cube' }
-      ]
+        { name: 'beams' }
+      ],
+      draw: function (api) {
+        api.setAlphaMode(false);
+        api.drawPrimitive(moon, 1000, 1000, 1000, [0, 0, -5000], rrr);
+      }
     });
     var fbo = vj.screen().createFrameBuffer(width, height);
     var fx = vj.create('effect', 'nicofarre');
@@ -55,7 +67,7 @@ tma.onload = function () {
       vj.onresize();
       fx.onresize(vj.aspect());
     };
-  }), function (e) { console.log('plugin load error: ' + e); });
+  }, function (e) { console.log('plugin load error: ' + e); });
 };
 </script>
 </body>

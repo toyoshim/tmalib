@@ -311,7 +311,7 @@ MajVj.frame.nicofarre3d.prototype._drawLine = function (src, dst) {
  * @param h height
  * @param d depth
  * @param p position in [x, y, z]
- * @param r rotation in [z, y, z] in radian (optional)
+ * @param r rotations in Array of [z, y, z] in radian (optional)
  */
 MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
     var texture = o.getTexture();
@@ -334,9 +334,19 @@ MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
 
     mat4.translate(this._iMatrix, p, this._matrix);
     if (r) {
-      mat4.rotateX(this._matrix, r[0]);
-      mat4.rotateY(this._matrix, r[1]);
-      mat4.rotateZ(this._matrix, r[2]);
+        if (typeof r[0] === 'number') {
+            // TODO: Remove this useless mod. Exist just for compat.
+            mat4.rotateX(this._matrix, r[0]);
+            mat4.rotateY(this._matrix, r[1]);
+            mat4.rotateZ(this._matrix, r[2]);
+        } else {
+            for (var i = r.length - 1; i >= 0; --i) {
+                var rotate = r[i];
+                mat4.rotateX(this._matrix, rotate[0]);
+                mat4.rotateY(this._matrix, rotate[1]);
+                mat4.rotateZ(this._matrix, rotate[2]);
+            }
+        }
     }
     mat4.scale(this._matrix, [w, h, d]);
     program.setUniformMatrix('uMatrix', this._matrix);
