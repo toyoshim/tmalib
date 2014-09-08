@@ -165,7 +165,8 @@ MajVj.frame.nicofarre3d.load = function () {
                 MajVj.loadScript('frame', name, 'waypoints.js'),
                 MajVj.loadScript('frame', name, 'beams.js'),
                 MajVj.loadScript('frame', name, 'train.js'),
-                MajVj.loadScript('frame', name, 'lines.js')
+                MajVj.loadScript('frame', name, 'lines.js'),
+                MajVj.loadScript('frame', name, 'harrier.js')
         ]).then(function (results) {
             MajVj.frame.nicofarre3d._vScreenShader = results[0];
             MajVj.frame.nicofarre3d._fScreenShader = results[1];
