@@ -147,14 +147,14 @@ MajVj.frame.nicofarre3d.modules.train.prototype._newRail = function () {
         r: this._r,
         houseR: houseR,
         houseRH: houseRH,
-        houseRC: [0.02 + Math.random() / 8,
-                  0.02 + Math.random() / 8,
-                  0.02 + Math.random() / 8, 1.0],
+        houseRC: [0.02 + Math.random() / 256,
+                  0.02 + Math.random() / 256,
+                  0.02 + Math.random() / 256, 1.0],
         houseL: houseL,
         houseLH: houseLH,
-        houseLC: [0.02 + Math.random() / 8,
-                  0.02 + Math.random() / 8,
-                  0.02 + Math.random() / 8, 1.0]
+        houseLC: [0.02 + Math.random() / 256,
+                  0.02 + Math.random() / 256,
+                  0.02 + Math.random() / 256, 1.0]
     };
 };
 
