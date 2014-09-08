@@ -10,11 +10,18 @@ MajVj.frame.nicofarre3d = function (options) {
     this._aspect = options.aspect;
     this._controller = options.controller;
     this._draw = options.draw;
-    this._module = null;
+    this._modules = [];
     if (options.module) {
         var opt = options.options || {};
-        this._module = new MajVj.frame.nicofarre3d.modules[options.module](opt);
-        this._draw = this._module.draw.bind(this._module);
+        this._modules[0] =
+                new MajVj.frame.nicofarre3d.modules[options.module](opt);
+    } else if (options.modules) {
+        for (var i = 0; i < options.modules.length; ++i) {
+            var module = options.modules[i];
+            var opt = module.options || {};
+            this._modules[i] =
+                    new MajVj.frame.nicofarre3d.modules[module.name](opt);
+        }
     }
     this._api = {
       clear: this._clear.bind(this),
@@ -188,7 +195,10 @@ MajVj.frame.nicofarre3d.prototype.draw = function (delta) {
     var screen = this._fboRight.bind();
 
     this._api.delta = delta;
-    this._draw(this._api);
+    for (var i = 0; i < this._modules.length; ++i)
+        this._modules[i].draw(this._api);
+    if (this._draw)
+        this._draw(this._api);
 
     screen.bind();
     this._screen.popAlphaMode();
