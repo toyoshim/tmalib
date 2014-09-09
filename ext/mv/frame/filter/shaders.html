@@ -34,10 +34,11 @@ void main() {
 <script id='fTexture' type='x-shader/x-fragment'>
 precision mediump float;
 uniform sampler2D uTexture;
+uniform float uFade;
 varying vec2 vCoord;
 
 void main() {
-  gl_FragColor = texture2D(uTexture, vCoord);
+  gl_FragColor = texture2D(uTexture, vCoord) * vec4(uFade, uFade, uFade, 1.0);
 }
 </script>
 

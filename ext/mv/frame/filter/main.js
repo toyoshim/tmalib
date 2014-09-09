@@ -11,7 +11,8 @@ MajVj.frame.filter = function (options) {
     this._aspect = options.aspect;
     this._controller = options.controller;
     this._color = options.color || [0.0, 0.0, 0.0, 1.0];
-    this._zoom = (options.zoom != 'undefined') ? options.zoom : 1.0;
+    this._zoom = (typeof options.zoom != 'undefined') ? options.zoom : 1.0;
+    this._fade = (typeof options.fade != 'undefined') ? options.fade : 1.0;
     this._offset = options.offset || [0.0, 0.0];
     this._texture = null;
     this._colorProgram = this._screen.createProgram(
@@ -88,6 +89,7 @@ MajVj.frame.filter.prototype.draw = function (delta) {
         this._textureProgram.setAttributeArray(
                 'aTexCoord', this._texCoords, 0, 2, 0);
         this._textureProgram.setTexture('uTexture', this._texture);
+        this._textureProgram.setUniformVector('uFade', [this._fade]);
         this._textureProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
     } else if (this._coords) {
         this._colorProgram.setAttributeArray('aCoord', this._coords, 0, 2, 0);
@@ -146,6 +148,15 @@ MajVj.frame.filter.prototype.setZoom = function (zoom) {
 MajVj.frame.filter.prototype.setOffset = function (offset) {
     this._offset = offset;
     this._resetCoords();
+};
+
+/**
+ * Sets fade level.
+ * @param fade fade level
+ * offset texture offset ratio
+ */
+MajVj.frame.filter.prototype.setFade = function (fade) {
+    this._fade = fade;
 };
 
 /**
