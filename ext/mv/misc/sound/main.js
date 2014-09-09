@@ -30,8 +30,10 @@ MajVj.misc.sound = function (options) {
  */
 MajVj.misc.sound.load = function () {
     return new Promise(function (resolve, reject) {
-        if (!MajVj.misc.sound.useMicrophone)
+        if (!MajVj.misc.sound.useMicrophone) {
             resolve();
+            return;
+        }
 
         navigator.webkitGetUserMedia({audio: true}, function (a) {
             MajVj.misc.sound._microphone = a;
@@ -43,7 +45,8 @@ MajVj.misc.sound.load = function () {
 };
 
 // AudioContext shared in all instances.
-MajVj.misc.sound.useMicrophone = true;
+MajVj.misc.sound.useMicrophone =
+        MajVj.getSetting('misc', 'sound', 'useMicrophone', true);
 MajVj.misc.sound._microphone = null;
 MajVj.misc.sound._context = null;
 

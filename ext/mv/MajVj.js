@@ -125,6 +125,35 @@ MajVj.prototype.fps = function () {
 };
 
 /**
+ * Get a plugin setting.
+ * @param type 'effect' or 'frame'
+ * @param name plugin name
+ * @param config config name
+ * @param value default value
+ */
+MajVj.getSetting = function (type, name, config, value) {
+    var path = [type, name, config].join('.');
+    tma.log('getting config ' + path);
+    if (typeof MajVj._settings[path] != 'undefined') {
+        tma.log(path + ' is ' + MajVj._settings[path]);
+        return MajVj._settings[path];
+    }
+    tma.log('default is ' + value);
+    return value;
+};
+
+/**
+ * Set a plugin setting.
+ * @param type 'effect' or 'frame'
+ * @param name plugin name
+ * @param config config name
+ */
+MajVj.setSetting = function (type, name, config, value) {
+    var path = [type, name, config].join('.');
+    MajVj._settings[path] = value;
+};
+
+/**
  * Creates source path for plugins with type and name.
  * @param type 'effect' or 'frame'
  * @param name plugin name
@@ -263,3 +292,4 @@ MajVj.loadMovie = function (type, name, path) {
 MajVj.effect = {};
 MajVj.frame = {};
 MajVj.misc = {};
+MajVj._settings = {};
