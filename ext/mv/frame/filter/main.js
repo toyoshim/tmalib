@@ -11,7 +11,7 @@ MajVj.frame.filter = function (options) {
     this._aspect = options.aspect;
     this._controller = options.controller;
     this._color = options.color || [0.0, 0.0, 0.0, 1.0];
-    this._zoom = options.zoom || 1.0;
+    this._zoom = (options.zoom != 'undefined') ? options.zoom : 1.0;
     this._offset = options.offset || [0.0, 0.0];
     this._texture = null;
     this._colorProgram = this._screen.createProgram(
