@@ -19,6 +19,7 @@ document.body.addEventListener('keydown', function (e) {
 
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
+  MajVj.setSetting('misc', 'sound', 'useMicrophone', true);
   MajVj.loadAllPlugins().then(_(function () {
     var r = 1;
     var width = 1920 / r;
