@@ -31,7 +31,8 @@ MajVj.frame.nicofarre3d.modules.roll = function (options) {
   this._headFont = this._api.createFont(headFont || font, heads.join(''));
 
   this._sequencer = new TmaSequencer();
-  var t = 0 * 1000;
+  var delay = options.delay || 0;
+  var t = delay * 1000;
   for (i = 0; i < script.length; ++i) {
     this._sequencer.register(t, this._createTextLineTask(script[i]));
     t += 3000;
@@ -87,7 +88,7 @@ MajVj.frame.nicofarre3d.modules.roll.Cell =
   this._sy = (Math.random() - 0.5) * 3000;
   this._sz = Math.random() * 5000;
   this._dx = x;
-  this._dy = -100;
+  this._dy = -50;
   this._dz = -1000;
   this._rx = x;
   this._ry = 0;
