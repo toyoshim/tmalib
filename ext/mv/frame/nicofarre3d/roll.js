@@ -171,8 +171,8 @@ MajVj.frame.nicofarre3d.modules.roll.Cell.prototype._wipein =
       this._font, this._c, this._scale * (1 + irate * 2.5), this._scale * irate,
       [this._rx * (1 + irate * 5), this._ry, this._rz],
       [-Math.PI / 3, 0, 0]);
-  this._ry += this._vy;
-  this._rz += this._vz;
+  this._ry += this._vy * delta / 20;
+  this._rz += this._vz * delta / 20;
 };
 
 MajVj.frame.nicofarre3d.modules.roll.Cell.prototype._roll =
@@ -181,6 +181,6 @@ MajVj.frame.nicofarre3d.modules.roll.Cell.prototype._roll =
       this._font, this._c, this._scale, this._scale,
       [this._rx, this._ry, this._rz],
       [-Math.PI / 4, 0, 0]);
-  this._ry += this._vy;
-  this._rz += this._vz;
+  this._ry += this._vy * delta / 20;
+  this._rz += this._vz * delta / 20;
 };
