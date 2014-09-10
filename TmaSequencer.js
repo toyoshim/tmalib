@@ -214,7 +214,6 @@ TmaSequencer.SerialTask.prototype.append = function (task) {
     else
         this._duration += duration;
     this._queue.push(task);
-    this._timeBase = -1;
 };
 
 /**
