@@ -26,10 +26,11 @@ MajVj.frame.specticle = function (options) {
     this._r = new Array(this._n);
     this._sv = new Array(this._n);
     this._sh = new Array(this._n);
+    var random = options.random || 1.0;
     for (var i = 0; i < this._n; ++i) {
         this._dh[i] = Math.random() * Math.PI * 2;
         this._dv[i] = Math.random() * Math.PI * 2;
-        this._r[i] = Math.random() * 6 + 2;
+        this._r[i] = Math.random() * random * 6 + (3 - random);
         this._sv[i] = Math.random() * 10 + 10;
         this._sh[i] = Math.random() * 20 + 20;
     }
