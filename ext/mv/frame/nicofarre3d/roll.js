@@ -34,7 +34,7 @@ MajVj.frame.nicofarre3d.modules.roll = function (options) {
   var t = 0 * 1000;
   for (i = 0; i < script.length; ++i) {
     this._sequencer.register(t, this._createTextLineTask(script[i]));
-    t += 4000;
+    t += 3000;
   }
 
   this._sequencer.start();
@@ -92,7 +92,7 @@ MajVj.frame.nicofarre3d.modules.roll.Cell =
   this._rx = x;
   this._ry = 0;
   this._rz = -2000;
-  this._vy = +1;
+  this._vy = +0.5;
   this._vz = -1;
   this._c = c;
   this._time = 0;
@@ -169,7 +169,7 @@ MajVj.frame.nicofarre3d.modules.roll.Cell.prototype._wipein =
   this._api.drawCharacter(
       this._font, this._c, this._scale * (1 + irate * 2.5), this._scale * irate,
       [this._rx * (1 + irate * 5), this._ry, this._rz],
-      [-Math.PI / 4, 0, 0]);
+      [-Math.PI / 3, 0, 0]);
   this._ry += this._vy;
   this._rz += this._vz;
 };
