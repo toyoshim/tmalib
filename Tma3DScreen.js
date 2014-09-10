@@ -21,7 +21,8 @@ function Tma3DScreen (width, height) {
     this.canvas.onmouseout = this._onmouseout.bind(this);
     this.canvas.onmousedown = this._onmousedown.bind(this);
     this.canvas.onmouseup = this._onmouseup.bind(this);
-    this.context = document.createElement('canvas').getContext('2d');
+    this.canvas2d = document.createElement('canvas');
+    this.context = this.canvas2d.getContext('2d');
     this.gl = this.canvas.getContext('webgl');
     if (!this.gl) {
         tma.log('WebGL: webgl is not supported. Try experimental-webgl...');
@@ -290,6 +291,9 @@ Tma3DScreen.prototype.createFrameBuffer = function (width, height) {
             gl.bindTexture(gl.TEXTURE_2D, this.texture);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            // FIXME: Should be linear if it does not affect performance.
+            //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(
                     gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(
@@ -340,13 +344,36 @@ Tma3DScreen.prototype.createImage = function (width, height, data) {
  * @return a new ImageData object
  */
 Tma3DScreen.prototype.convertImage = function (image) {
-    if (this.context.canvas.width < image.width)
-        this.context.canvas.width = image.width;
-    if (this.context.canvas.height < image.height)
-        this.context.canvas.height = image.height;
+    this.canvas2d.width = image.width;
+    this.canvas2d.height = image.height;
     this.context.drawImage(image, 0, 0);
     var src = this.context.getImageData(0, 0, image.width, image.height);
     return this.createImage(src.width, src.height, src.data);
+};
+
+/**
+ * Creates a texture buffer from string.
+ * @param text a text shown in the created texture
+ * @param font font information
+ */
+Tma3DScreen.prototype.createStringTexture = function (text, font) {
+    var fontname = font.size + 'px ' + font.name;
+    this.context.font = fontname;
+    var w = this.context.measureText(text).width;
+    var h = font.size * devicePixelRatio * 1.5; // FIXME: just in case.
+    this.canvas2d.width = w;
+    this.canvas2d.height = h;
+    // Other rendering contexts should be set after changing canvas size.
+    this.context.font = fontname;
+    this.context.fillStyle = font.background;
+    this.context.fillRect(0, 0, w, h);
+    this.context.fillStyle = font.foreground;
+    this.context.textAlign = 'center';
+    this.context.textBaseline = 'middle';
+    this.context.fillText(text, w / 2, h / 2);
+    var src = this.context.getImageData(0, 0, w, h);
+    var image = this.createImage(src.width, src.height, src.data);
+    return this.createTexture(image, true, Tma3DScreen.FILTER_LINEAR);
 };
 
 /**

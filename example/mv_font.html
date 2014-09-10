@@ -1,0 +1,65 @@
+<html>
+<head><title>Nicofarre test</title></head>
+<body>
+<script src="../tma.js"></script>
+<script src="mv_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  MajVj.setSetting('misc', 'sound', 'useMicrophone', false);
+  Promise.all([
+    MajVj.loadAllPlugins()
+  ]).then(function (resources) {
+    var r = 1;
+    var width = 1920 / r;
+    var height = 1080 / r;
+    vj = new MajVj(width, height, true);
+    var box = TmaModelPrimitives.createBox();
+    var stringTexture = vj.screen().createStringTexture(
+        '豊島（とよしま）Toyoshima', {
+          size: 128,
+          name: 'Comic Sans MS',
+          foreground: 'rgba(255, 255, 255, 255)',
+          background: 'rgba(0, 0, 0, 255)'
+        });
+    box.setTexture(stringTexture);
+    nico3d = vj.create('frame', 'nicofarre3d', {
+      draw: function (api) {
+        api.setAlphaMode(false);
+        vj.screen().setAlphaMode(true, vj.screen().gl.ONE, vj.screen().gl.ONE);
+        api.drawPrimitive(box, stringTexture.width, stringTexture.height, 1, [0, 0, -2500]);
+      }
+    });
+    var fbo = vj.screen().createFrameBuffer(width, height);
+    var fx = vj.create('effect', 'nicofarre');
+    fx.setController(controller);
+    vj.screen().setAlphaMode(false);
+    var c = 0;
+    vj.run(function (delta) {
+      c++;
+      if (0 == c % 40) {
+        c = 0;
+        tma.log('fps: ' + vj.fps());
+      }
+      if (emulate)
+        fbo.bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      vj.screen().setAlphaMode(true, vj.screen().gl.ONE, vj.screen().gl.ONE);
+      nico3d.draw(delta);
+      if (emulate) {
+        vj.screen().bind();
+        vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+        vj.screen().setAlphaMode(true, vj.screen().gl.ONE, vj.screen().gl.ONE);
+        fx.draw(delta, fbo.texture);
+      }
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      vj.onresize();
+      fx.onresize(vj.aspect());
+    };
+  }, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
