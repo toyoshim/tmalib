@@ -12,24 +12,14 @@ MajVj.frame.nicofarre3d = function (options) {
     this._clearCallback = options.clear;
     this._drawCallback = options.draw;
     this._modules = [];
-    if (options.module) {
-        var opt = options.options || {};
-        this._modules[0] =
-                new MajVj.frame.nicofarre3d.modules[options.module](opt);
-    } else if (options.modules) {
-        for (var i = 0; i < options.modules.length; ++i) {
-            var module = options.modules[i];
-            var opt = module.options || {};
-            this._modules[i] =
-                    new MajVj.frame.nicofarre3d.modules[module.name](opt);
-        }
-    }
     this._api = {
       clear: this._clear.bind(this),
       color: [1.0, 1.0, 1.0, 1.0],
+      createFont: this._createFont.bind(this),
       createTexture: this._screen.createTexture,
       delta: 0.0,
       drawBox: this._drawBox.bind(this),
+      drawCharacter: this._drawCharacter.bind(this),
       drawCube: this._drawCube.bind(this),
       drawLine: this._drawLine.bind(this),
       drawPrimitive: this._drawPrimitive.bind(this),
@@ -129,6 +119,26 @@ MajVj.frame.nicofarre3d = function (options) {
             [-1, -1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1]);
     this._box = TmaModelPrimitives.createBox();
     this._cube = TmaModelPrimitives.createCube();
+
+    if (options.init)
+      options.init(this._api);
+    if (options.module) {
+        var opt = options.options || {};
+        this._modules[0] =
+                new MajVj.frame.nicofarre3d.modules[options.module](opt);
+        if (this._modules[0].init)
+            this._modules[0].init(this._api);
+    } else if (options.modules) {
+        for (var i = 0; i < options.modules.length; ++i) {
+            var module = options.modules[i];
+            var opt = module.options || {};
+            this._modules[i] =
+                    new MajVj.frame.nicofarre3d.modules[module.name](opt);
+            if (this._modules[i].init)
+                this._modules[i].init(this._api);
+
+        }
+    }
 };
 
 // Sub modules that draw frames using nicofarre3d API.
@@ -251,7 +261,7 @@ MajVj.frame.nicofarre3d.prototype._clear = function (flag) {
  * @param w width
  * @param h height
  * @param p position in [x, y, z]
- * @param r rotation in [z, y, z] in radian (optional)
+ * @param r rotations in Array of [z, y, z] in radian (optional)
  * @param texture texture (optional)
  */
 MajVj.frame.nicofarre3d.prototype._drawBox = function (w, h, p, r, texture) {
@@ -260,12 +270,30 @@ MajVj.frame.nicofarre3d.prototype._drawBox = function (w, h, p, r, texture) {
 };
 
 /**
+ * Draws a character to all displays.
+ * @param font a font set that is created by createFont API
+ * @param c a character to show
+ * @param w width scale (actual size depends on font size)
+ * @param h height scale (actual size depends on font size)
+ * @param p position in [x, y, z]
+ * @param r rotations in Array of [z, y, z] in radian (optional)
+ */
+MajVj.frame.nicofarre3d.prototype._drawCharacter =
+        function (font, c, w, h, p, r) {
+    var texture = font[c];
+    this._box.setTexture(texture);
+    var width = texture.width * w;
+    var height = texture.height * h;
+    return this._drawPrimitive(this._box, width, height, 1.0, p, r);
+};
+
+/**
  * Draws a cube to all displays.
  * @param w width
  * @param h height
  * @param d depth
  * @param p position in [x, y, z]
- * @param r rotation in [z, y, z] in radian (optional)
+ * @param r rotations in Array of [z, y, z] in radian (optional)
  */
 MajVj.frame.nicofarre3d.prototype._drawCube = function (w, h, d, p, r) {
     return this._drawPrimitive(this._cube, w, h, d, p, r);
@@ -397,4 +425,17 @@ MajVj.frame.nicofarre3d.prototype._fill = function (color) {
     this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
     this._fboBack.bind();
     this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+};
+
+/**
+ * Creates a font context.
+ * @param font font information for Tma3DScreen.prototype.createStringTexture()
+ * @param text a string that contains characters
+ */
+MajVj.frame.nicofarre3d.prototype._createFont = function (font, text) {
+    var result = {};
+    // FIXME: Support surrogate code pairs
+    for (var i = 0; i < text.length; ++i)
+        result[text[i]] = this._screen.createStringTexture(text[i], font);
+    return result;
 };
