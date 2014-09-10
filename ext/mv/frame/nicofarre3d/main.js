@@ -120,23 +120,20 @@ MajVj.frame.nicofarre3d = function (options) {
     this._box = TmaModelPrimitives.createBox();
     this._cube = TmaModelPrimitives.createCube();
 
-    if (options.init)
-      options.init(this._api);
     if (options.module) {
         var opt = options.options || {};
+        opt.screen = this._screen;
+        opt.api = this._api;
         this._modules[0] =
                 new MajVj.frame.nicofarre3d.modules[options.module](opt);
-        if (this._modules[0].init)
-            this._modules[0].init(this._api);
     } else if (options.modules) {
         for (var i = 0; i < options.modules.length; ++i) {
             var module = options.modules[i];
             var opt = module.options || {};
+            opt.screen = this._screen;
+            opt.api = this._api;
             this._modules[i] =
                     new MajVj.frame.nicofarre3d.modules[module.name](opt);
-            if (this._modules[i].init)
-                this._modules[i].init(this._api);
-
         }
     }
 };
@@ -176,7 +173,8 @@ MajVj.frame.nicofarre3d.load = function () {
                 MajVj.loadScript('frame', name, 'beams.js'),
                 MajVj.loadScript('frame', name, 'train.js'),
                 MajVj.loadScript('frame', name, 'lines.js'),
-                MajVj.loadScript('frame', name, 'harrier.js')
+                MajVj.loadScript('frame', name, 'harrier.js'),
+                MajVj.loadScript('frame', name, 'roll.js')
         ]).then(function (results) {
             MajVj.frame.nicofarre3d._vScreenShader = results[0];
             MajVj.frame.nicofarre3d._fScreenShader = results[1];

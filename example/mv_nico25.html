@@ -8,7 +8,7 @@ tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
   Promise.all([
     MajVj.loadAllPlugins()
-  ]).then(function (resources) {
+  ]).then(_(function () {
     var r = 1;
     var width = 1920 / r;
     var height = 1080 / r;
@@ -16,6 +16,8 @@ tma.onload = function () {
     var font = null;
     t = 0;
     nico3d = vj.create('frame', 'nicofarre3d', {
+      module: 'roll'
+      /*
       init: function (api) {
         font = api.createFont({
           size: 128,
@@ -42,6 +44,7 @@ tma.onload = function () {
         if (t != 500)
           t++;
       }
+      */
     });
     var fbo = vj.screen().createFrameBuffer(width, height);
     var fx = vj.create('effect', 'nicofarre');
@@ -70,7 +73,7 @@ tma.onload = function () {
       vj.onresize();
       fx.onresize(vj.aspect());
     };
-  }, function (e) { console.log('plugin load error: ' + e); });
+  }), function (e) { console.log('plugin load error: ' + e); });
 };
 </script>
 </body>
