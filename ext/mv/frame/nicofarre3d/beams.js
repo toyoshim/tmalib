@@ -140,7 +140,7 @@ MajVj.frame.nicofarre3d.modules.beams.prototype.draw = function (api) {
         for (var i = 0; i < emit; ++i)
             this._container.add(this._size, this._speed, this._dir);
     }
-    this._container.update();
+    this._container.update(api.delta);
 
     var n = Math.min(this._maxParticles, this._container.length);
     var vertices = this._model.getVerticesBuffer(api.screen);
