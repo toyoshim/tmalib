@@ -1,0 +1,83 @@
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - effect plugin - tuning -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.effect.tuning = function (options) {
+    this._screen = options.screen;
+    this._width = options.width;
+    this._height = options.height;
+    this._aspect = options.aspect;
+    this._controller = options.controller;
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.effect.tuning._vertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.effect.tuning._fragmentShader));
+    this._noEffect = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.effect.tuning._vertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.effect.tuning._noEffectFragmentShader));
+    this._coords = this._screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
+};
+
+// Shader programs.
+MajVj.effect.tuning._vertexShader = null;
+MajVj.effect.tuning._fragmentShader = null;
+MajVj.effect.tuning._noEffectFragmentShader = null;
+
+/**
+ * Loads resources asynchronously.
+ */
+MajVj.effect.tuning.load = function () {
+    return new Promise(function (resolve, reject) {
+        Promise.all([
+            MajVj.loadShader('effect', 'tuning', 'shaders.html', 'vertex'),
+            MajVj.loadShader('effect', 'tuning', 'shaders.html', 'fragment'),
+            MajVj.loadShader('effect', 'tuning', 'shaders.html',
+                    'noEffectFragment')
+        ]).then(function (shaders) {
+            MajVj.effect.tuning._vertexShader = shaders[0];
+            MajVj.effect.tuning._fragmentShader = shaders[1];
+            MajVj.effect.tuning._noEffectFragmentShader = shaders[2];
+            resolve();
+        }, function () { reject('tuning.load fails'); });
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.effect.tuning.prototype.onresize = function (aspect) {
+};
+
+/**
+ * Draws a frame.
+ * @param delta delta time from the last rendering
+ * @param texture texture data
+ */
+MajVj.effect.tuning.prototype.draw = function (delta, texture) {
+    var t = 0.0;
+    if (this._controller && this._controller.volume)
+        t = this._controller.volume[0];
+    if (volume != 0.0) {
+        this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
+        this._program.setTexture('uTexture', texture);
+        this._program.setUniformVector('uT', [t]);
+        this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+    } else {
+        this._noEffect.setAttributeArray('aCoord', this._coords, 0, 2, 0);
+        this._noEffect.setTexture('uTexture', texture);
+        this._noEffect.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+    }
+};
+
+/**
+ * Sets a controller.
+ * @param controller a controller object
+ */
+MajVj.effect.tuning.prototype.setController = function (controller) {
+    this._controller = controller;
+};
