@@ -103,7 +103,7 @@ MajVj.frame.sandbox.load = function () {
             MajVj.frame.sandbox._fragmentShaders['18142.0'] = results[34];
             MajVj.frame.sandbox._fragmentShaders['17945.0'] = results[35];
             resolve();
-        }, function (error) { console.log(error); });
+        }, function (error) { tma.log(error); });
     });
 };
 

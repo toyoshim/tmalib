@@ -36,7 +36,7 @@ MajVj.frame.crlogo = function (options) {
 MajVj.frame.crlogo._createLogo = function (path) {
     return new Promise(function (resolve, reject) {
         MajVj.loadImage('frame', 'crlogo', path).then(function (image) {
-            console.log('generating ' + image.width + 'x' + image.height +
+            tma.log('generating ' + image.width + 'x' + image.height +
                     ' particles from ' + path);
             var canvas = document.createElement('canvas');
             canvas.width = image.width;
@@ -363,7 +363,7 @@ MajVj.frame.crlogo.ps.prototype.autoMorph = function (force) {
 
 MajVj.frame.crlogo.ps.prototype.morph = function (src, dst, speed) {
     if (src.length != dst.length) {
-        console.log('image size is different');
+        tma.log('image size is different');
         return;
     }
     this._morphSrc = src;

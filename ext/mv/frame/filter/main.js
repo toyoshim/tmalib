@@ -66,7 +66,7 @@ MajVj.frame.filter.load = function () {
             MajVj.frame.filter._vTextureShader = results[2];
             MajVj.frame.filter._fTextureShader = results[3];
             resolve();
-        }, function (error) { console.log(error); });
+        }, function (error) { tma.log(error); });
     });
 };
 
@@ -128,7 +128,7 @@ MajVj.frame.filter.prototype.setTexture = function (texture) {
             this._texture = this._screen.createTexture(
                     image, true, Tma3DScreen.FILTER_LINEAR);
             this._resetCoords();
-        }.bind(this), function (e) { console.log(e); });
+        }.bind(this), function (e) { tma.log(e); });
     }
 };
 

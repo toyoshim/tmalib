@@ -67,7 +67,7 @@ MajVj.misc.sound.prototype.fetch = function (url, play) {
                 if (this._play)
                     this.play();
                 resolve(buffer);
-            }.bind(this), function (e) { console.log(e); });
+            }.bind(this), function (e) { tma.log(e); });
         }.bind(this), reject);
     }.bind(this));
 };

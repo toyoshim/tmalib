@@ -53,7 +53,7 @@ MajVj.frame.specticle.load = function () {
             MajVj.frame.specticle._vertexShader = results[0];
             MajVj.frame.specticle._fragmentShader = results[1];
             resolve();
-        }, function (error) { console.log(error); });
+        }, function (error) { tma.log(error); });
     });
 };
 

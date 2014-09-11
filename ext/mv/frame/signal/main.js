@@ -37,7 +37,7 @@ MajVj.frame.signal.load = function () {
             MajVj.frame.signal._vertexShader = results[0];
             MajVj.frame.signal._fragmentShader = results[1];
             resolve();
-        }, function (error) { console.log(error); });
+        }, function (error) { tma.log(error); });
     });
 };
 

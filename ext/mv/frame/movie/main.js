@@ -40,7 +40,7 @@ MajVj.frame.movie.load = function () {
             MajVj.frame.movie._vertexShader = results[0];
             MajVj.frame.movie._fragmentShader = results[1];
             resolve();
-        }, function (error) { console.log(error); });
+        }, function (error) { tma.log(error); });
     });
 };
 
@@ -53,7 +53,7 @@ MajVj.frame.movie.prototype.play = function (url) {
     return new Promise(function (resolve, reject) {
         MajVj.loadMovieFrom(url).then(function (video) {
             this._video = video;
-            console.log('video: ' + video.videoWidth + 'x' + video.videoHeight);
+            tma.log('video: ' + video.videoWidth + 'x' + video.videoHeight);
             var aspect = video.videoWidth / video.videoHeight;
             if (this._aspect > aspect)
                 this._zoom = this._aspect / aspect;
@@ -65,7 +65,7 @@ MajVj.frame.movie.prototype.play = function (url) {
               video.play();
             });
             resolve();
-        }.bind(this), function (error) { console.log(error); });
+        }.bind(this), function (error) { tma.log(error); });
     }.bind(this));
 };
 

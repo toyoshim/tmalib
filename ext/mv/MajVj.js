@@ -38,7 +38,7 @@ MajVj.prototype.onresize = function () {
     this._screen.canvas.style.height = window.innerHeight + 'px';
     this._aspect =
             this._screen.canvas.clientWidth / this._screen.canvas.clientHeight;
-    console.log('resize: ' + this._screen.canvas.clientWidth + 'x' +
+    tma.log('resize: ' + this._screen.canvas.clientWidth + 'x' +
             this._screen.canvas.clientHeight);
 };
 
@@ -51,7 +51,7 @@ MajVj.prototype.onresize = function () {
  */
 MajVj.prototype.create = function (type, name, options) {
     if (!MajVj[type] || !MajVj[type][name]) {
-        console.error('unknown plugin: ' + type + '/' + name);
+        tma.error('unknown plugin: ' + type + '/' + name);
         return null;
     }
     var opt = options || {};

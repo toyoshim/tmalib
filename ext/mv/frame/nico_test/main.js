@@ -145,7 +145,7 @@ MajVj.frame.nico_test.prototype.draw = function (delta) {
         this._controller.volume[2]) {
         this._az = 0;
         this._z += this._controller.volume[2];
-        console.log(this._z);
+        uma.log(this._z);
     }
     this._z += this._az;
     if (this._z < 0)
