@@ -95,9 +95,10 @@ MajVj.frame.nicofarre3d.modules.beams.Particle.prototype.initialize =
  */
 MajVj.frame.nicofarre3d.modules.beams.Particle.prototype.update =
         function (delta) {
-    this.x += this.vx;
-    this.y += this.vy;
-    this.z += this.vz;
+    var step = delta / 17;
+    this.x += this.vx * step;
+    this.y += this.vy * step;
+    this.z += this.vz * step;
     var ysize = this.size / 10;
     if ((this.x > this.size && this.vx > 0) ||
             (this.x < -this.size && this.vx < 0))
