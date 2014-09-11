@@ -14,18 +14,12 @@ MajVj.effect.tuning = function (options) {
                     MajVj.effect.tuning._vertexShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.effect.tuning._fragmentShader));
-    this._noEffect = this._screen.createProgram(
-            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.effect.tuning._vertexShader),
-            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
-                    MajVj.effect.tuning._noEffectFragmentShader));
     this._coords = this._screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
 };
 
 // Shader programs.
 MajVj.effect.tuning._vertexShader = null;
 MajVj.effect.tuning._fragmentShader = null;
-MajVj.effect.tuning._noEffectFragmentShader = null;
 
 /**
  * Loads resources asynchronously.
@@ -34,13 +28,10 @@ MajVj.effect.tuning.load = function () {
     return new Promise(function (resolve, reject) {
         Promise.all([
             MajVj.loadShader('effect', 'tuning', 'shaders.html', 'vertex'),
-            MajVj.loadShader('effect', 'tuning', 'shaders.html', 'fragment'),
-            MajVj.loadShader('effect', 'tuning', 'shaders.html',
-                    'noEffectFragment')
+            MajVj.loadShader('effect', 'tuning', 'shaders.html', 'fragment')
         ]).then(function (shaders) {
             MajVj.effect.tuning._vertexShader = shaders[0];
             MajVj.effect.tuning._fragmentShader = shaders[1];
-            MajVj.effect.tuning._noEffectFragmentShader = shaders[2];
             resolve();
         }, function () { reject('tuning.load fails'); });
     });
@@ -62,16 +53,10 @@ MajVj.effect.tuning.prototype.draw = function (delta, texture) {
     var t = 0.0;
     if (this._controller && this._controller.volume)
         t = this._controller.volume[0];
-    if (volume != 0.0) {
-        this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
-        this._program.setTexture('uTexture', texture);
-        this._program.setUniformVector('uT', [t]);
-        this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
-    } else {
-        this._noEffect.setAttributeArray('aCoord', this._coords, 0, 2, 0);
-        this._noEffect.setTexture('uTexture', texture);
-        this._noEffect.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
-    }
+    this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
+    this._program.setTexture('uTexture', texture);
+    this._program.setUniformVector('uT', [t]);
+    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
 
 /**

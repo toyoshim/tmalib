@@ -21,19 +21,10 @@ varying vec2 vCoord;
 void main() {
     float x = vCoord.x - mod(vCoord.x, 0.005);
     float y = vCoord.y - mod(vCoord.y, 0.005);
+    vec4 color = texture2D(uTexture, vCoord);
     color += texture2D(uTexture, vec2(x, y)) * 0.3;
     float a = sin((y * 4096.0 - x * 57.3) * uT) * sin((y * 5963.0 + x * 3.3) * uT) * 0.8;
     gl_FragColor = color + vec4(a, a, a, 0.0);
-}
-</script>
-
-<script id='noEffectFragment' type='x-shader/x-fragment'>
-precision mediump float;
-uniform sampler2D uTexture;
-varying vec2 vCoord;
-
-void main() {
-    gl_FragColor = texture2D(uTexture, vCoord);
 }
 </script>
 
