@@ -61,6 +61,10 @@ MajVj.prototype.create = function (type, name, options) {
     opt.height = opt.height || this._height;  // offscreen height
     // screen aspect / offscreen aspect
     opt.aspect = opt.aspect || this.aspect();
+    opt.controller = opt.controller || {
+      volume: [0.0, 0.0, 0.0, 0.0],
+      sound: { fftDb: [] }
+    };
     return new MajVj[type][name](opt);
 };
 
@@ -204,10 +208,16 @@ MajVj.loadAllPlugins = function () {
 MajVj.loadPlugin = function (type, name) {
     return new Promise(function (resolve, reject) {
         if (MajVj[type][name]) {
+            // The specified plugin is already loaded.
             resolve();
             return;
         }
         MajVj.loadScript(type, name, 'main.js').then(function () {
+            if (!MajVj[type][name]) {
+                reject('MajVj.' + type + '.' + name + ' is not defined.');
+            }
+            if (!MajVj[type][name].load)
+                resolve();
             MajVj[type][name].load().then(function () {
                 resolve();
             }, function (e) { reject(e); });
@@ -293,4 +303,5 @@ MajVj.loadMovie = function (type, name, path) {
 MajVj.effect = {};
 MajVj.frame = {};
 MajVj.misc = {};
+MajVj.scene = {};
 MajVj._settings = {};

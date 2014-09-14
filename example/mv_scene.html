@@ -1,0 +1,83 @@
+<html>
+<head><title>MajVj scene test</title></head>
+<body>
+Select scenes: <select>
+  <option value="waypoints">Waypoints</options>
+  <option value="church">Church</options>
+  <option value="dreamcube">Cube</options>
+  <option value="lines">3D Line Art</options>
+  <option value="miku">Miku</options>
+  <option value="computerbrain">Computer</options>
+  <option value="saiyaan">Saiyaan</options>
+  <option value="roll">End Roll</options>
+  <option value="perfume1mm">Perfume - 1mm</options>
+  <option value="noop">Black</options>
+  <option value="white">White</options>
+</select>
+<br>
+<div>[x]: Nicofarre emulation ON/OFF</div>
+<div>[h] / [l]: Turn Left / Right</div>
+<div>[j] / [k]: Go Back / Forward</div>
+<script src="../tma.js"></script>
+<script src="mv_common.js"></script>
+<script>
+document.querySelector('select').addEventListener('change', function (e) {
+  scene = vj.create('scene', e.target.value);
+});
+var vj;
+var scene;
+var name = 'waypoints';
+var main = function () {
+  var r = 2;
+  var width = 1920 / r;
+  var height = 1080 / r;
+  vj = new MajVj(width, height, false);
+  scene = vj.create('scene', name);
+  var fbo = vj.screen().createFrameBuffer(width, height);
+  var fx = vj.create('effect', 'nicofarre');
+  fx.setController(controller);
+  vj.run(function (delta) {
+    if (emulate)
+      fbo.bind();
+    vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+    if (scene)
+      scene.draw(delta);
+    if (emulate) {
+      vj.screen().bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      fx.draw(delta, fbo.texture);
+    }
+    vj.screen().flush();
+  });
+  window.onresize = function () {
+    vj.onresize();
+    fx.onresize(vj.aspect());
+  };
+};
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  MajVj.loadAllPlugins().then(function () {
+    Promise.all([
+      MajVj.loadPlugin('scene', 'waypoints'),
+      MajVj.loadPlugin('scene', 'church'),
+      MajVj.loadPlugin('scene', 'dreamcube'),
+      MajVj.loadPlugin('scene', 'lines'),
+      MajVj.loadPlugin('scene', 'miku'),
+      MajVj.loadPlugin('scene', 'computerbrain'),
+      MajVj.loadPlugin('scene', 'saiyaan'),
+      MajVj.loadPlugin('scene', 'roll'),
+      MajVj.loadPlugin('scene', 'perfume1mm'),
+      MajVj.loadPlugin('scene', 'noop'),
+      MajVj.loadPlugin('scene', 'white')
+    ]).then(function () {
+      try {
+        main();
+      } catch (e) { console.error(e.stack); }
+    }, function (e) { console.error(e.stack); });
+  }, function (e) { console.err(e.stack); });
+}
+
+</script>
+</body>
+</html>
