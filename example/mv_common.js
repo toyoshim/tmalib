@@ -39,18 +39,27 @@ function nanoKONTROL2 (e) {
 }
 
 
-navigator.requestMIDIAccess().then(function (a) {
-  var inputs = a.inputs();
-  for (var i = 0; i < inputs.length; ++i) {
-    if (inputs[i].name == 'nanoKONTROL2') {
-      inputs[i].onmidimessage = nanoKONTROL2;
-      console.log(inputs[i].name + ' found.');
-      window.nano2 = inputs[i];  // make it alive
+if (navigator['requestMIDIAccess']) {
+  navigator.requestMIDIAccess().then(function (a) {
+    var inputs = [];
+    if (typeof a.inputs === "function") {
+      inputs = a.inputs();
     } else {
-      console.log(inputs[i]);
+      var it = a.inputs.values();
+      for (var o = it.next(); !o.done; o = it.next())
+        inputs.push(o.value);
     }
-  }
-}, function (e) { console.log(e); });
+    for (var i = 0; i < inputs.length; ++i) {
+      if (inputs[i].name == 'nanoKONTROL2') {
+        inputs[i].onmidimessage = nanoKONTROL2;
+        console.log(inputs[i].name + ' found.');
+        window.nano2 = inputs[i];  // make it alive
+      } else {
+        console.log(inputs[i]);
+      }
+    }
+  }, function (e) { console.log(e); });
+}
 
 
 window.addEventListener('message', function (e) {
