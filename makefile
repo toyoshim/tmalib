@@ -26,5 +26,5 @@ build:
 		src/polymer_head.js \
 		dist/tmalib.js \
 		src/polymer_tail.js \
-	| tee polymer/tmalib.js \
-	| ./bower_components/uglify-js/bin/uglifyjs -nc -o polymer/tmalib.min.js
+	| tee polymer/tma-core.js \
+	| ./bower_components/uglify-js/bin/uglifyjs -nc -o polymer/tma-core.min.js

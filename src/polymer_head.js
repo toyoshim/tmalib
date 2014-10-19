@@ -1,2 +1,2 @@
-Polymer('tmalib', {
-  use: function () {
+Polymer('tma-core', {
+  ready: function () {

@@ -1,5 +1,5 @@
-Polymer('tmalib', {
-  use: function () {
+Polymer('tma-core', {
+  ready: function () {
 /**
  * T'MediaArt library for JavaScript.
  * - header script for unified version.
