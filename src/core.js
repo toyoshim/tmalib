@@ -163,7 +163,7 @@ tma._boot = function () {
   ]).then(function () {
     tma.ready = true;
     Promise.all(tma.extlibs.map(function (src) {
-      return tma.load(src);
+      return tma.load(tma.base + src);
     })).then(function () {
       if (tma.onload)
         tma.onload();
