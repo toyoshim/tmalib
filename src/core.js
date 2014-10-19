@@ -7,18 +7,11 @@
  * Takes a log at a each level.
  * @param arguments Variable number of arguments to log
  */
-tma.log = function () {
-    console.log.apply(console, arguments);
-};
-tma.info = function () {
-    console.info.apply(console, arguments);
-};
-tma.warn = function () {
-    console.warn.apply(console, arguments);
-};
-tma.error = function () {
-    console.error.apply(console, arguments);
-};
+tma.log = console.log.bind(console);
+tma.info = console.info.bind(console);
+tma.warn = console.warn.bind(console);
+tma.error = console.error.bind(console);
+
 // Error callback.
 tma.ecb = function (e) {
   console.error(e.stack);
