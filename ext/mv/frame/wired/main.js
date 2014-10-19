@@ -95,7 +95,7 @@ MajVj.frame.wired.prototype.onresize = function (aspect) {
  */
 MajVj.frame.wired.prototype.draw = function (delta) {
     var rotate = 0.002 * delta;
-    if (this._controller)
+    if (this._controller && this._controller.slider)
         rotate = rotate * (0.5 + this._controller.slider * 1.5);
     this._rotate += rotate;
     mat4.rotate(this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
