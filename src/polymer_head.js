@@ -1,0 +1,2 @@
+Polymer('tmalib', {
+  use: function () {
