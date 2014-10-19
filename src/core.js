@@ -100,7 +100,6 @@ tma.fetch = function (url, type) {
 };
 
 /**
- * TODO: Use fetch with resopnseType 'document'.
  * Loads a shader program from external html by id.
  * @param src an external html URL
  * @param id script ID to obtain the shader program
@@ -108,29 +107,10 @@ tma.fetch = function (url, type) {
  */
 tma.loadShader = function (src, id) {
   return new Promise(function (resolve, reject) {
-    var frames = document.getElementsByTagName('iframe');
-    for (var i = 0; i < frames.length; ++i) {
-      if (frames[i].src == src || frames[i]._src == src) {
-        if (frames[i]._load) {
-          resolve(frames[i].contentDocument.getElementById(id).text);
-        } else {
-          var callback = frames[i].onload;
-          frames[i].onload = function () {
-            callback.apply(this);
-            resolve(frames[i].contentDocument.getElementById(id).text);
-          };
-        }
-        return;
-      }
-    }
-    var frame = document.createElement('iframe');
-    frame.onload = function () {
-      this._load = true;
-      resolve(this.contentDocument.getElementById(id).text);
-    };
-    frame.src = src;
-    frame._src = src;
-    document.head.appendChild(frame);
+    tma.fetch(src, 'document').then(function (dom) {
+      console.log(dom);
+      resolve(dom.getElementById(id).text);
+    }, tma.ecb);
   });
 };
 
