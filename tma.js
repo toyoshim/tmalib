@@ -179,15 +179,15 @@ var global = window;
         }
     }
     var libs = [
-        'TmaScreen.js',
-        'Tma2DScreen.js',
-        'Tma3DScreen.js',
-        'TmaParticle.js',
-        'TmaSequencer.js',
-        'TmaMotionBvh.js',
-        'TmaModelPly.js',
-        'TmaModelPrimitives.js',
-        'TmaModelPs2Ico.js'
+        'src/TmaScreen.js',
+        'src/Tma2DScreen.js',
+        'src/Tma3DScreen.js',
+        'src/TmaParticle.js',
+        'src/TmaSequencer.js',
+        'src/TmaMotionBvh.js',
+        'src/TmaModelPly.js',
+        'src/TmaModelPrimitives.js',
+        'src/TmaModelPs2Ico.js'
     ];
     tma._load(libs, function () {
         tma.ready = true;
