@@ -17,8 +17,9 @@ tma.ecb = function (e) {
   console.error(e.stack);
 };
 
-// Holds loading and loaded JavaScript libraries.
+// Holds loading and loaded JavaScript libraries, and resources.
 tma._libraries = {};
+tma._resources = {};
 
 /**
  * Returns library base path.
@@ -66,33 +67,63 @@ tma.load = function (src, callback) {
     });
   } else {
     // The same library is on loading.
-    var promise = new Promise(function (resolve, reject) {
+    return new Promise(function (resolve, reject) {
       var callbacks = tma._libraries[src].callbacks;
       callbacks.push(resolve);
       if (callback)
         callbacks.push(callback);
     });
-    return promise;
   }
 };
 
 /**
- * TODO: Add a cache capability.
  * Fetches a data via XMLHttpRequest.
  * @param url a url to fetch a data
  * @param type a response type in string (optional: 'arraybuffer' is default)
+ * @param cache flag to use a cache for the result (optional: false by default)
  * @return a Primise
  */
-tma.fetch = function (url, type) {
-  return new Promise(function(resolve, reject) {
+tma.fetch = function (url, type, cache) {
+  if (!type)
+    type = 'arraybuffer';
+  var key = type + ':' + url;
+  if (cache && tma._resources[key]) {
+    if (tma._resources[key].ready) {
+      // The same resource is already loaded.
+      return new Promise(function (resolve, reject) {
+        resolve(tma_resources[key].resource);
+      });
+    } else {
+      // The same resource is on loading.
+      return new Promise(function (resolve, reject) {
+        tma._resources[key].callbacks.push(resolve);
+      });
+    }
+  }
+  return new Promise(function (resolve, reject) {
+    if (cache) {
+      tma._resources[key] = {
+        callbacks: [],
+        ready: false,
+        resource: undefined
+      };
+    }
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
-    xhr.responseType = type || 'arraybuffer';
+    xhr.responseType = type;
     xhr.onload = function () {
-      if (!this.response)
-        reject();
-      else
+      if (!this.response) {
+        reject(this);
+      } else {
         resolve(this.response);
+        if (cache) {
+          var state = tma._resources[key];
+          state.ready = true;
+          state.resource = this.response;
+          for (var i = 0; i < state.callbacks.length; ++i)
+            state.callbacks[i](this.response);
+        }
+      }
       this.onload = null;
     }.bind(xhr);
     xhr.send();
@@ -107,8 +138,7 @@ tma.fetch = function (url, type) {
  */
 tma.loadShader = function (src, id) {
   return new Promise(function (resolve, reject) {
-    tma.fetch(src, 'document').then(function (dom) {
-      console.log(dom);
+    tma.fetch(src, 'document', true).then(function (dom) {
       resolve(dom.getElementById(id).text);
     }, tma.ecb);
   });
