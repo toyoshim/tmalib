@@ -19,7 +19,7 @@ tma.onload = function () {
 		});
 		window.onresize = function () {
 			vj.onresize();
-			var ratio = vj.ratio();
+			var ratio = vj.aspect();
 			effect.onresize(ratio);
 			wired.onresize(ratio);
 		};

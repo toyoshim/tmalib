@@ -35,7 +35,7 @@ tma.onload = function () {
 			wired.onresize(ratio);
 			effect.onresize(ratio);
 		};
-	}, function (e) { console.log('plugin load error: ' + e); });
+	}, function (e) { console.error('plugin load error: ' + e.stack); });
 };
 </script>
 </body>
