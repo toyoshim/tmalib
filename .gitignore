@@ -1,4 +1,9 @@
 .idea
+bower_components
 test/data
+test/*_nr.html
 example/data
+example/test
+example/*_nr.html
 *~
+*.

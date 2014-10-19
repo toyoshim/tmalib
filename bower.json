@@ -1,0 +1,22 @@
+{
+  "name": "tmalib",
+  "version": "0.1.0",
+  "authors": [
+    "Takashi Toyoshima <toyoshim@gmail.com>"
+  ],
+  "description": "T'MediaArt library with MajVj extension",
+  "main": "tma.js",
+  "license": "New BSD",
+  "homepage": "https://github.com/toyoshim/tmalib",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "mozapp",
+    "example"
+  ],
+  "devDependencies": {
+    "gl-matrix": "~1.3.7"
+  }
+}
