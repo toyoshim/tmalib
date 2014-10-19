@@ -1,9 +1,10 @@
+*.
+*~
 .idea
 bower_components
-test/data
-test/*_nr.html
+example/*_nr.html
 example/data
 example/test
-example/*_nr.html
-*~
-*.
+ext/gl-matrix.js
+test/*_nr.html
+test/data
