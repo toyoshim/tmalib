@@ -3,8 +3,6 @@
  * - core script - the second boot loader.
  */
 
-var exports = {};
-
 /**
  * Takes a log at a each level.
  * @param arguments Variable number of arguments to log
@@ -28,6 +26,14 @@ tma.ecb = function (e) {
 
 // Holds loading and loaded JavaScript libraries.
 tma._libraries = {};
+
+/**
+ * Returns library base path.
+ * @return string base path
+ */
+tma.basePath = function () {
+  return tma.base;
+};
 
 /**
  * Loads JavaScript library asynchronously.
@@ -131,7 +137,7 @@ tma.loadShader = function (src, id) {
     };
     frame.src = src;
     frame._src = src;
-    tma._head.appendChild(frame);
+    document.head.appendChild(frame);
   });
 };
 
