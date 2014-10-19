@@ -10,9 +10,10 @@
   * @author Takashi Toyoshima <toyoshim@gmail.com>
   * @param width offscreen width
   * @param height offscreen height
-  * @param fullscreen flag to decide if MajVj runs as a fullscreen app.
+  * @param fullscreen flag to decide if MajVj runs as a fullscreen app
+  * @param parent parent DOM node (optional)
   */
-function MajVj (width, height, fullscreen) {
+function MajVj (width, height, fullscreen, parent) {
     this._width = width;
     this._height = height;
     this._fullscreen = (fullscreen === undefined) ? true : fullscreen;
@@ -21,7 +22,7 @@ function MajVj (width, height, fullscreen) {
     this._screen = new TmaScreen(width, height, TmaScreen.MODE_3D);
     this._screen.setAlphaMode(
             true, this._screen.gl.SRC_ALPHA, this._screen.gl.ONE);
-    this._screen.attachTo(TmaScreen.BODY);
+    this._screen.attachTo(parent || TmaScreen.BODY);
     this._fps = new Array(60);
     this._fpsCount = 0;
     this._fpsAvg = 0.0;
