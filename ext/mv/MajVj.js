@@ -13,7 +13,7 @@
   * @param fullscreen flag to decide if MajVj runs as a fullscreen app
   * @param parent parent DOM node (optional)
   */
-function MajVj (width, height, fullscreen, parent) {
+var MajVj = function (width, height, fullscreen, parent) {
     this._width = width;
     this._height = height;
     this._fullscreen = (fullscreen === undefined) ? true : fullscreen;

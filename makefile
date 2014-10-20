@@ -1,8 +1,13 @@
 usage:
 	@echo 'Usage: make <target>'
 	@echo '<target>:'
+	@echo '    all'
 	@echo '    install-deps'
 	@echo '    build'
+
+all:
+	make install-deps
+	make build
 
 install-deps:
 	bower install
@@ -11,6 +16,7 @@ install-deps:
 build:
 	cat \
 		src/head.js \
+		src/core.js \
 		src/TmaScreen.js \
 		src/Tma2DScreen.js \
 		src/Tma3DScreen.js \
@@ -23,8 +29,15 @@ build:
 	| tee dist/tmalib.js \
 	| ./bower_components/uglify-js/bin/uglifyjs -nc -o dist/tmalib.min.js
 	cat \
-		src/polymer_head.js \
+		src/core_head.js \
 		dist/tmalib.js \
-		src/polymer_tail.js \
+		src/core_tail.js \
 	| tee polymer/tma-core.js \
 	| ./bower_components/uglify-js/bin/uglifyjs -nc -o polymer/tma-core.min.js
+	cat \
+		src/majvj_head.js \
+		bower_components/gl-matrix/gl-matrix.js \
+		ext/mv/MajVj.js \
+		src/majvj_tail.js \
+	| tee polymer/tma-majvj.js \
+	| ./bower_components/uglify-js/bin/uglifyjs -nc -o polymer/tma-majvj.min.js
