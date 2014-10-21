@@ -13,7 +13,7 @@ Polymer('majvj-suite', {
     var Tma2DScreen = _core.Tma2DScreen;
     var Tma3DScreen = _core.Tma3DScreen;
     var TmaModelPrimitives = _core.TmaModelPrimitives;
-    var TmaParticles = _core.TmaParticles;
+    var TmaParticle = _core.TmaParticle;
     var TmaSequencer = _core.TmaSequencer;
     var TmaMotionBvh = _core.TmaMotionBvh;
     var TmaModelPly = _core.TmaModelPly;

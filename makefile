@@ -55,7 +55,7 @@ build-tma-majvj:
 build-majvj-suite:
 	cat \
 		src/suite_head.js \
-		ext/mv/frame/wired/main.js \
+		`find ext/mv -name main.js` \
 		src/suite_tail.js \
 	| tee polymer/majvj-suite.js \
 	| ./bower_components/uglify-js/bin/uglifyjs -nc -o polymer/majvj-suite.min.js
