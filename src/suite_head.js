@@ -1,4 +1,10 @@
 Polymer('majvj-suite', {
+  width: 0,
+  height: 0,
+  type: 'frame',
+  name: undefined,
+  options: undefined,
+  base: '',
   ready: function () {
     var _majvj = this.$.majvj;
     var _core = _majvj.core;

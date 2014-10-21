@@ -29,9 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <link rel="import" href="tma-majvj.html">
 
-<polymer-element name="majvj-suite">
+<polymer-element name="majvj-suite" attributes="width height type name options base">
   <template>
     <tma-majvj id="majvj"></tma-majvj>
+    <div id="main" style="width: {{width}}; height: {{height}}; border:0; padding: 0"></div>
   </template>
   <script type="text/javascript" src="majvj-suite.min.js"></script>
 </polymer>

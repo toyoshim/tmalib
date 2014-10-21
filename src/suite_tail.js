@@ -35,5 +35,21 @@
     this.setBase = function (base) {
       tma.base = base;
     };
+
+    if (this.name) {
+      this.setBase(this.base);
+      if (0 == this.width)
+        this.width = 480;
+      if (0 == this.height)
+        this.height = 270;
+      var vj = this.create(this.width, this.height, false, this.$.main);
+      this.loadPlugin(this.type, this.name).then(function () {
+        var frame = vj.create(this.type, this.name);
+        vj.run(function (delta) {
+          vj.screen().fillColor(0, 0, 0, 1);
+          frame.draw(delta);
+        });
+      }.bind(this), tma.ecb);
+    }
   }
 });
