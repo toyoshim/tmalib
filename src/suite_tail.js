@@ -25,12 +25,16 @@
         }, tma.ecb);
       });
     };
-    this.loadAllPlugin = function (base) {
+    this.loadAllPlugins = function (base) {
       if (base)
         tma.base = base;
-      return Promise.all([
-        this.loadPlugin('frame', 'wired')
-      ]);
+      var effects = Object.keys(MajVj.effect).map(function (name) {
+        return this.loadPlugin('effect', name);
+      }.bind(this));
+      var frames = Object.keys(MajVj.frame).map(function (name) {
+        return this.loadPlugin('frame', name);
+      }.bind(this));
+      return Promise.all(effects.concat(frames));
     };
     this.setBase = function (base) {
       tma.base = base;
@@ -42,8 +46,8 @@
         this.width = 240;
       if (0 == this.height)
         this.height = 135;
-      var vj = this.create(this.width, this.height, false, this.$.main);
-      this.loadPlugin(this.type, this.name).then(function () {
+      var main = function () {
+        var vj = this.create(this.width, this.height, false, this.$.main);
         var frame = vj.create(this.type, this.name);
         vj.run(function (delta) {
           vj.screen().fillColor(0, 0, 0, 1);
@@ -51,7 +55,14 @@
             frame.draw(delta);
           } catch (e) { tma.error(e.stack); }
         });
-      }.bind(this), tma.ecb);
+      }.bind(this);
+      if (this.type == 'scene') {
+        this.loadAllPlugins().then(function () {
+          this.loadPlugin(this.type, this.name).then(main, tma.ecb);
+        }.bind(this), tma.ecb);
+      } else {
+        this.loadPlugin(this.type, this.name).then(main, tma.ecb);
+      }
     }
   }
 });

@@ -26,6 +26,12 @@ Polymer('majvj-suite', {
     var mat3 = _majvj.mat3;
     var mat4 = _majvj.mat4;
     var quat4 = _majvj.quat4;
+    MajVj.loadScript = function (type, name, src) {
+      tma.log('all script should be preloaded to avoid name space pollution: ' +
+              'ignore MajVj.loadScript(' + type + ', ' + name + ', ' + src +
+              ');');
+      return new Promise(function (resolve, reject) { resolve() });
+    };
 /**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - effect plugin - tuning -
@@ -4781,6 +4787,891 @@ MajVj.frame.snow.ps.prototype.update = function () {
     this.image.setPixel(this.x|0, this.y|0, 0xff, 0xff, 0xff, 0xff);
     return true;
 };
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - frame plugin - nicofarre3d - harrier module
+ */
+MajVj.frame.nicofarre3d.modules.harrier = function (options) {
+  this._controller = options.controller;
+  this._zspeed = options.zspeed || 10.0;
+  this._xspeed = options.xspeed || 0.00;
+  this._zinterval = options.zinterval || 50.0;
+  this._xinterval = options.xinterval || 0.0;
+  this._alpha = options.alpha || 0.1;
+  this._color = options.color || [0.4, 0.4, 0.6];
+  this._ceil = options.ceil || true;
+  this._t = 0.0;
+};
+
+/**
+ * Clears screen.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.harrier.prototype.clear = function (api) {
+  api.setAlphaMode(true, api.gl.DST_COLOR, api.gl.ZERO);
+  api.fill([this._alpha, this._alpha, this._alpha, 1.0]);
+};
+
+/**
+ * Draws.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.harrier.prototype.draw = function (api) {
+  this._t += api.delta;
+  api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
+  api.color = [1.0, 1.0, 1.0, 1.0];
+  var s = 100000;
+  var l = 1000000;
+  var c = 0;
+  var t = this._t / 1000 * this._zspeed;
+  var y = 5000;
+  if (this._controller && this._controller.volume)
+    y *= (1 + this._controller.volume[0] * 10);
+  for (var z = -s; z < s; z += 10000) {
+    c = (1.0 + Math.sin(t + z / s * this._zinterval)) / 2.0;
+    api.color =
+        [this._color[0] * c, this._color[1] * c, this._color[2] * c, 1.0];
+    api.drawLine([-l, -y, z], [l, -y, z]);
+    if (this._ceil)
+      api.drawLine([-l, y, z], [l, y, z]);
+  }
+  t = this._t / 1000 * this._xspeed;
+  for (var x = -s; x < s; x += 10000) {
+    c = (1.0 + Math.sin(t)) / 2.0;
+    c = (1.0 + Math.sin(t + x / s * this._xinterval)) / 2.0;
+    api.color =
+        [this._color[0] * c, this._color[1] * c, this._color[2] * c, 1.0];
+    api.drawLine([x, -y, -l], [x, -y, l]);
+    if (this._ceil)
+      api.drawLine([x, y, -l], [x, y, l]);
+  }
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - frame plugin - nicofarre3d - train module
+ *  @param options options
+ */
+MajVj.frame.nicofarre3d.modules.train = function (options) {
+    this._container = new TmaParticle.Container(
+            MajVj.frame.nicofarre3d.modules.train.Particle);
+    this._period = options.period || 500;
+    this._controller = options.controller;
+    this._tick = 0;
+    this._nextTime = 0;
+    this._frontRails = [];
+    this._backRails = [];
+    this._houseR = 0;
+    this._houseL = 0;
+    this._offset = 0;
+    this._r = 0.0;
+    this._fly = 0.0;
+    for (var i = 0; i < 30; ++i) {
+        this._frontRails.push(this._newRail());
+        this._backRails.push(this._newRail());
+    }
+    this._box = TmaModelPrimitives.createCube();
+    this._box.setDrawMode(Tma3DScreen.MODE_LINE_LOOP);
+};
+
+/**
+ * Clears.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.train.prototype.clear = function (api) {
+    api.clear(api.gl.DEPTH_BUFFER_BIT);
+    api.setAlphaMode(true, api.gl.ONE, api.gl.SRC_ALPHA);
+    api.fill([0.0, 0.0, 0.0, 0.7]);
+};
+
+/**
+ * Draws.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
+    if (this._controller && this._controller.volume) {
+        this._r = this._controller.volume[0] - 0.5;
+        this._fly = 10000 * this._controller.volume[1];
+    }
+    api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
+
+    this._tick += api.delta;
+    while (this._tick >= this._nextTime) {
+        this._update();
+        this._nextTime += this._period;
+    }
+
+    var color = [0.1, 0.1, 0.1, 1.0];
+    api.color = color;
+    var z = -1000 + this._offset;
+    var x = 0.0;
+    var r = 0.0;
+    for (var i = 0; i < this._frontRails.length; ++i) {
+        var rail = this._frontRails[i];
+        api.drawBox(500, 200, [x, -500.0 - this._fly, z],
+                [-Math.PI / 2.0, r, 0.0]);
+        var xdiff = 250.0 * Math.cos(r);
+        var zdiff = 250.0 * Math.sin(r);
+        api.drawBox(800, 10, [x + xdiff, -450.0 - this._fly, z - zdiff],
+                [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
+        api.drawBox(800, 10, [x - xdiff, -450.0 - this._fly, z + zdiff],
+                [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
+        if (rail.houseR) {
+            api.color = rail.houseRC;
+            api.drawPrimitive(this._box,
+                    2000, rail.houseRH, rail.houseR,
+                    [x + xdiff * 20, -500.0 - this._fly, z - zdiff * 20],
+                    [0, -r, 0]);
+            api.color = color;
+
+        }
+        if (rail.houseL) {
+            api.color = rail.houseLC;
+            api.drawPrimitive(this._box,
+                    2000, rail.houseLH, rail.houseL,
+                    [x - xdiff * 20, -500.0 - this._fly, z + zdiff * 20],
+                    [0, -r, 0]);
+            api.color = color;
+        }
+        z -= 1000 * Math.cos(r);
+        x += 1000 * Math.sin(r);
+        r += rail.r;
+    }
+    z = 0 + this._offset;
+    x = 0.0;
+    r = 0.0;
+    for (i = this._backRails.length - 1; i >= 0; --i) {
+        var rail = this._backRails[i];
+        api.drawBox(500, 200, [x, -500.0 - this._fly, z],
+                [-Math.PI / 2.0, r, 0.0]);
+        var xdiff = 250.0 * Math.cos(r);
+        var zdiff = 250.0 * Math.sin(r);
+        api.drawBox(800, 10, [x + xdiff, -450.0 - this._fly, z - zdiff],
+                [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
+        api.drawBox(800, 10, [x - xdiff, -450.0 - this._fly, z + zdiff],
+                [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
+        if (rail.houseR) {
+            api.color = rail.houseRC;
+            api.drawPrimitive(this._box,
+                    2000, rail.houseRH, rail.houseR,
+                    [x + xdiff * 20, -500.0 - this._fly, z - zdiff * 20],
+                    [0, -r, 0]);
+            api.color = color;
+
+        }
+        if (rail.houseL) {
+            api.color = rail.houseLC;
+            api.drawPrimitive(this._box,
+                    2000, rail.houseLH, rail.houseL,
+                    [x - xdiff * 20, -500.0 - this._fly, z + zdiff * 20],
+                    [0, -r, 0]);
+            api.color = color;
+        }
+        z += 1000 * Math.cos(r);
+        x -= 1000 * Math.sin(r);
+        r -= rail.r;
+    }
+};
+
+MajVj.frame.nicofarre3d.modules.train.prototype._newRail = function () {
+    var houseR = 0;
+    var houseRH = 0;
+    if (this._houseR == 0) {
+        this._houseR = 2 + (Math.random() * 3)|0;
+        houseR = this._houseR * 1000;
+        houseRH = Math.random() * 5000;
+    } else {
+        this._houseR--;
+    }
+    var houseL = 0;
+    var houseLH = 0;
+    if (this._houseL == 0) {
+        this._houseL = 2 + (Math.random() * 3)|0;
+        houseL = this._houseL * 1000;
+        houseLH = Math.random() * 5000;
+    } else {
+        this._houseL--;
+    }
+    return {
+        r: this._r,
+        houseR: houseR,
+        houseRH: houseRH,
+        houseRC: [0.02 + Math.random() / 256,
+                  0.02 + Math.random() / 256,
+                  0.02 + Math.random() / 256, 1.0],
+        houseL: houseL,
+        houseLH: houseLH,
+        houseLC: [0.02 + Math.random() / 256,
+                  0.02 + Math.random() / 256,
+                  0.02 + Math.random() / 256, 1.0]
+    };
+};
+
+MajVj.frame.nicofarre3d.modules.train.prototype._update = function () {
+    this._offset += 250;
+    if (this._offset == 1000) {
+        this._offset = 0;
+        this._backRails.shift();
+        this._backRails.push(this._frontRails.shift());
+        this._frontRails.push(this._newRail());
+    }
+};
+
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - frame plugin - nicofarre3d - lines module
+ */
+MajVj.frame.nicofarre3d.modules.lines = function (options) {
+  this._rate = options.rate || 0.95;
+  this._lines = options.lines || 256;
+};
+
+/**
+ * Clears screen.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.lines.prototype.clear = function (api) {
+  api.setAlphaMode(true, api.gl.DST_COLOR, api.gl.ZERO);
+  api.fill([this._rate, this._rate, this._rate, 1.0]);
+};
+
+/**
+ * Draws.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.lines.prototype.draw = function (api) {
+  api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
+  for (var i = 0; i < this._lines; ++i) {
+    api.color = [Math.random(), Math.random(), Math.random(), Math.random()];
+    api.drawLine([this._p(), this._p(), this._p()],
+                 [this._p(), this._p(), this._p()]);
+  }
+};
+
+MajVj.frame.nicofarre3d.modules.lines.prototype._p = function (api) {
+  return (Math.random() - 0.5) * 10000;
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - frame plugin - nicofarre3d - waypoints module
+ */
+MajVj.frame.nicofarre3d.modules.waypoints = function (options) {
+    this._container = new TmaParticle.Container(
+            MajVj.frame.nicofarre3d.modules.waypoints.Particle);
+    this._waypoints = [];
+    this._size = options.size || 4096;
+    this._height = options.height || 2048;
+    this._gravity = options.gravity / 1000 || 0.002;
+    this._h = 0;
+    this._lastParticles = 0;
+    this._maxParticles = options.particles || 10000;
+    this._range = options.range || 100000;
+    this._emit = options.emit || 4;
+    var waypoints = options.waypoints || 32;
+    var wayspeed = options.wayspeed || 10;
+    for (var points = 0; points < waypoints; ++points) {
+        this._waypoints.push({
+            x: (Math.random() - 0.5) * 2.0 * this._size,
+            y: (Math.random() - 0.5) * 2.0 * this._height,
+            z: (Math.random() - 0.5) * 2.0 * this._size,
+            vx: (Math.random() * 2 - 1) * wayspeed,
+            vy: (Math.random() * 2 - 1) * wayspeed,
+            vz: (Math.random() * 2 - 1) * wayspeed
+        });
+    }
+    this._waypoints.push({ x: 0.0, y: 0.0, z: 0.0, vx: 0.0, vy: 0.0, vz: 0.0 });
+    this._model = TmaModelPrimitives.createPoints(
+            new Array(this._maxParticles * 3));
+};
+
+/**
+ * Particle prototype
+ *
+ * This prototype controls a particle.
+ */
+MajVj.frame.nicofarre3d.modules.waypoints.Particle = function () {
+    TmaParticle.apply(this, arguments);
+};
+
+// Inherits TmaParticle.
+MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype =
+        new TmaParticle(null, 0);
+MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.constructor =
+        MajVj.frame.nicofarre3d.modules.waypoints.Particle;
+
+/**
+ *
+ */
+MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.initialize =
+        function (h, waypoints, size, gravity, range) {
+    this.x = Math.random() * 1000;
+    this.y = Math.random() * 1000;
+    this.z = Math.random() * 1000;
+    this.ox = this.x;
+    this.oy = this.y;
+    this.oz = this.z;
+    var color = TmaScreen.HSV2RGB(h, 1 - Math.random() / 4, Math.random() / 2);
+    this.color = [color.r / 255, color.g / 255, color.b / 255, 1.0];
+    this.target = 0;
+    this.waypoints = waypoints;
+    this.size = size;
+    this.gravity = gravity;
+    this.range = range;
+};
+
+/**
+ *
+ */
+MajVj.frame.nicofarre3d.modules.waypoints.Particle.prototype.update =
+        function (delta) {
+    var waypoint = this.waypoints[this.target];
+    var dx = waypoint.x - this.x;
+    var dy = waypoint.y - this.y;
+    var dz = waypoint.z - this.z;
+    if (dx * dx + dy * dy + dz * dz < this.range) {
+        this.target++;
+        if (this.target == this.waypoints.length)
+            return false;
+        this.vx += Math.random() * 2 - 1;
+        this.vy += Math.random() * 2 - 1;
+        this.vz += Math.random() * 2 - 1;
+    }
+    this.vx += dx * this.gravity;
+    this.vy += dy * this.gravity;
+    this.vz += dz * this.gravity;
+    this.vx *= 0.97;
+    this.vy *= 0.97;
+    this.vz *= 0.97;
+    this.ox = this.x;
+    this.oy = this.y;
+    this.oz = this.z;
+    this.x += this.vx;
+    this.y += this.vy;
+    this.z += this.vz;
+    return true;
+};
+
+/**
+ * Clears screen.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.waypoints.prototype.clear = function (api) {
+  //api.color = [0.0, 0.0, 0.0, 1.0];
+  //api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
+  api.clear(api.gl.DEPTH_BUFFER_BIT);
+  api.setAlphaMode(true, api.gl.ONE, api.gl.SRC_ALPHA);
+  api.fill([0.0, 0.0, 0.0, 0.8]);
+};
+
+/**
+ * Draws.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.waypoints.prototype.draw = function (api) {
+    api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
+
+    // Update waypoints.
+    var size = this._size;
+    var ysize = this._height;
+    for (var point = 0; point < this._waypoints.length; ++point) {
+        var waypoint = this._waypoints[point];
+        waypoint.x += waypoint.vx;
+        waypoint.y += waypoint.vy;
+        waypoint.z += waypoint.vz;
+        if ((waypoint.x > size && waypoint.vx > 0) ||
+                (waypoint.x < -size && waypoint.vx < 0))
+            waypoint.vx = -waypoint.vx;
+        if ((waypoint.y > ysize && waypoint.vy > 0) ||
+                (waypoint.y < -ysize && waypoint.vy < 0))
+            waypoint.vy = -waypoint.vy;
+        if ((waypoint.z > size && waypoint.vz > 0) ||
+                (waypoint.z < -size && waypoint.vz < 0))
+            waypoint.vz = -waypoint.vz;
+    }
+
+    // Update particles.
+    var emit = Math.min(
+        this._emit, this._maxParticles - this._container.length);
+    for (var i = 0; i < emit; ++i) {
+        this._container.add(this._h, this._waypoints, this._size,
+                            this._gravity, this._range);
+    }
+    this._h = (this._h + 1) % 360;
+    this._container.update();
+
+    var n = Math.min(this._maxParticles, this._container.length);
+    var vertices = this._model.getVerticesBuffer(api.screen);
+    var vbuffer = vertices.buffer();
+    var colors = this._model.getColorsBuffer(api.screen);
+    var cbuffer = colors.buffer();
+    for (i = 0; i < n; ++i) {
+        var particle = this._container.at(i);
+        vbuffer[i * 3 + 0] = particle.x;
+        vbuffer[i * 3 + 1] = particle.y;
+        vbuffer[i * 3 + 2] = particle.z;
+        cbuffer[i * 4 + 0] = particle.color[0];
+        cbuffer[i * 4 + 1] = particle.color[1];
+        cbuffer[i * 4 + 2] = particle.color[2];
+        cbuffer[i * 4 + 3] = particle.color[3];
+    }
+    for (; i < this._lastParticles; ++i) {
+        vbuffer[i * 3 + 0] = 0.0;
+        vbuffer[i * 3 + 1] = 0.0;
+        vbuffer[i * 3 + 2] = 0.0;
+        cbuffer[i * 4 + 0] = 0.0;
+        cbuffer[i * 4 + 1] = 0.0;
+        cbuffer[i * 4 + 2] = 0.0;
+        cbuffer[i * 4 + 3] = 0.0;
+    }
+    this._lastParticles = this._container.length;
+    vertices.update();
+    colors.update();
+    api.drawPrimitive(this._model, 1.0, 1.0, 1.0, [0.0, 0.0, 0.0]);
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - frame plugin - nicofarre3d - cube module
+ */
+MajVj.frame.nicofarre3d.modules.cube = function () {
+    this._n = 256;
+    this._objects = new Array(this._n);
+    for (var i = 0; i < this._n; ++i) {
+        this._objects[i] = new MajVj.frame.nicofarre3d.modules.cube.object(
+            (Math.random() - 0.5) * 20000);
+    }
+    this._cube = TmaModelPrimitives.createCube();
+    this._cube.setDrawMode(Tma3DScreen.MODE_LINE_LOOP);
+};
+
+/**
+ * object prototype
+ *
+ * This prototype represents a cube.
+ * @param z an initial z position
+ */
+MajVj.frame.nicofarre3d.modules.cube.object = function (z) {
+    this._init(z);
+};
+
+/**
+ * Initialize a cube.
+ * @param z an initial z position
+ */
+MajVj.frame.nicofarre3d.modules.cube.object.prototype._init = function (z) {
+    this._position = [
+        (Math.random() - 0.5) * 10000.0,
+        (Math.random() - 0.5) * 1000.0,
+        z];
+    this._size = 100.0;  // Math.random() * 100.0;
+
+    var r = Math.random();
+    var g = Math.random();
+    var b = Math.random();
+    var avg = (r + g + b) / 3.0;
+    r = (r + avg) / 2.0;
+    g = (r + avg) / 2.0;
+    b = (r + avg) / 2.0;
+    this._color = [r, g, b, 1.0];
+    this._rotate = Math.random() * Math.PI * 2.0;
+};
+
+/**
+ * Draws a cube
+ * @param api nicofarre3d interfaces
+ * @param cube a cube primitive object
+ * @param rotate rotation speed
+ * @param speed approaching speed
+ */
+MajVj.frame.nicofarre3d.modules.cube.object.prototype.draw =
+        function (api, cube, rotate, speed) {
+    api.color = this._color;
+    var s = this._size;
+    api.drawPrimitive(cube, s, s, s, this._position, [this._rotate, 0.0, 0.0]);
+    this._rotate += rotate;
+    this._position[2] += speed;
+    if (this._position[2] > 10000)
+        this._init(this._position[2] - 20000);
+};
+
+/**
+ * Clears screen.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.cube.prototype.clear = function (api) {
+    api.color = [0.0, 0.0, 0.0, 1.0];
+    api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
+};
+
+/**
+ * Draws.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.cube.prototype.draw = function (api) {
+    api.color = [0.0, 0.0, 0.0, 1.0];
+    api.setAlphaMode(false);
+    var speed = api.delta * 2.0;
+    var rotate = speed / 1000.0;
+    for (var i = 0; i < this._n; ++i)
+        this._objects[i].draw(api, this._cube, rotate, speed);
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - frame plugin - nicofarre3d - roll module
+ */
+MajVj.frame.nicofarre3d.modules.roll = function (options) {
+  this._api = options.api;
+
+  var font = options.font || {
+    size: 90,
+    name: 'Sans',
+    foreground: 'rgba(19, 76, 51, 255)',
+    background: 'rgba(0, 0, 0, 255'
+  };
+  var headFont = options.headFont || font;
+  var script = options.script || [
+    { head: true, text: 'Powered by' },
+    { text: 'Takashi Toyoshima' }
+  ];
+  this._headScale = options.headScale || 1.2;
+  this._ghost = (typeof options.ghost != 'undefined') ? options.ghost : 0.8;
+
+  var texts = [];
+  var heads = [];
+  for (var i = 0; i < script.length; ++i) {
+    if (script[i].head)
+      heads.push(script[i].text);
+    else
+      texts.push(script[i].text);
+  }
+  this._normFont = this._api.createFont(font, texts.join(''));
+  this._headFont = this._api.createFont(headFont || font, heads.join(''));
+
+  this._sequencer = new TmaSequencer();
+  var delay = options.delay || 0;
+  var t = delay * 1000;
+  for (i = 0; i < script.length; ++i) {
+    this._sequencer.register(t, this._createTextLineTask(script[i]));
+    t += 3000;
+  }
+
+  this._sequencer.start();
+}
+
+/**
+ * Clears screen.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.roll.prototype.clear = function (api) {
+  var rate = this._ghost;
+  api.setAlphaMode(true, api.gl.DST_COLOR, api.gl.ZERO);
+  api.fill([rate, rate, rate, 1.0]);
+};
+
+/**
+ * Draws.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.roll.prototype.draw = function (api) {
+  api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
+  this._sequencer.run(api.delta);
+};
+
+MajVj.frame.nicofarre3d.modules.roll.prototype._createTextLineTask =
+    function (script) {
+  var task = new TmaSequencer.ParallelTask();
+  var width = 0;
+  var text = script.text;
+  var font = script.head ? this._headFont : this._normFont;
+  var scale = script.head ? this._headScale : 1.0;
+  for (var i = 0; i < text.length; ++i)
+    width += font[text[i]].width * scale;
+  var x = -width / 2;
+  for (i = 0; i < text.length; ++i) {
+    var size = font[text[i]].width * scale;
+    task.append(new MajVj.frame.nicofarre3d.modules.roll.Cell(
+        this._api, font, text[i], x + size / 2, scale, 100 * i));
+    x += size;
+  }
+  return task;
+};
+
+MajVj.frame.nicofarre3d.modules.roll.Cell =
+    function (api, font, c, x, scale, delay) {
+  this._api = api;
+  this._font = font;
+  this._scale = scale;
+  this._sx = (Math.random() - 0.5) * 10000;
+  this._sy = (Math.random() - 0.5) * 3000;
+  this._sz = Math.random() * 5000;
+  this._dx = x;
+  this._dy = -50;
+  this._dz = -1000;
+  this._rx = x;
+  this._ry = 0;
+  this._rz = -2000;
+  this._vy = +0.5;
+  this._vz = -1;
+  this._c = c;
+  this._time = 0;
+  this._appearDuration = 1000;
+  this._stopDuration = 3000;
+  this._wipeoutDuration = 100;
+  this._wipeDuration = 1000;
+  this._wipeinDuration = 100;
+  this._rollDuration = 10000;
+  this.SerialTask();
+  this.append(new TmaSequencer.Task(delay));
+  this.append(new TmaSequencer.Task(0, this._reset.bind(this)));
+  this.append(new TmaSequencer.Task(
+      this._appearDuration, this._appear.bind(this)));
+  this.append(new TmaSequencer.Task(0, this._reset.bind(this)));
+  this.append(new TmaSequencer.Task(0, this._reset.bind(this)));
+  this.append(new TmaSequencer.Task(
+      this._stopDuration - delay, this._stop.bind(this)));
+  this.append(new TmaSequencer.Task(0, this._reset.bind(this)));
+  this.append(new TmaSequencer.Task(
+      this._wipeoutDuration, this._wipeout.bind(this)));
+  this.append(new TmaSequencer.Task(0, this._reset.bind(this)));
+  this.append(new TmaSequencer.Task(this._wipeDuration));
+  this.append(new TmaSequencer.Task(0, this._reset.bind(this)));
+  this.append(new TmaSequencer.Task(
+      this._wipeinDuration, this._wipein.bind(this)));
+  this.append(new TmaSequencer.Task(0, this._reset.bind(this)));
+  this.append(new TmaSequencer.Task(
+      this._rollDuration, this._roll.bind(this)));
+};
+
+MajVj.frame.nicofarre3d.modules.roll.Cell.prototype =
+    new TmaSequencer.SerialTask;
+MajVj.frame.nicofarre3d.modules.roll.Cell.prototype.SerialTask =
+    TmaSequencer.SerialTask;
+MajVj.frame.nicofarre3d.modules.roll.Cell.prototype.constructor =
+    MajVj.frame.nicofarre3d.modules.roll.Cell;
+
+MajVj.frame.nicofarre3d.modules.roll.Cell.prototype._reset =
+    function (delta, time) {
+  this._time = time;
+};
+
+MajVj.frame.nicofarre3d.modules.roll.Cell.prototype._appear =
+    function (delta, time) {
+  var rate = (time - this._time) / this._appearDuration;
+  var irate = 1 - rate;
+  var p = [this._sx * irate + this._dx * rate,
+           this._sy * irate + this._dy * rate,
+           this._sz * irate + this._dz * rate];
+  this._api.drawCharacter(this._font, this._c, this._scale, this._scale, p);
+};
+
+MajVj.frame.nicofarre3d.modules.roll.Cell.prototype._stop =
+    function (delta, time) {
+  this._api.drawCharacter(
+      this._font, this._c, this._scale, this._scale,
+      [this._dx, this._dy, this._dz]);
+};
+
+MajVj.frame.nicofarre3d.modules.roll.Cell.prototype._wipeout =
+    function (delta, time) {
+  var rate = (time - this._time) / this._wipeoutDuration;
+  var irate = 1 - rate;
+  this._api.drawCharacter(
+      this._font, this._c, this._scale * (1 + rate * 2.5), this._scale * irate,
+      [this._dx * (1 + rate * 5), this._dy, this._dz]);
+};
+
+MajVj.frame.nicofarre3d.modules.roll.Cell.prototype._wipein =
+    function (delta, time) {
+  var rate = (time - this._time) / this._wipeinDuration;
+  var irate = 1 - rate;
+  this._api.drawCharacter(
+      this._font, this._c, this._scale * (1 + irate * 2.5), this._scale * irate,
+      [this._rx * (1 + irate * 5), this._ry, this._rz],
+      [-Math.PI / 3, 0, 0]);
+  this._ry += this._vy * delta / 20;
+  this._rz += this._vz * delta / 20;
+};
+
+MajVj.frame.nicofarre3d.modules.roll.Cell.prototype._roll =
+    function (delta, time) {
+  this._api.drawCharacter(
+      this._font, this._c, this._scale, this._scale,
+      [this._rx, this._ry, this._rz],
+      [-Math.PI / 4, 0, 0]);
+  this._ry += this._vy * delta / 20;
+  this._rz += this._vz * delta / 20;
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - frame plugin - nicofarre3d - beams module
+ *  @param options options
+ */
+MajVj.frame.nicofarre3d.modules.beams = function (options) {
+    this._container = new TmaParticle.Container(
+            MajVj.frame.nicofarre3d.modules.beams.Particle);
+    this._period = options.period || 1000;
+    this._unit = options.unit || 20;
+    this._dir = options.dir || MajVj.frame.nicofarre3d.modules.beams.DIR_ALL;
+    this._tick = 0;
+    this._nextTime = 0;
+    this._beams = [];
+    this._size = 8192 * 2;
+    this._speed = options.speed || this._size / 200;
+    this._maxParticles = 10000;
+    this._lastParticles = 0;
+    this._model = TmaModelPrimitives.createPoints(
+            new Array(this._maxParticles * 3));
+};
+
+/**
+ * Particle prototype
+ *
+ * This prototype controls a particle.
+ */
+MajVj.frame.nicofarre3d.modules.beams.Particle = function () {
+    TmaParticle.apply(this, arguments);
+};
+
+// Inherits TmaParticle.
+MajVj.frame.nicofarre3d.modules.beams.Particle.prototype =
+        new TmaParticle(null, 0);
+MajVj.frame.nicofarre3d.modules.beams.Particle.prototype.constructor =
+        MajVj.frame.nicofarre3d.modules.beams.Particle;
+
+MajVj.frame.nicofarre3d.modules.beams.DIR_ALL = [0, 1, 2, 3];
+MajVj.frame.nicofarre3d.modules.beams.DIR_Z = [0, 1];
+MajVj.frame.nicofarre3d.modules.beams.DIR_F2B = [0];
+MajVj.frame.nicofarre3d.modules.beams.DIR_B2F = [1];
+MajVj.frame.nicofarre3d.modules.beams.DIR_X = [2, 3];
+MajVj.frame.nicofarre3d.modules.beams.DIR_L2R = [2];
+MajVj.frame.nicofarre3d.modules.beams.DIR_R2L = [3];
+
+/**
+ *
+ */
+MajVj.frame.nicofarre3d.modules.beams.Particle.prototype.initialize =
+        function (size, speed, dir) {
+    var pattern = (0|(dir.length * Math.random())) % dir.length;
+    switch (dir[pattern]) {
+      case 0:
+        this.x = (Math.random() - 0.5) * size;
+        this.y = (Math.random() - 0.5) * size / 10;
+        this.z = -size;
+        this.vx = 0;
+        this.vy = 0;
+        this.vz = speed;
+        break;
+      case 1:
+        this.x = (Math.random() - 0.5) * size;
+        this.y = (Math.random() - 0.5) * size / 10;
+        this.z = size;
+        this.vx = 0;
+        this.vy = 0;
+        this.vz = -speed;
+        break;
+      case 2:
+        this.x = -size;
+        this.y = (Math.random() - 0.5) * size / 10;
+        this.z = (Math.random() - 0.5) * size;
+        this.vx = speed;
+        this.vy = 0;
+        this.vz = 0;
+        break;
+      case 3:
+        this.x = size;
+        this.y = (Math.random() - 0.5) * size / 10;
+        this.z = (Math.random() - 0.5) * size;
+        this.vx = -speed;
+        this.vy = 0;
+        this.vz = 0;
+        break;
+    }
+    this.x -= (this.x % 1000);
+    this.y -= (this.x % 1000);
+    this.z -= (this.x % 1000);
+    this.color = [Math.random(), Math.random(), Math.random(), 1.0];
+    this.size = size;
+};
+
+/**
+ *
+ */
+MajVj.frame.nicofarre3d.modules.beams.Particle.prototype.update =
+        function (delta) {
+    var step = delta / 17;
+    this.x += this.vx * step;
+    this.y += this.vy * step;
+    this.z += this.vz * step;
+    var ysize = this.size / 10;
+    if ((this.x > this.size && this.vx > 0) ||
+            (this.x < -this.size && this.vx < 0))
+        return false;
+    if ((this.y > ysize && this.vy > 0) ||
+            (this.y < -ysize && this.vy < 0))
+        return false;
+    if ((this.z > this.size && this.vz > 0) ||
+            (this.z < -this.size && this.vz < 0))
+        return false;
+    return true;
+};
+
+/**
+ * Clears screen.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.beams.prototype.clear = function (api) {
+    api.clear(api.gl.DEPTH_BUFFER_BIT);
+    api.setAlphaMode(true, api.gl.ONE, api.gl.SRC_ALPHA);
+    api.fill([0.0, 0.0, 0.0, 0.92]);
+};
+
+/**
+ * Draws.
+ * @param api nicofarre3d interfaces
+ */
+MajVj.frame.nicofarre3d.modules.beams.prototype.draw = function (api) {
+    // Update beams.
+    var size = this._size;
+    var ysize = size / 10.0;
+
+    // Update particles.
+    this._tick += api.delta;
+    while (this._tick > this._nextTime) {
+        this._nextTime += this._period;
+        var emit = Math.min(
+                this._unit, this._maxParticles - this._container.length);
+        for (var i = 0; i < emit; ++i)
+            this._container.add(this._size, this._speed, this._dir);
+    }
+    this._container.update(api.delta);
+
+    var n = Math.min(this._maxParticles, this._container.length);
+    var vertices = this._model.getVerticesBuffer(api.screen);
+    var vbuffer = vertices.buffer();
+    var colors = this._model.getColorsBuffer(api.screen);
+    var cbuffer = colors.buffer();
+    for (i = 0; i < n; ++i) {
+        var particle = this._container.at(i);
+        vbuffer[i * 3 + 0] = particle.x;
+        vbuffer[i * 3 + 1] = particle.y;
+        vbuffer[i * 3 + 2] = particle.z;
+        cbuffer[i * 4 + 0] = particle.color[0];
+        cbuffer[i * 4 + 1] = particle.color[1];
+        cbuffer[i * 4 + 2] = particle.color[2];
+        cbuffer[i * 4 + 3] = particle.color[3];
+    }
+    for (; i < this._lastParticles; ++i) {
+        vbuffer[i * 3 + 0] = 0.0;
+        vbuffer[i * 3 + 1] = 0.0;
+        vbuffer[i * 3 + 2] = 0.0;
+        cbuffer[i * 4 + 0] = 0.0;
+        cbuffer[i * 4 + 1] = 0.0;
+        cbuffer[i * 4 + 2] = 0.0;
+        cbuffer[i * 4 + 3] = 0.0;
+    }
+    this._lastParticles = this._container.length;
+    vertices.update();
+    colors.update();
+    api.drawPrimitive(this._model, 1.0, 1.0, 1.0, [0.0, 0.0, 0.0]);
+};
     this.majvj = _majvj;
     this.tma = tma;
     this.create = function (width, height, fullscreen, parent) {
@@ -4808,12 +5699,16 @@ MajVj.frame.snow.ps.prototype.update = function () {
         }, tma.ecb);
       });
     };
-    this.loadAllPlugin = function (base) {
+    this.loadAllPlugins = function (base) {
       if (base)
         tma.base = base;
-      return Promise.all([
-        this.loadPlugin('frame', 'wired')
-      ]);
+      var effects = Object.keys(MajVj.effect).map(function (name) {
+        return this.loadPlugin('effect', name);
+      }.bind(this));
+      var frames = Object.keys(MajVj.frame).map(function (name) {
+        return this.loadPlugin('frame', name);
+      }.bind(this));
+      return Promise.all(effects.concat(frames));
     };
     this.setBase = function (base) {
       tma.base = base;
@@ -4825,8 +5720,8 @@ MajVj.frame.snow.ps.prototype.update = function () {
         this.width = 240;
       if (0 == this.height)
         this.height = 135;
-      var vj = this.create(this.width, this.height, false, this.$.main);
-      this.loadPlugin(this.type, this.name).then(function () {
+      var main = function () {
+        var vj = this.create(this.width, this.height, false, this.$.main);
         var frame = vj.create(this.type, this.name);
         vj.run(function (delta) {
           vj.screen().fillColor(0, 0, 0, 1);
@@ -4834,7 +5729,14 @@ MajVj.frame.snow.ps.prototype.update = function () {
             frame.draw(delta);
           } catch (e) { tma.error(e.stack); }
         });
-      }.bind(this), tma.ecb);
+      }.bind(this);
+      if (this.type == 'scene') {
+        this.loadAllPlugins().then(function () {
+          this.loadPlugin(this.type, this.name).then(main, tma.ecb);
+        }.bind(this), tma.ecb);
+      } else {
+        this.loadPlugin(this.type, this.name).then(main, tma.ecb);
+      }
     }
   }
 });

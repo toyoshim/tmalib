@@ -1,3 +1,5 @@
+MINIFY=./bower_components/uglify-js/bin/uglifyjs -nc -o
+
 usage:
 	@echo 'Usage: make <target>'
 	@echo '<target>:'
@@ -33,7 +35,7 @@ build-tmalib:
 		src/TmaModelPly.js \
 		src/TmaModelPs2Ico.js \
 	| tee dist/tmalib.js \
-	| ./bower_components/uglify-js/bin/uglifyjs -nc -o dist/tmalib.min.js
+	| ${MINIFY} dist/tmalib.min.js
 
 build-tma-core:
 	cat \
@@ -41,7 +43,7 @@ build-tma-core:
 		dist/tmalib.js \
 		src/core_tail.js \
 	| tee polymer/tma-core.js \
-	| ./bower_components/uglify-js/bin/uglifyjs -nc -o polymer/tma-core.min.js
+	| ${MINIFY} polymer/tma-core.min.js
 
 build-tma-majvj:
 	cat \
@@ -50,12 +52,13 @@ build-tma-majvj:
 		ext/mv/MajVj.js \
 		src/majvj_tail.js \
 	| tee polymer/tma-majvj.js \
-	| ./bower_components/uglify-js/bin/uglifyjs -nc -o polymer/tma-majvj.min.js
+	| ${MINIFY} polymer/tma-majvj.min.js
 
 build-majvj-suite:
 	cat \
 		src/suite_head.js \
 		`find ext/mv -name main.js` \
+		`find ext/mv/frame/nicofarre3d -name \*.js | grep -v main.js` \
 		src/suite_tail.js \
 	| tee polymer/majvj-suite.js \
-	| ./bower_components/uglify-js/bin/uglifyjs -nc -o polymer/majvj-suite.min.js
+	| ${MINIFY} polymer/majvj-suite.min.js

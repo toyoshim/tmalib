@@ -23,7 +23,7 @@ tma.error = console.error.bind(console);
 
 // Error callback.
 tma.ecb = function (e) {
-  console.error(e.stack);
+  console.error(e);
 };
 
 // Holds loading and loaded JavaScript libraries, and resources.

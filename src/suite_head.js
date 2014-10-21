@@ -26,3 +26,9 @@ Polymer('majvj-suite', {
     var mat3 = _majvj.mat3;
     var mat4 = _majvj.mat4;
     var quat4 = _majvj.quat4;
+    MajVj.loadScript = function (type, name, src) {
+      tma.log('all script should be preloaded to avoid name space pollution: ' +
+              'ignore MajVj.loadScript(' + type + ', ' + name + ', ' + src +
+              ');');
+      return new Promise(function (resolve, reject) { resolve() });
+    };
