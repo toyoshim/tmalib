@@ -228,7 +228,7 @@ MajVj.frame.crlogo.prototype.onresize = function (aspect) {
 MajVj.frame.crlogo.prototype.draw = function (delta) {
     this._program.setUniformMatrix('uMVMatrix', this._mvMatrix);
     var rotate = 0.002 * delta;
-    if (this._controller)
+    if (this._controller && this._controller.slider)
         rotate = rotate * (0.5 + this._controller.slider * 1.5);
     this._rotate += rotate;
     mat4.rotate(this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
@@ -331,7 +331,7 @@ MajVj.frame.crlogo.ps.prototype.pilot = function () {
         return;
     }
     var timeout = Math.random() * 100;
-    if (this._parent._controller)
+    if (this._parent._controller && this._parent._controller.knob)
         timeout = timeout / (this._parent._controller.knob * 2.2 + 0.2);
 
     this._mode = Math.floor(Math.random() * 4);

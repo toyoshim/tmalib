@@ -75,8 +75,8 @@ MajVj.frame.specticle.prototype.draw = function (delta) {
     var t = this._t / 10000;
     var buffer = this._coords.buffer();
     var fft = this._controller && this._controller.sound &&
-          this._controller.sound.fftDb;
-    var useLength = this._controller.sound.fftDb.length - 128;
+          this._controller.sound.fftDb && this._controller.sound.fftDb.length;
+    var useLength = !fft || this._controller.sound.fftDb.length - 128;
     for (var i = 0; i < this._n; ++i) {
         var y = Math.sin(t * this._sv[i] + this._dv[i]) * 10;
         var r = 1.0;

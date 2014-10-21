@@ -60,7 +60,7 @@ MajVj.frame.snow.prototype.onresize = function (aspect) {
  */
 MajVj.frame.snow.prototype.draw = function (delta) {
     var volume = 1.0;
-    if (this._controller) {
+    if (this._controller && this._controller.slider) {
         volume = this._controller.slider;
         if (volume == 0.0)
             return;

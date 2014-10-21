@@ -84,7 +84,8 @@ MajVj.frame.morphere.prototype.draw = function (delta) {
     }
     buffer.update();
     var size = 2.0;
-    if (this._controller && this._controller.volume)
+    if (this._controller && this._controller.volume &&
+            this._controller.volume[0])
         size *= this._controller.volume[0];
     this._screen.pushAlphaMode();
     this._screen.setAlphaMode(false);
