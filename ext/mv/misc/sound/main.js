@@ -15,6 +15,10 @@ MajVj.misc.sound = function (options) {
     this._analyser = this._audio.createAnalyser();
     this._leftAnalyser = this._audio.createAnalyser();
     this._rightAnalyser = this._audio.createAnalyser();
+    var fftSize = 2048;
+    this._analyser.fftSize = fftSize;
+    this._leftAnalyser.fftSize = fftSize;
+    this._rightAnalyser.fftSize = fftSize;
     this._delay = this._audio.createDelay();
     if (options.delay)
         this._delay.delayTime.value = options.delay;
@@ -184,7 +188,7 @@ MajVj.misc.sound.prototype.setDelay = function (delay) {
  * @return a FFT length
  */
 MajVj.misc.sound.prototype.getFftCount = function () {
-    return this._analyser.frequencyBinCount / 2;
+    return this._analyser.frequencyBinCount;
 };
 
 /**
@@ -225,3 +229,24 @@ MajVj.misc.sound.prototype.getFloatFrequencyData = function (left, right) {
     }
 };
 
+/**
+ * Gets time domain wave table count.
+ * @return a time domain wave table length
+ */
+MajVj.misc.sound.prototype.getWaveTableCount = function () {
+    return this._analyser.fftSize;
+};
+
+/**
+ * Gets FFT results in Float32Array.
+ * @param laft an Float32Array to receive a result for left channel, or merged
+ * @param right an Float32Array to receive a result for right channel (optional)
+ */
+MajVj.misc.sound.prototype.getFloatWaveTable = function (left, right) {
+    if (!right) {
+        this._analyser.getFloatTimeDomainData(left);
+    } else {
+        this._leftAnalyser.getFloatTimeDomainData(left);
+        this._rightAnalyser.getFloatTimeDomainData(right);
+    }
+};

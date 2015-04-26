@@ -1,0 +1,25 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+attribute vec2 aCoord;
+
+void main() {
+    gl_Position = vec4(aCoord.x, aCoord.y, 0.0, 1.0);
+}
+</script>
+
+
+<script id='fragment_head' type='x-shader/x-fragment'>
+precision mediump float;
+uniform vec3 iResolution;
+uniform float iGlobalTime;
+uniform float iChannelTime[4];
+uniform vec3 iChannelResolution[4];
+uniform vec4 iMouse;
+uniform sampler2D iChannel0;
+uniform sampler2D iChannel1;
+uniform sampler2D iChannel2;
+uniform sampler2D iChannel3;
+uniform vec4 iDate;
+</script>
