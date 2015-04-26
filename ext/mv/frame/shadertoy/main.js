@@ -50,6 +50,9 @@ MajVj.frame.shadertoy.prototype.onresize = function (aspect) {
  * @param delta delta time from the last rendering
  */
 MajVj.frame.shadertoy.prototype.draw = function (delta) {
+    this._screen.setAlphaMode(true, this._screen.gl.ONE, this._screen.gl.ONE);
+    this._screen.fillColor(0.0, 0.0, 0.0, 1.0);
+
     // Set shadertoy compatible uniforms.
     this._time += delta / 1000.0;
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
