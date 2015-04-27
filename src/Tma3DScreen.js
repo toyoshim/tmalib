@@ -46,6 +46,10 @@ function Tma3DScreen (width, height) {
     this._mouse = false;
     this._mouseX = 0;
     this._mouseY = 0;
+    this._mouseClickX = 0;
+    this._mouseClickY = 0;
+    this._mouseWidth = 0;
+    this._mouseHeight = 0;
 
     // Logging GL capabilities.
     tma.log('WebGL max vertex uniform vectors: ' +
@@ -622,11 +626,29 @@ Tma3DScreen.prototype.flush = function () {
  */
 Tma3DScreen.prototype.mouse = function () {
     if (!this._mouse)
-        return { over: this._mouse };
+        return {
+            over: false,
+            x: 0,
+            y: 0,
+            click: {
+                on: false,
+                x: 0,
+                y: 0,
+            },
+            width: 0,
+            height: 0,
+        };
     return {
         over: this._mouse,
         x: this._mouseX,
-        y: this._mouseY
+        y: this._mouseY,
+        click: {
+            on: this._mousePressed,
+            x: this._mouseClickX,
+            y: this._mouseClickY
+        },
+        width: this._mouseWidth,
+        height: this._mouseHeight,
     };
 };
 
@@ -639,6 +661,8 @@ Tma3DScreen.prototype._onmousemove = function (e) {
     var rect = e.target.getBoundingClientRect();
     this._mouseX = e.clientX - rect.left;
     this._mouseY = e.clientY - rect.top;
+    this._mouseWidth = rect.right - rect.left;
+    this._mouseHeight = rect.bottom - rect.top;
     if (this._mousePressed)
         this.onMouseDrag(this._mouseX, this._mouseY);
 };
@@ -657,6 +681,8 @@ Tma3DScreen.prototype._onmousedown = function (e) {
     this._mouseX = e.clientX - rect.left;
     this._mouseY = e.clientY - rect.top;
     this._mousePressed = true;
+    this._mouseClickX = this._mouseX;
+    this._mouseClickY = this._mouseY;
     this.onMouseDown(this._mouseX, this._mouseY);
     this.onMouseDrag(this._mouseX, this._mouseY);
 };
