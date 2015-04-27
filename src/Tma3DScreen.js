@@ -35,6 +35,9 @@ function Tma3DScreen (width, height) {
     if (!this.gl) {
         tma.error('WebGL: not supported.');
     }
+    if (this.gl.getExtension('OES_texture_float') == null) {
+        tma.log('WebGL: float texture is not supported.');
+    }
     this.gl.viewport(0, 0, width, height);
     this.setAlphaMode(false);
     this.setCullingMode(false, true);
@@ -378,6 +381,41 @@ Tma3DScreen.prototype.createStringTexture = function (text, font) {
     var src = this.context.getImageData(0, 0, w, h);
     var image = this.createImage(src.width, src.height, src.data);
     return this.createTexture(image, true, Tma3DScreen.FILTER_LINEAR);
+};
+
+/**
+ * Create texture buffer from Float32Array object.
+ * @param data Float32Array object
+ * @param width texture width
+ * @param height texture height
+ * @param flip image flip flag
+ */
+Tma3DScreen.prototype.createFloatTexture =
+        function (data, width, height, flip) {
+    var texture = this.gl.createTexture();
+    texture.width = width;
+    texture.height = height;
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
+    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, width, height, 0,
+            this.gl.RGBA, this.gl.FLOAT, data);
+    this.gl.texParameteri(
+        this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+    this.gl.texParameteri(
+        this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+    this.gl.texParameteri(
+        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(
+        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+    texture._flip = flip;
+    texture._owner = this;
+    texture.update = function (data) {
+        var gl = this._owner.gl;
+        gl.bindTexture(gl.TEXTURE_2D, this);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0,
+                gl.RGBA, gl.FLOAT, data);
+    };
+    return texture;
 };
 
 /**
