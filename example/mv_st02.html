@@ -2,35 +2,25 @@
 <head><title>Shadertoy test</title></head>
 <body style="margin: 0; cursor: none">
 <script id="shader" type="x-shader/x-fragment">
-// This shader is based on shadertone simple.glsl.
+// This shader is based on shadertone wave.glsl.
 // See https://github.com/overtone/shadertone/LICENSE (the MIT license).
-/*
-uniform float iOvertoneVolume;
-
-void main(void) {
-  vec2 uv = (gl_FragCoord.xy / iResolution.xy);
-  // find the center and use distance from the center to vary the
-  // green component
-  vec2 uv2 = uv - 0.5;
-  float r = sqrt(uv2.x*uv2.x + uv2.y*uv2.y);
-  gl_FragColor = vec4(uv.x,
-                      20.0*iOvertoneVolume*(1.0-r),
-                      0.5*sin(3.0*iGlobalTime)+0.5,
-                      1.0);
+float smoothbump(float center, float width, float x) {
+  float w2 = width/2.0;
+  float cp = center+w2;
+  float cm = center-w2;
+  float c = smoothstep(cm, center, x) * (1.0-smoothstep(center, cp, x));
+  return c;
 }
-*/
 
-// This shader is based on shadertone sine_dance.glsl.
-uniform float iOvertoneVolume;
 void main(void)
 {
-    vec2 uv = 2.0*(gl_FragCoord.xy/iResolution.xy) - 1.0;
-    // equvalent to the video's spec.y, I think
-    float spec_y = 0.01 + 5.0*iOvertoneVolume;
-    float col = 0.0;
-    uv.x += sin(iGlobalTime * 6.0 + uv.y*1.5)*spec_y;
-    col += abs(0.066/uv.x) * spec_y;
-    gl_FragColor = vec4(col,col,col,1.0);
+    vec2  uv     = gl_FragCoord.xy/iResolution.xy;
+    uv.y         = 1.0 - uv.y; // +Y is now "up"
+    float freq   = 0.25*texture2D(iChannel0,vec2(uv.x,0.25)).x;
+    float wave   = texture2D(iChannel0,vec2(uv.x,0.75)).x;
+    float freqc  = smoothstep(0.0,(1.0/iResolution.y), freq + uv.y - 0.9);
+    float wavec  = smoothbump(0.0,(4.0/iResolution.y), wave + uv.y - 0.5);
+    gl_FragColor = vec4(freqc, wavec, 0.25,1.0);
 }
 </script>
 <script src="../tma.js"></script>
@@ -38,26 +28,26 @@ void main(void)
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
-  var r = 1;
+  var r = 2;
   var width = 1920 / r;
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
   MajVj.loadAllPlugins().then(function () {
+    var sound = vj.create('misc', 'sound', { delay: 0.0 });
+    sound.fetch('data/bustling.mp3', true);
     var controller = {
       sound: {
         volume: 0.0,
-        wave: [],
-        fft: [],
-        fftDb: [],
+        wave: new Float32Array(sound.getWaveTableCount()),
+        fft: new Uint8Array(sound.getFftCount()),
+        fftDb: new Float32Array(sound.getFftCount()),
       }
     }
     var shader = document.getElementById('shader').text;
     var shadertoy = vj.create('frame', 'shadertoy', {
         shader: shader,
-        controller: controller });
-    var sound = vj.create('misc', 'sound', { delay: 0.0 });
-    sound.fetch('data/bustling.mp3', true);
-    controller.sound.wave = new Float32Array(sound.getWaveTableCount());
+        controller: controller,
+        textures: [ 'audio' ] });
     vj.run(function (delta) {
       sound.getFloatWaveTable(controller.sound.wave);
       var rms = 0.0;
@@ -67,6 +57,8 @@ tma.onload = function () {
       }
       rms = Math.sqrt(rms / controller.sound.wave.length);
       controller.sound.volume = rms;
+      sound.getByteFrequencyData(controller.sound.fft);
+      sound.getFloatFrequencyData(controller.sound.fftDb);
 
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
       shadertoy.draw(delta);

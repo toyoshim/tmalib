@@ -10,6 +10,18 @@ void main() {
 </script>
 
 
+<script id='fragment' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture;
+uniform float uWidth;
+uniform float uHeight;
+
+void main() {
+  vec2 position = vec2(gl_FragCoord.x / uWidth, gl_FragCoord.y / uHeight);
+  gl_FragColor = texture2D(uTexture, position);
+}
+</script>
+
 <script id='fragment_head' type='x-shader/x-fragment'>
 precision mediump float;
 uniform vec3 iResolution;
