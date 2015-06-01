@@ -190,12 +190,14 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'nico_test'),
         MajVj.loadPlugin('frame', 'nicofarre'),
         MajVj.loadPlugin('frame', 'nicofarre3d'),
+        MajVj.loadPlugin('frame', 'rolline'),
         MajVj.loadPlugin('frame', 'sandbox'),
         MajVj.loadPlugin('frame', 'shadertoy'),
         MajVj.loadPlugin('frame', 'signal'),
         MajVj.loadPlugin('frame', 'snow'),
         MajVj.loadPlugin('frame', 'specticle'),
         MajVj.loadPlugin('frame', 'wired'),
+        MajVj.loadPlugin('misc', 'midi'),
         MajVj.loadPlugin('misc', 'sound')
     ]);
 };
