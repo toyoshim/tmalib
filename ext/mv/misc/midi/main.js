@@ -15,6 +15,7 @@ MajVj.misc.midi.keymap = [];
 MajVj.misc.midi._access = null;
 MajVj.misc.midi._devices = {};
 MajVj.misc.midi._inputs = [];
+MajVj.misc.midi._output = null;
 
 /**
  * Loads resources asynchronously.
@@ -31,6 +32,8 @@ MajVj.misc.midi.load = function () {
                     MajVj.misc.midi._onStateChange;
             for (var input of a.inputs)
                 MajVj.misc.midi._addInputDevice(input[1]);
+            for (var output of a.outputs)
+                MajVj.misc.midi._output = output[1];
             resolve();
         }, function (e) {
             reject(e);
@@ -39,12 +42,41 @@ MajVj.misc.midi.load = function () {
 };
 
 /**
+ * Updates keymap by random triggers.
+ */
+MajVj.misc.midi.auto = function () {
+    for (var i = 0; i < 128; ++i) {
+        if (MajVj.misc.midi.keymap[i] > 0) {
+            if (Math.random() > 0.99) {
+                MajVj.misc.midi.keymap[i] = 0.0;
+                if (MajVj.misc.midi._output) {
+                    var data = [0x80, i, 0];
+                    MajVj.misc.midi._output.send(data);
+                }
+            }
+        }
+        var p = (i > 4) ? i - 4 : 0;
+        if (Math.random() + (MajVj.misc.midi.keymap[p] / 1024) > 0.9998) {
+            MajVj.misc.midi.keymap[i] = (Math.random() * 128) | 0;
+            if (MajVj.misc.midi._output) {
+                var data = [0x90, i, MajVj.misc.midi.keymap[i]];
+                MajVj.misc.midi._output.send(data);
+            }
+        }
+    }
+};
+
+/**
  * Decays keymap values.
  */
 MajVj.misc.midi.decay = function () {
     for (var i = 0; i < 128; ++i) {
-        if (MajVj.misc.midi.keymap[i] > 0)
-            MajVj.misc.midi.keymap[i] *= 0.99;
+        if (MajVj.misc.midi.keymap[i] > 0) {
+            var value = (MajVj.misc.midi.keymap[i] * 0.99) | 0;
+            if (value == 0)
+                value = 1;
+            MajVj.misc.midi.keymap[i] = value;
+        }
     }
 };
 
