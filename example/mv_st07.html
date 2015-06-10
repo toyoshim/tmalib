@@ -2,35 +2,48 @@
 <head><title>Shadertoy test</title></head>
 <body style="margin: 0; cursor: none">
 <script id="shader" type="x-shader/x-fragment">
-// This shader is based on shadertone zoomwave.glsl.
-// See https://github.com/overtone/shadertone/LICENSE (the MIT license).
-float smoothbump(float center, float width, float x) {
-  float w2 = width/2.0;
-  float cp = center+w2;
-  float cm = center-w2;
-  float c = smoothstep(cm, center, x) * (1.0-smoothstep(center, cp, x));
-  return c;
+// based on https://www.shadertoy.com/view/Mds3Wn
+float noise(float t) {
+        return fract(sin(t)*4397.33);
 }
 
-vec3 hsv2rgb(float h,float s,float v) {
-  return mix(vec3(1.),clamp((abs(fract(h+vec3(3.,2.,1.)/3.)*6.-3.)-1.),0.,1.),s)*v;
+vec3 rotate(vec3 p) {
+        float angle = iGlobalTime / 3.;
+        return vec3(p.x*cos(angle) + p.z*sin(angle), p.y, p.x*sin(angle) - p.z*cos(angle));
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
-{
-    // draw a colorful waveform
-    vec2  uv     = fragCoord.xy/iResolution.xy;
-    float wave   = texture2D(iChannel0,vec2(uv.x,0.75)).x;
-    wave         = smoothbump(0.0,(6.0/iResolution.y), wave + uv.y - 0.5);
-    vec3  wc     = wave*hsv2rgb(fract(iGlobalTime/2.0),0.9,0.9);
+float field(vec3 p) {
+        float d = 0.;
+        p = abs(rotate(p));
+        for (int i = 0; i < 7; ++i) {
+                d = max(d, exp(-float(i) / 7.) * (length(max(p - .4, vec3(0.))) - .2));
+                p = abs(2.*fract(p) - 1.) + .1;
+        }
+        return d;
+}
 
-    // zoom into the previous frame
-    float zf     = -0.05;
-    vec2  uv2    = (1.0+zf)*uv-(zf/2.0,zf/2.0);
-    vec3  pc     = 0.95*texture2D(iChannel1,uv2).rgb;
-
-    // mix the two
-    fragColor = vec4(vec3(wc+pc),1.0);
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+        vec2 uv = 2. * fragCoord.xy / iResolution.xy - 1.;
+        uv *= iResolution.xy / max(iResolution.x, iResolution.y);
+        vec3 ro = vec3(0., 0., 2.7);
+        vec3 rd = normalize(vec3(uv.x, -uv.y, -1.5));
+        float dSum = 0.;
+        float dMax = 0.;
+        
+        float variance = mix(3., 1., pow(.5 + .5*sin(iGlobalTime), 8.));
+        variance -= .05 * log(1.e-6 + noise(iGlobalTime));
+        
+        for (int i = 0; i < 64; ++i) {
+                float d = field(ro);
+                float weight = 1. + .2 * (exp(-10. * abs(2.*fract(abs(4.*ro.y)) - 1.)));
+                float value = exp(-variance * abs(d)) * weight;
+                dSum += value;
+                dMax = max(dMax, value);
+                ro += (d / 8.) * rd;
+        }
+        
+        float t = max(dSum / 32., dMax) * mix(.92, 1., noise(uv.x + noise(uv.y + iGlobalTime)));
+        fragColor = vec4(t * vec3(t*t*1.3, t*1.3, 1.), 1.);
 }
 </script>
 <script src="../tma.js"></script>

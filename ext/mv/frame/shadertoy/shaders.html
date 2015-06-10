@@ -35,3 +35,9 @@ uniform sampler2D iChannel2;
 uniform sampler2D iChannel3;
 uniform vec4 iDate;
 </script>
+
+<script id='fragment_foot' type='x-shader/x-fragment'>
+void main() {
+  mainImage(gl_FragColor, gl_FragCoord.xy);
+}
+</script>

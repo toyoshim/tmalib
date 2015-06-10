@@ -36,7 +36,8 @@ MajVj.frame.shadertoy = function (options) {
 // Shader programs.
 MajVj.frame.shadertoy._vertexShader = null;
 MajVj.frame.shadertoy._fragmentShader = null;
-MajVj.frame.shadertoy._shadertoyUniforms = null;
+MajVj.frame.shadertoy._shadertoyHeader = null;
+MajVj.frame.shadertoy._shadertoyFooter = null;
 
 /**
  * Loads resource asynchronously.
@@ -48,11 +49,14 @@ MajVj.frame.shadertoy.load = function () {
             MajVj.loadShader('frame', 'shadertoy', 'shaders.html', 'vertex'),
             MajVj.loadShader('frame', 'shadertoy', 'shaders.html', 'fragment'),
             MajVj.loadShader(
-                'frame', 'shadertoy', 'shaders.html', 'fragment_head')
+                'frame', 'shadertoy', 'shaders.html', 'fragment_head'),
+            MajVj.loadShader(
+                'frame', 'shadertoy', 'shaders.html', 'fragment_foot')
         ]).then(function (results) {
             MajVj.frame.shadertoy._vertexShader = results[0];
             MajVj.frame.shadertoy._fragmentShader = results[1];
-            MajVj.frame.shadertoy._shadertoyUniforms = results[2];
+            MajVj.frame.shadertoy._shadertoyHeader = results[2];
+            MajVj.frame.shadertoy._shadertoyFooter = results[3];
             resolve();
         }, function (error) { tma.log(error); });
     });
@@ -168,6 +172,7 @@ MajVj.frame.shadertoy.prototype.setShader = function (shader) {
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.shadertoy._vertexShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
-                    MajVj.frame.shadertoy._shadertoyUniforms + shader));
+                    MajVj.frame.shadertoy._shadertoyHeader + shader +
+                    MajVj.frame.shadertoy._shadertoyFooter));
 };
 
