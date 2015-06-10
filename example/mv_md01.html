@@ -1,0 +1,52 @@
+<html>
+<head><title>MIDI frame test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script src="mv_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var r = 1;
+  var width = 1920 / r;
+  var height = 1080 / r;
+  var vj = new MajVj(width, height, true);
+  MajVj.loadAllPlugins().then(function () {
+    var controller = {
+      sound: {
+        volume: 0.0,
+        wave: [],
+        fft: [],
+        fftDb: [],
+      },
+      midi: {
+        keymap: MajVj.misc.midi.keymap
+      }
+    }
+    var frame = vj.create('frame', 'astalight', { controller: controller });
+    var sound = vj.create('misc', 'sound', { delay: 0.0 });
+    //sound.fetch('data/bustling.mp3', true);
+    controller.sound.wave = new Float32Array(sound.getWaveTableCount());
+    vj.run(function (delta) {
+      sound.getFloatWaveTable(controller.sound.wave);
+      var rms = 0.0;
+      for (var i = 0; i < controller.sound.wave.length; ++i) {
+        var data = controller.sound.wave[i];
+        rms += data * data;
+      }
+      rms = Math.sqrt(rms / controller.sound.wave.length);
+      controller.sound.volume = rms;
+
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      //MajVj.misc.midi.auto();
+      MajVj.misc.midi.decay();
+      frame.draw(delta);
+    });
+    window.onresize = function () {
+      vj.onresize();
+      frame.onresize(vj.aspect());
+    };
+  }, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

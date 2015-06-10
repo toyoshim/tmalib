@@ -1,0 +1,51 @@
+<html>
+<head><title>MIDI frame test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script src="mv_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var r = 1;
+  var width = 1920 / r;
+  var height = 1080 / r;
+  var vj = new MajVj(width, height, true);
+  MajVj.loadAllPlugins().then(function () {
+    var controller = {
+      sound: {
+        volume: 0.0,
+        wave: [],
+        fft: [],
+        fftDb: [],
+      },
+      midi: {
+        keymap: MajVj.misc.midi.keymap
+      }
+    };
+    var glowController = {
+      volume: [0.1, 0.0]
+    };
+    var wired = vj.create('frame', 'wired');
+    var frame = vj.create('frame', 'astalight', { controller: controller });
+    var glow = vj.create('effect', 'glow', { controller: glowController });
+    var fbo = vj.screen().createFrameBuffer(width, height);
+    vj.run(function (delta) {
+      fbo.bind();
+      vj.screen().fillColor(0.01, 0.0, 0.0, 1.0);
+      wired.draw(delta);
+      frame.draw(delta);
+      vj.screen().bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      glow.draw(delta, fbo.texture);
+      //MajVj.misc.midi.auto();
+      MajVj.misc.midi.decay();
+    });
+    window.onresize = function () {
+      vj.onresize();
+      frame.onresize(vj.aspect());
+    };
+  }, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
