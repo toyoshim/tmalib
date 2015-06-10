@@ -5,8 +5,6 @@
  */
 MajVj.frame.rolline = function (options) {
     this._screen = options.screen;
-    this._width = options.width;
-    this._height = options.height;
     this._aspect = options.aspect;
     this._controller = options.controller;
     this._time = 0.0;
