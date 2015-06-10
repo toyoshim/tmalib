@@ -359,12 +359,19 @@ Tma3DScreen.prototype.convertImage = function (image) {
  * Creates a texture buffer from string.
  * @param text a text shown in the created texture
  * @param font font information
+ * @param texture output texture restrictions
  */
-Tma3DScreen.prototype.createStringTexture = function (text, font) {
+Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
     var fontname = font.size + 'px ' + font.name;
     this.context.font = fontname;
     var w = this.context.measureText(text).width;
     var h = font.size * devicePixelRatio * 1.5; // FIXME: just in case.
+    if (texture) {
+        if (texture.width)
+            w = texture.width;
+        if (texture.height)
+            h = texture.height;
+    }
     this.canvas2d.width = w;
     this.canvas2d.height = h;
     // Other rendering contexts should be set after changing canvas size.
@@ -392,6 +399,7 @@ Tma3DScreen.prototype.createFloatTexture =
     var texture = this.gl.createTexture();
     texture.width = width;
     texture.height = height;
+    texture.data = data;
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
     this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, width, height, 0,
@@ -425,6 +433,7 @@ Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
     var texture = this.gl.createTexture();
     texture.width = image.width;
     texture.height = image.height;
+    texture.image = image;
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
     // TODO: Handles level of detail
