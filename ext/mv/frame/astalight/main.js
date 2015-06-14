@@ -19,7 +19,7 @@ MajVj.frame.astalight = function (options) {
     this._rotate = 0.0;
     this._texture = this._screen.createStringTexture(
             String.fromCharCode(65290), {
-            size: 256,
+            size: 300,
             name: 'Serif',
             foreground: 'rgba(255, 100, 200, 255)',
             background: 'rgba(0, 0, 0, 255)' }, {
@@ -292,7 +292,7 @@ MajVj.frame.astalight.ps.prototype.update = function (delta) {
         var crashKey = 0;
         var ons = 0;
         for (i = 0; i < 128; ++i) {
-            if (map[i] > 120) {
+            if (map[i] > 110) {
                 onCrash = true;
                 crashKey = i;
             }
