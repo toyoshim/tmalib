@@ -17,15 +17,29 @@ MajVj.frame.astalight = function (options) {
     this._pMatrix = mat4.create();
     this._mvMatrix = mat4.create();
     this._rotate = 0.0;
-    this._texture = this._screen.createStringTexture(
-            String.fromCharCode(65290), {
-            size: 300,
-            name: 'Serif',
-            foreground: 'rgba(255, 100, 200, 255)',
-            background: 'rgba(0, 0, 0, 255)' }, {
-            width: 256,
-            height: 256 });
-    var data = MajVj.frame.astalight._createData(this._texture);
+    this._alpha = 1.0;
+    var zoom = 4;
+    var brightness = 1.0;
+    if (options.brightness)
+        brightness = options.brightness;
+    if (options.zoom)
+        zoom = options.zoom;
+    if (options.image) {
+        this._texture = this._screen.createTexture(
+                this._screen.convertImage(options.image),
+                true,
+                Tma3DScreen.FILTER_LINEAR);
+    } else {
+        this._texture = this._screen.createStringTexture(
+                String.fromCharCode(65290), {
+                size: 300,
+                name: 'Serif',
+                foreground: 'rgba(255, 100, 200, 255)',
+                background: 'rgba(0, 0, 0, 255)' }, {
+                width: 256,
+                height: 256 });
+    }
+    var data = MajVj.frame.astalight._createData(this._texture, zoom, brightness);
     this._vertices = this._screen.createBuffer(data.vertices);
     this._vertices.items = data.items;
     this._offsets = this._screen.createBuffer(data.offsets);
@@ -39,12 +53,12 @@ MajVj.frame.astalight = function (options) {
 /**
  * Creates data
  * @param texture source texture object
+ * @param zoom texture zoom
  */
-MajVj.frame.astalight._createData = function (texture) {
+MajVj.frame.astalight._createData = function (texture, zoom, brightness) {
     var bitmap = texture.image.data;
     var size = texture.image.width;
     var resolution = 64;
-    var zoom = 4;
     var step = size / resolution;
     var d = resolution / 2;
 
@@ -52,9 +66,9 @@ MajVj.frame.astalight._createData = function (texture) {
     for (var y = 0; y < resolution; ++y) {
         for (var x = 0; x < resolution; ++x) {
             var offset = (y * size + x) * step * 4;
-            var r = bitmap[offset + 0] / 255;
-            var g = bitmap[offset + 1] / 255;
-            var b = bitmap[offset + 2] / 255;
+            var r = bitmap[offset + 0] / 255 * brightness;
+            var g = bitmap[offset + 1] / 255 * brightness;
+            var b = bitmap[offset + 2] / 255 * brightness;
             if (r == 0 && g == 0 && b == 0)
                 continue;
             data.push([(x - d) * zoom, (d - y) * zoom, r, g, b]);
@@ -193,6 +207,7 @@ MajVj.frame.astalight.prototype.draw = function (delta) {
     this._rotate += rotate;
     mat4.rotate(this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
     this._program.setUniformMatrix('uPMatrix', this._pMatrix);
+    this._program.setUniformVector('uAlpha', [this._alpha]);
     this._program.setTexture('uTexture', this._texture);
     this._program.setAttributeArray(
             'aVertexPosition', this._vertices, 0, 3, 0);
