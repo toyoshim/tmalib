@@ -9,9 +9,11 @@ MajVj.misc.midi = function (options) {
 
 // MIDIAccess and MIDIInputs shared in all instances.
 MajVj.misc.midi.useSysex = MajVj.getSetting('misc', 'midi', 'useSysex', false);
+MajVj.misc.midi.record = MajVj.getSetting('misc', 'midi', 'record', false);
 MajVj.misc.midi.portmaps = [];
 MajVj.misc.midi.devicemaps = [];
 MajVj.misc.midi.keymap = [];
+MajVj.misc.midi.messages = [];
 MajVj.misc.midi._access = null;
 MajVj.misc.midi._devices = {};
 MajVj.misc.midi._inputs = [];
@@ -131,11 +133,14 @@ MajVj.misc.midi._onMidiMessage = function (e) {
         MajVj.misc.midi.portmaps[index][ch][note] = data[2];
         MajVj.misc.midi.devicemaps[index][note] = data[2];
         MajVj.misc.midi.keymap[note] = data[2];
-    } else {
+    } else if (0x80 == type) {
         // Note OFF
         MajVj.misc.midi.portmaps[index][ch][note] = 0;
         MajVj.misc.midi.devicemaps[index][note] = 0;
         MajVj.misc.midi.keymap[note] = 0;
+    }
+    if (MajVj.misc.midi.record) {
+        MajVj.misc.midi.messages.push(data);
     }
 };
 
