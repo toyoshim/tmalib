@@ -1,0 +1,274 @@
+<html>
+<head><title>MIDI frame test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script src="mv_common.js"></script>
+<script id="shader" type="x-shader/x-fragment">
+/*--------------------------------------------------------------------------------------
+License CC0 - http://creativecommons.org/publicdomain/zero/1.0/
+To the extent possible under law, the author(s) have dedicated all copyright and related and neighboring rights to this software to the public domain worldwide. This software is distributed without any warranty.
+----------------------------------------------------------------------------------------
+-Otavio Good
+*/
+
+// various noise functions
+float Hash2d(vec2 uv)
+{
+    float f = uv.x + uv.y * 47.0;
+    return fract(cos(f*3.333)*100003.9);
+}
+float Hash3d(vec3 uv)
+{
+    float f = uv.x + uv.y * 37.0 + uv.z * 521.0;
+    return fract(cos(f*3.333)*100003.9);
+}
+float mixP(float f0, float f1, float a)
+{
+    return mix(f0, f1, a*a*(3.0-2.0*a));
+}
+const vec2 zeroOne = vec2(0.0, 1.0);
+float noise2d(vec2 uv)
+{
+    vec2 fr = fract(uv.xy);
+    vec2 fl = floor(uv.xy);
+    float h00 = Hash2d(fl);
+    float h10 = Hash2d(fl + zeroOne.yx);
+    float h01 = Hash2d(fl + zeroOne);
+    float h11 = Hash2d(fl + zeroOne.yy);
+    return mixP(mixP(h00, h10, fr.x), mixP(h01, h11, fr.x), fr.y);
+}
+float noise2dT(vec2 uv)
+{
+    vec2 fr = fract(uv);
+    vec2 smooth = fr*fr*(3.0-2.0*fr);
+    vec2 fl = floor(uv);
+    uv = smooth + fl;
+    return texture2D(iChannel0, (uv + 0.5)/iChannelResolution[0].xy).y; // use constant here instead?
+}
+float noise(vec3 uv)
+{
+    vec3 fr = fract(uv.xyz);
+    vec3 fl = floor(uv.xyz);
+    float h000 = Hash3d(fl);
+    float h100 = Hash3d(fl + zeroOne.yxx);
+    float h010 = Hash3d(fl + zeroOne.xyx);
+    float h110 = Hash3d(fl + zeroOne.yyx);
+    float h001 = Hash3d(fl + zeroOne.xxy);
+    float h101 = Hash3d(fl + zeroOne.yxy);
+    float h011 = Hash3d(fl + zeroOne.xyy);
+    float h111 = Hash3d(fl + zeroOne.yyy);
+    return mixP(
+        mixP(mixP(h000, h100, fr.x), mixP(h010, h110, fr.x), fr.y),
+        mixP(mixP(h001, h101, fr.x), mixP(h011, h111, fr.x), fr.y)
+        , fr.z);
+}
+
+float PI=3.14159265;
+
+vec3 saturate(vec3 a)
+{
+        return clamp(a, 0.0, 1.0);
+}
+vec2 saturate(vec2 a)
+{
+        return clamp(a, 0.0, 1.0);
+}
+float saturate(float a)
+{
+        return clamp(a, 0.0, 1.0);
+}
+
+float Density(vec3 p)
+{
+    //float ws = 0.06125*0.125;
+    //vec3 warp = vec3(noise(p*ws), noise(p*ws + 111.11), noise(p*ws + 7111.11));
+    float final = noise(p*0.06125);// + sin(iGlobalTime)*0.5-1.95 + warp.x*4.0;
+    float other = noise(p*0.06125 + 1234.567);
+    other -= 0.5;
+    final -= 0.5;
+    final = 0.1/(abs(final*final*other));
+    final += 0.5;
+    return final*0.0001;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+        // ---------------- First, set up the camera rays for ray marching ----------------
+        vec2 uv = fragCoord.xy/iResolution.xy * 2.0 - 1.0;// - 0.5;
+
+        // Camera up vector.
+        vec3 camUp=vec3(0,1,0); // vuv
+
+        // Camera lookat.
+        vec3 camLookat=vec3(0,0.0,0);   // vrp
+
+        float mx=iMouse.x/iResolution.x*PI*2.0 + iGlobalTime * 0.01;
+        float my=-iMouse.y/iResolution.y*10.0 + sin(iGlobalTime * 0.03)*0.2+0.2;//*PI/2.01;
+        vec3 camPos=vec3(cos(my)*cos(mx),sin(my),cos(my)*sin(mx))*(200.2);      // prp
+
+        // Camera setup.
+        vec3 camVec=normalize(camLookat - camPos);//vpn
+        vec3 sideNorm=normalize(cross(camUp, camVec));  // u
+        vec3 upNorm=cross(camVec, sideNorm);//v
+        vec3 worldFacing=(camPos + camVec);//vcv
+        vec3 worldPix = worldFacing + uv.x * sideNorm * (iResolution.x/iResolution.y) + uv.y * upNorm;//scrCoord
+        vec3 relVec = normalize(worldPix - camPos);//scp
+
+        // --------------------------------------------------------------------------------
+        float t = 0.0;
+        float inc = 0.02;
+        float maxDepth = 70.0;
+        vec3 pos = vec3(0,0,0);
+    float density = 0.0;
+        // ray marching time
+    for (int i = 0; i < 37; i++)        // This is the count of how many times the ray actually marches.
+    {
+        if ((t > maxDepth)) break;
+        pos = camPos + relVec * t;
+        float temp = Density(pos);
+        //temp *= saturate(t-1.0);
+
+        inc = 1.9 + temp*0.05;  // add temp because this makes it look extra crazy!
+        density += temp * inc;
+        t += inc;
+    }
+
+        // --------------------------------------------------------------------------------
+        // Now that we have done our ray marching, let's put some color on this.
+        vec3 finalColor = vec3(0.01,0.1,1.0)* density*0.2;
+
+        // output the final color with sqrt for "gamma correction"
+        //fragColor = vec4(sqrt(clamp(finalColor, 0.0, 1.0)),1.0);
+        fragColor = vec4(sqrt(clamp(finalColor, 0.0, 1.0)),1.0) * 0.1;
+}
+</script>
+
+<script id="shader2" type="x-shader/x-fragment">
+// https://www.shadertoy.com/view/4dsGzH
+vec3 COLOR1 = vec3(0.0, 0.0, 0.3);
+vec3 COLOR2 = vec3(0.5, 0.0, 0.0);
+float BLOCK_WIDTH = 0.01;
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+        vec2 uv = fragCoord.xy / iResolution.xy;
+        
+        // To create the BG pattern
+        vec3 final_color = vec3(1.0);
+        vec3 bg_color = vec3(0.0);
+        vec3 wave_color = vec3(0.0);
+        
+        float c1 = mod(uv.x, 2.0 * BLOCK_WIDTH);
+        c1 = step(BLOCK_WIDTH, c1);
+        
+        float c2 = mod(uv.y, 2.0 * BLOCK_WIDTH);
+        c2 = step(BLOCK_WIDTH, c2);
+        
+        bg_color = mix(uv.x * COLOR1, uv.y * COLOR2, c1 * c2);
+        
+        
+        // To create the waves
+        float wave_width = 0.01;
+        uv  = -1.0 + 2.0 * uv;
+        uv.y += 0.1;
+        for(float i = 0.0; i < 10.0; i++) {
+                
+                uv.y += (0.07 * sin(uv.x + i/7.0 + iGlobalTime ));
+                wave_width = abs(1.0 / (150.0 * uv.y));
+                wave_color += vec3(wave_width * 1.9, wave_width, wave_width * 1.5);
+        }
+        
+        final_color = bg_color + wave_color;
+        
+        
+        fragColor = vec4(final_color, 1.0);
+}
+</script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var r = 2;
+  var width = 1920 / r;
+  var height = 1080 / r;
+  width = 640;
+  height = 400;
+  MajVj.setSetting('misc', 'midi', 'useSysex', true);
+  MajVj.setSetting('misc', 'midi', 'record', true);
+  var vj = new MajVj(width, height, true);
+  Promise.all([
+    MajVj.loadAllPlugins(),
+    MajVj.loadImageFrom('data/moon512.jpg'),
+    MajVj.loadImageFrom('data/bs256.jpg')]).then(function (values) {
+    var image_moon = values[1];
+    var image_bs = values[2];
+    var controller = {
+      sound: {
+        volume: 0.0,
+        wave: [],
+        fft: [],
+        fftDb: [],
+      },
+      midi: {
+        keymap: MajVj.misc.midi.keymap
+      }
+    };
+    var glowController = {
+      volume: [0.1, 0.0]
+    };
+    var wired = vj.create('frame', 'wired');
+    var roll = vj.create('frame', 'rolline', { controller: controller });
+    var moon = vj.create('frame', 'astalight', { controller: controller,
+                                                 image: image_moon,
+                                                 brightness: 0.2,
+                                                 zoom: 2 });
+    var bs = vj.create('frame', 'astalight', { controller: controller,
+                                                  image: image_bs,
+                                                  brightness: 2.0,
+                                                  zoom: 2 });
+    var rate = 1.0;
+    var rate_target = 1.0;
+    var shader = document.getElementById('shader').text;
+    var shadertoy = vj.create('frame', 'shadertoy', {
+        shader: shader,
+        controller: controller,
+        textures: [ 'previous-frame' ] });
+    var glow = vj.create('effect', 'glow', { controller: glowController });
+    var fbo = vj.screen().createFrameBuffer(width, height);
+    var update_rate = function() {
+      var messages = MajVj.misc.midi.messages;
+      MajVj.misc.midi.messages = [];
+      for (var i = 0; i < messages.length; ++i) {
+        if (messages[i][0] != 144 || messages[i][1] != 32)
+          continue;
+        rate_target = messages[i][2] / 2;
+      }
+      rate += (rate_target - rate) * 0.01;
+    };
+    set_rate = function(rate) {
+      rate_target = rate;
+    };
+    vj.run(function (delta) {
+      fbo.bind();
+      shadertoy.draw(delta);
+      wired.draw(delta);
+      roll.draw(delta);
+      update_rate();
+      moon._alpha = rate;
+      moon.draw(delta);
+      bs._alpha = 1.0 - rate;
+      bs.draw(delta);
+      vj.screen().bind();
+      glow.draw(delta, fbo.texture);
+      //MajVj.misc.midi.auto();
+      MajVj.misc.midi.decay();
+    });
+    window.onresize = function () {
+      vj.onresize();
+      moon.onresize(vj.aspect());
+      bs.onresize(vj.aspect());
+    };
+  }, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
