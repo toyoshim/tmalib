@@ -44,7 +44,7 @@ MajVj.frame.spiline.prototype.draw = function (delta) {
     this._api.stroke(0);
     this._api.rect(this._api.width / 2, this._api.height / 2,
                    this._api.width, this._api.height);
-    this._api.stroke(0, 0, 255, 200);
+    this._api.stroke(30, 30, 255, 150);
     var cy = this._by;
     for (var iy = 0; iy < this._grid.y; ++iy) {
         var cx = this._bx;
