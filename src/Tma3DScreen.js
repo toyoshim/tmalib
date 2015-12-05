@@ -23,7 +23,7 @@ function Tma3DScreen (width, height) {
     this.canvas.onmouseup = this._onmouseup.bind(this);
     this.canvas2d = document.createElement('canvas');
     this.context = this.canvas2d.getContext('2d');
-    this.gl = this.canvas.getContext('webgl');
+    this.gl = this.canvas.getContext('webgl', { preserveDrawingBuffer: true });
     if (!this.gl) {
         tma.log('WebGL: webgl is not supported. Try experimental-webgl...');
         this.gl = this.canvas.getContext('experimental-webgl');
