@@ -43,6 +43,9 @@ MajVj.misc.api2d = function (options) {
               Math.sin(Math.PI * 2 * i / (this._ellipseResolution - 1)));
     }
     this._ellipseCoords = this._screen.createBuffer(ellipseCoords);
+
+    this._rectCoords = this._screen.createBuffer(
+            [-1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0]);
 };
 
 // Shader programs.
@@ -261,6 +264,34 @@ MajVj.misc.api2d.prototype.ellipse = function (x, y, width, height) {
     this._program.setUniformVector('uColor', this._stroke);
     this._program.drawArrays(
             Tma3DScreen.MODE_LINE_LOOP, 1, this._ellipseResolution);
+};
+
+/**
+ * Draws a rectangle.
+ * @param x center position x
+ * @param y center position y
+ * @param width width
+ * @param height height
+ */
+MajVj.misc.api2d.prototype.rect = function (x, y, width, height) {
+    this._screen.setLineWidth(this._strokeWeight);
+    this._screen.setAlphaMode(true,
+                              this._screen.gl.SRC_ALPHA,
+                              this._screen.gl.ONE_MINUS_SRC_ALPHA);
+    this._program.setAttributeArray('aCoord', this._rectCoords, 0, 2, 0);
+    this._size[0] = this._Width(width);
+    this._size[1] = this._Height(height);
+    this._program.setUniformVector('uSize', this._size);
+    this._position[0] = this._X(x);
+    this._position[1] = this._Y(y);
+    this._program.setUniformVector('uPosition', this._position);
+    this._program.setUniformVector('uColor', this._fill);
+    this._program.drawArrays(
+            Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+
+    this._program.setUniformVector('uColor', this._stroke);
+    this._program.drawArrays(
+            Tma3DScreen.MODE_LINE_LOOP, 0, 5);
 };
 
 /**
