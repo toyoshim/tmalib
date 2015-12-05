@@ -20,7 +20,7 @@ MajVj.frame.movie = function (options) {
                     MajVj.frame.movie._fragmentShader));
     this._coords = this._screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0])
     if (options.url)
-      this.play(options.url);
+      this.play(options.url).then(function(){});
 };
 
 // Shader programs.
