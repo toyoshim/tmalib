@@ -130,6 +130,15 @@ MajVj.prototype.fps = function () {
 };
 
 /**
+ * Gets MajVj2D API interface.
+ * @param options options
+ * @return a MajVj2D API interface (misc.api2d object in JavaScript)
+ */
+MajVj.prototype.get2DInterface = function (options) {
+    return this.create('misc', 'api2d', options);
+};
+
+/**
  * Get a plugin setting.
  * @param type 'effect' or 'frame'
  * @param name plugin name
@@ -198,6 +207,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'snow'),
         MajVj.loadPlugin('frame', 'specticle'),
         MajVj.loadPlugin('frame', 'wired'),
+        MajVj.loadPlugin('misc', 'api2d'),
         MajVj.loadPlugin('misc', 'midi'),
         MajVj.loadPlugin('misc', 'sound')
     ]);

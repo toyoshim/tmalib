@@ -1,0 +1,33 @@
+<html>
+<head><title>MajVj API2D test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script src="mv_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var r = 4;
+  var width = 1920 / r;
+  var height = 1080 / r;
+  var vj = new MajVj(width, height, true);
+  var api = null;
+  MajVj.loadAllPlugins().then(function () {
+    api = vj.get2DInterface({ width: width, height: height });
+    api.background(0);
+    vj.run(function (delta) {
+      api.background(230, 230, 230);
+      api.stroke(130, 0, 0);
+      api.strokeWeight(4);
+      api.line(api.width / 2 - 70, api.height / 2 - 70, api.width / 2 + 70, api.height / 2 + 70);
+      api.line(api.width / 2 + 70, api.height / 2 - 70, api.width / 2 - 70, api.height / 2 + 70);
+      api.fill(255, 150);
+      api.ellipse(api.width / 2, api.height / 2, 50, 50);
+    });
+    window.onresize = function () {
+      vj.onresize();
+    };
+  }, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

@@ -655,6 +655,14 @@ Tma3DScreen.prototype.popCullingMode = function () {
 };
 
 /**
+ * Sets line width.
+ * @param width line width
+ */
+Tma3DScreen.prototype.setLineWidth = function (width) {
+    this.gl.lineWidth(width);
+};
+
+/**
  * Flush the OpenGL ES 2.0 pipeline.
  */
 Tma3DScreen.prototype.flush = function () {
