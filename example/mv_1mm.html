@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>Perfume 1mm</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="../ext/baser.min.js"></script>
+<script src="../tma.js"></script>
+<style>
+div.youtube {
+  position: fixed;
+  //top: 252px;
+  top: 300px;
+  left: 224px;
+  transform: perspective(500px) rotateX(77deg);
+}
+</style>
+</head>
+<body style="margin:0" bgcolor="#000000">
+<div class="youtube" data-id="ihNaFCEd0Ms" data-width="512" data-height="288" data-autoplay="false" data-loop="false"></div>
+<script>
+var yt = $('.youtube').bcYoutube().data(baser.ui.element.Youtube.className);
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+var vj;
+var scene;
+var fx;
+var fbo;
+var time = 0;
+var play = false;
+
+var run = function () {
+  vj.run(function (delta) {
+    time += delta;
+    if (time > 2000 && !play) {
+      yt.player.playVideo();
+      play = true;
+    }
+    fbo.bind();
+    vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+    scene.draw(delta);
+    vj.screen().bind();
+    vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+    fx.draw(delta, fbo.texture);
+  });
+};
+
+var majvjReady = function () {
+  scene = vj.create('scene', 'perfume1mm');
+  fx = vj.create('effect', 'nicofarre');
+  fbo = vj.screen().createFrameBuffer(960, 540);
+  if (yt.player.playVideo)
+    run(vj);
+  else
+    setTimeout(majvjReady, 100);
+};
+
+tma.onload = function () {
+  vj = new MajVj(960, 540, false);
+  MajVj.loadAllPlugins().then(function() {
+    MajVj.loadPlugin('scene', 'perfume1mm').then(majvjReady);
+  });
+};
+</script>
+</body>
+</html>
+
