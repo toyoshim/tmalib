@@ -17,6 +17,7 @@ function Tma3DScreen (width, height) {
     this.canvas = document.createElement('canvas');
     this.canvas.width = width;
     this.canvas.height = height;
+    this.canvas.style.backgroundColor = '#000000';
     this.canvas.onmousemove = this._onmousemove.bind(this);
     this.canvas.onmouseout = this._onmouseout.bind(this);
     this.canvas.onmousedown = this._onmousedown.bind(this);
