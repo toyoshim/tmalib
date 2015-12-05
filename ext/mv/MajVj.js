@@ -206,6 +206,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'signal'),
         MajVj.loadPlugin('frame', 'snow'),
         MajVj.loadPlugin('frame', 'specticle'),
+        MajVj.loadPlugin('frame', 'spiline'),
         MajVj.loadPlugin('frame', 'wired'),
         MajVj.loadPlugin('misc', 'api2d'),
         MajVj.loadPlugin('misc', 'midi'),
@@ -230,9 +231,12 @@ MajVj.loadPlugin = function (type, name) {
         MajVj.loadScript(type, name, 'main.js').then(function () {
             if (!MajVj[type][name]) {
                 reject('MajVj.' + type + '.' + name + ' is not defined.');
+                return;
             }
-            if (!MajVj[type][name].load)
+            if (!MajVj[type][name].load) {
                 resolve();
+                return;
+            }
             MajVj[type][name].load().then(function () {
                 resolve();
             }, function (e) { reject(e); });
