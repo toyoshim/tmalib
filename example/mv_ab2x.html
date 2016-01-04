@@ -12,20 +12,25 @@ tma.onload = function () {
 		MajVj.frame.ab2.resolution = 2;
 		var ab2 = vj.create('frame', 'ab2');
 		var wired = vj.create('frame', 'wired');
-		var effect = vj.create('effect', 'glow');
-		effect.setController({ volume: [0.1, 0.0] });
-		var fbo = vj.screen().createFrameBuffer(resolution, resolution);
+		var glow = vj.create('effect', 'glow');
+		var cathode = vj.create('effect', 'cathode');
+		glow.setController({ volume: [0.1, 0.0] });
+		var fbo1 = vj.screen().createFrameBuffer(resolution, resolution);
+		var fbo2 = vj.screen().createFrameBuffer(resolution, resolution);
 		vj.run(function (delta) {
-			effect._controller.volume[1] = Math.random() * 0.2;
+			glow._controller.volume[1] = Math.random() * 0.2;
 			if (Math.random() < 0.95)
-				effect._controller.volume[1] = 0.0;
-			fbo.bind();
+				glow._controller.volume[1] = 0.0;
+			fbo1.bind();
 			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
 			wired.draw(delta);
 			ab2.draw(delta);
+			fbo2.bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			glow.draw(delta, fbo1.texture);
 			vj.screen().bind();
 			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
-			effect.draw(delta, fbo.texture);
+			cathode.draw(delta, fbo2.texture);
 			vj.screen().flush();
 		});
 		window.onresize = function () {
@@ -33,7 +38,8 @@ tma.onload = function () {
 			var ratio = vj.aspect();
 			ab2.onresize(ratio);
 			wired.onresize(ratio);
-			effect.onresize(ratio);
+			glow.onresize(ratio);
+			cathode.onresize(ratio);
 		};
 	}, function (e) { console.error('plugin load error: ' + e.stack); });
 };
