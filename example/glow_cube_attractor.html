@@ -264,6 +264,9 @@ tma.onload = function () {
         texture1.update(image);
         texture2.update(imageBlur);
 
+        // Fill background.
+        screen.fillColor(0, 0, 0, 0);
+
         // Draws cube.
         mat4.set(mvMatrixBase, mvMatrix);
         mat4.translate(mvMatrix, [0.0, 0.0, -5.0]);
