@@ -1,6 +1,6 @@
 {
   "name": "tmalib",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "authors": [
     "Takashi Toyoshima <toyoshim@gmail.com>"
   ],
@@ -22,7 +22,6 @@
   ],
   "devDependencies": {
     "gl-matrix": "~1.3.7",
-    "uglify-js": "~1.3.5",
     "polymer": "Polymer/polymer#~0.4.2"
   }
 }

@@ -1,16 +1,17 @@
-MINIFY=./bower_components/uglify-js/bin/uglifyjs -nc -o
+MINIFY=./node_modules/uglify/bin/uglify -o
 
 usage:
 	@echo 'Usage: make <target>'
 	@echo '<target>:'
-	@echo '    all           ... install-bower && install-deps && build'
-	@echo '    install-npm   ... apt-get install npm'
-	@echo '    install-bower ... npm install bower'
-	@echo '    install-deps  ... bower install && cp'
+	@echo '    all            ... install-bower && install-deps && build'
+	@echo '    install-npm    ... apt-get install npm'
+	@echo '    install-bower  ... npm install bower'
+	@echo '    install-deps   ... bower install && cp'
+	@echo '    install-uglify ... npm install uglify'
 	@echo '    build'
 
 all:
-	make install-bower && make install-deps && make build
+	make install-bower && make install-uglify && make install-deps && make build
 
 install-npm:
 	apt-get install npm
@@ -22,6 +23,9 @@ install-bower:
 install-deps:
 	./node_modules/bower/bin/bower install
 	cp ./bower_components/gl-matrix/gl-matrix-min.js ./ext/gl-matrix.js
+
+install-uglify:
+	npm install uglify
 
 build:
 	make build-tmalib
