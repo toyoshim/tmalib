@@ -26,8 +26,20 @@ var MajVj = function (width, height, fullscreen, parent) {
     this._fps = new Array(60);
     this._fpsCount = 0;
     this._fpsAvg = 0.0;
+    this.adjustPosition(0, 0);
     this.onresize();
 }
+
+/**
+ * Adjust canvas position relative to the parent.
+ * @param x relative position from let in pixel.
+ * @param y relative position from top in pixel.
+ */
+MajVj.prototype.adjustPosition = function (x, y) {
+    this._screen.canvas.style.position = 'relative';
+    this._screen.canvas.style.top = y + 'px';
+    this._screen.canvas.style.left = x + 'px';
+};
 
 /**
  * Handles screen resize.
