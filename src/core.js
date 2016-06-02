@@ -166,6 +166,7 @@ tma._boot = function () {
     screen,
     tma.load(tma.base + 'src/TmaParticle.js'),
     tma.load(tma.base + 'src/TmaSequencer.js'),
+    tma.load(tma.base + 'src/TmaTimeline.js'),
     tma.load(tma.base + 'src/TmaMotionBvh.js'),
     tma.load(tma.base + 'src/TmaModelPly.js'),
     tma.load(tma.base + 'src/TmaModelPs2Ico.js')

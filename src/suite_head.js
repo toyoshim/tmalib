@@ -15,6 +15,7 @@ Polymer('majvj-suite', {
     var TmaModelPrimitives = _core.TmaModelPrimitives;
     var TmaParticle = _core.TmaParticle;
     var TmaSequencer = _core.TmaSequencer;
+    var TmaTimeline = _core.TmaTimeline;
     var TmaMotionBvh = _core.TmaMotionBvh;
     var TmaModelPly = _core.TmaModelPly;
     var TmaModelPs2Ico = _core.TmaModelPs2Ico;

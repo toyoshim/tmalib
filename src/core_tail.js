@@ -5,6 +5,7 @@
     this.TmaModelPrimitives = TmaModelPrimitives;
     this.TmaParticle = TmaParticle;
     this.TmaSequencer = TmaSequencer;
+    this.TmaTimeline = TmaTimeline;
     this.TmaMotionBvh = TmaMotionBvh;
     this.TmaModelPly = TmaModelPly;
     this.TmaModelPs2Ico = TmaModelPs2Ico;
