@@ -1,0 +1,83 @@
+<html>
+<head><title>GLSL Sandbox test</title></head>
+<body style="margin: 0; cursor: none">
+<!-- http://glslsandbox.com/e#32768.0 -->
+<script id="shader" type="x-shader/x-fragment">
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+
+//mod by everythinging
+
+void main( void ) {
+	
+	vec2 pos = ( gl_FragCoord.xy / resolution.xy ) - vec2(0.5,0.5);	
+        float horizon = 0.0; 
+        float fov = 0.5; 
+	float scaling = 0.5;
+	float t = time*0.25;
+	
+	vec3 p = vec3(pos.x, fov, pos.y - horizon);
+	p.xy *= 1.0-distance(p.xy, vec2(0.0, 0.0));
+	//p.xy /= 1.0-distance(p.xy, vec2(cos(p.x),sin(p.y)));
+	
+	vec2 s = vec2(p.x/p.z, (p.y/p.z)+(t)) * scaling;
+	s.x *= atan(sin(atan(t)));
+	
+	//checkboard texture
+	float color = sign((mod(s.x, 0.1) - 0.05) * (mod(s.y, 0.1) - 0.05));
+	//fading
+	color *= p.z*p.z*40.0;
+	
+	gl_FragColor = vec4( vec3(color), 1.0 );
+
+}
+</script>
+<script src="../tma.js"></script>
+<script>
+/* global tma */
+/* global MajVj */
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  const r = 4;
+  const width = 1920 / r;
+  const height = 540 / r;
+  const vj = new MajVj(width, height, false);
+  const fbo = vj.screen().createFrameBuffer(width, height);
+  MajVj.loadAllPlugins().then(function () {
+    const shader = document.getElementById('shader').text;
+    const sandbox = vj.create('frame', 'sandbox', { shader: shader });
+    const origins = [
+      [ 0.0, 0.0],  // from center
+      [ 1.0, 0.0],  // from right
+      [-1.0, 0.0],  // from left
+    ];
+    let originIndex = 0;
+    const fx = vj.create('effect', 'flashpanel', {
+      panels: [15.0, 5.0],
+      speed: 0.7,
+      origin: origins[originIndex],
+      color: [0.3, 0.3, 0.9]
+    });
+    window.addEventListener('keydown', e => {
+      fx.restart();
+      fx._origin = origins[++originIndex % origins.length]
+    });
+    vj.run(function (delta) {
+      fbo.bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      sandbox.draw(delta);
+      vj.screen().bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      fx.draw(delta, fbo.texture);
+    });
+  }, function (e) { console.log('plugin load error: ' + e); });
+};
+
+</script>
+</body>
+</html>
