@@ -206,6 +206,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'ab2'),
         MajVj.loadPlugin('frame', 'astalight'),
         MajVj.loadPlugin('frame', 'at'),
+        MajVj.loadPlugin('frame', 'color'),
         MajVj.loadPlugin('frame', 'crlogo'),
         MajVj.loadPlugin('frame', 'effect'),
         MajVj.loadPlugin('frame', 'filter'),
