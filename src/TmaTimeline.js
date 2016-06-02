@@ -8,11 +8,36 @@
  * This prototype provides a Timeline that schedule tasks.
  * @author Takashi Toyoshima <toyoshim@gmail.com>
  */
-function TmaTimeline () {
+function TmaTimeline (options) {
     this._elapsed = 0.0;
     this._convertedTime = 0.0;
-    this._function = TmaTimeline._functionBypass;
+    this._input_scale = options.input_scale || 1.0;
+    this._output_scale = options.output_scale || 1.0;
+    this._function = options.function || TmaTimeline._functionBypass;
+    if (options.type)
+        this._function = TmaTimeline._functionFor(options.type);
 }
+
+TmaTimeline.covert = function (type, value) {
+    var f = TmaTimeline._functionFor(type);
+    if (!f)
+        return value;
+    return f(value);
+};
+
+TmaTimeline._functionFor = function (type) {
+    switch (type) {
+    case 'bypass':
+        return TmaTimeline._functionBypass;
+    case 'power':
+        return TmaTimeline._functionPower;
+    case 'saturate':
+        return TmaTimeline._functionSaturate;
+    case 'sin':
+        return TmaTimeline._functionSin;
+    }
+    return null;
+};
 
 /**
  * Convert function just to bypass.
@@ -21,6 +46,37 @@ function TmaTimeline () {
  */
 TmaTimeline._functionBypass = function (elapsed) {
     return elapsed;
+};
+
+/**
+ * Convert function in power curve.
+ * @param elapsed original elapsed time
+ * @return converted elapsed time
+ */
+TmaTimeline._functionPower = function (elapsed) {
+    return Math.pow(10.0, elapsed * 2 - 2);
+};
+
+/**
+ * Convert function in saturated curve.
+ * @param elapsed original elapsed time
+ * @return converted elapsed time
+ */
+TmaTimeline._functionSaturate = function (elapsed) {
+    if (elapsed < 0.0)
+        return 0.0;
+    if (elapsed > 1.0)
+        return 1.0;
+    return elapsed;
+};
+
+/**
+ * Convert function in sin curve.
+ * @param elapsed original elapsed time
+ * @return converted elapsed time
+ */
+TmaTimeline._functionSin = function (elapsed) {
+    return Math.sin(2.0 * Math.PI * elapsed);
 };
 
 /**
@@ -36,9 +92,9 @@ TmaTimeline.prototype.reset = function () {
  * @return delta in converted timeline
  */
 TmaTimeline.prototype.update = function (delta) {
-    this._elapsed += delta;
+    this._elapsed += delta * this._input_scale;
     var lastConvertedTime = this._convertedTime;
-    this._convertedTime = this._function(this._elapsed);
+    this._convertedTime = this._function(this._elapsed) * this._output_scale;
     return this._convertedTime - lastConvertedTime;
 };
 
