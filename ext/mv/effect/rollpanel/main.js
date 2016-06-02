@@ -31,8 +31,10 @@ MajVj.effect.rollpanel = function (options) {
     }
     this._coords =
             this._screen.createBuffer(Array.prototype.concat.apply([], coords));
-    this._matrix = mat4.perspective(90, 1, 0.1, 2.0, mat4.create());
-    mat4.translate(this._matrix, [0.0, 0.0, -1.0]);
+    this._matrix = mat4.create();
+    mat4.perspective(this._matrix, 90, 1, 0.1, 2.0);
+    mat4.translate(this._matrix, this._matrix, [0.0, 0.0, -1.0]);
+    mat4.scale(this._matrix, this._matrix, [2, 2, 2]);
     this._scaleTimeline = new TmaTimeline({
             type: 'bypass',
             input_scale: 0.0001 * (options.speed || 1)
@@ -81,12 +83,12 @@ MajVj.effect.rollpanel.prototype.draw = function (delta, texture) {
     this._program.setUniformMatrix('uMatrix', this._matrix);
     this._program.setTexture('uTexture', texture);
     var center = (this._panels - 1) / 2;
-    var matrix = mat4.identity();
+    var matrix = mat4.create();
     var time = this._scaleTimeline.elapsed();
     for (var i = 0; i < this._panels; ++i) {
         var local_time = time - Math.abs(i - center) * this._delay;
         mat4.identity(matrix);
-        mat4.rotateX(matrix, this._oneshotTimeline.convert(local_time));
+        mat4.rotateX(matrix, matrix, this._oneshotTimeline.convert(local_time));
         this._program.setUniformMatrix('uMvMatrix', matrix);
         this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 4 * i, 4);
     }
