@@ -25,6 +25,8 @@ TmaTimeline.convert = function (type, value) {
     return f(value);
 };
 
+TmaTimeline._Math = Math;
+
 TmaTimeline._functionFor = function (type) {
     switch (type) {
     case 'bypass':
@@ -56,7 +58,7 @@ TmaTimeline._functionBypass = function (elapsed) {
 TmaTimeline._functionPower = function (elapsed) {
     if (elapsed <= 0)
         return 0.0;
-    return Math.pow(10.0, elapsed * 2 - 2);
+    return TmaTimeline._Math.pow(10.0, elapsed * 2 - 2);
 };
 
 /**
@@ -78,7 +80,7 @@ TmaTimeline._functionSaturate = function (elapsed) {
  * @return converted elapsed time
  */
 TmaTimeline._functionSin = function (elapsed) {
-    return Math.sin(2.0 * Math.PI * elapsed);
+    return TmaTimeline._Math.sin(2.0 * TmaTimeline._Math.PI * elapsed);
 };
 
 /**
@@ -98,6 +100,16 @@ TmaTimeline.prototype.update = function (delta) {
     var lastConvertedTime = this._convertedTime;
     this._convertedTime = this._function(this._elapsed) * this._output_scale;
     return this._convertedTime - lastConvertedTime;
+};
+
+/**
+ * Convert elapsed timeline.
+ * @param elapsed time in msec
+ * @return elapsed time in converted timeline
+ */
+TmaTimeline.prototype.convert = function (elapsed) {
+    return this._function(elapsed * this._input_scale) *
+            this._output_scale;
 };
 
 /**
