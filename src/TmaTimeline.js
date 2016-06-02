@@ -18,7 +18,7 @@ function TmaTimeline (options) {
         this._function = TmaTimeline._functionFor(options.type);
 }
 
-TmaTimeline.covert = function (type, value) {
+TmaTimeline.convert = function (type, value) {
     var f = TmaTimeline._functionFor(type);
     if (!f)
         return value;
@@ -54,6 +54,8 @@ TmaTimeline._functionBypass = function (elapsed) {
  * @return converted elapsed time
  */
 TmaTimeline._functionPower = function (elapsed) {
+    if (elapsed <= 0)
+        return 0.0;
     return Math.pow(10.0, elapsed * 2 - 2);
 };
 
