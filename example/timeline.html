@@ -1,0 +1,56 @@
+<html>
+<head>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript" src="../src/TmaTimeline.js"></script>
+<script type="text/javascript">
+/* global TmaTimeline */
+/* global google */
+google.charts.load('current', {'packages':['corechart']});
+google.charts.setOnLoadCallback(drawChart);
+
+function drawChart() {
+  let inputs1 = [['Input', 'Bypass', 'Power', 'Saturate', 'Sin']];
+  for (let i = -0.1; i <= 1.1; i += 0.01) {
+    let values = [];
+    values.push(i);
+    values.push(TmaTimeline.convert('bypass', i));
+    values.push(TmaTimeline.convert('power', i));
+    values.push(TmaTimeline.convert('saturate', i));
+    values.push(TmaTimeline.convert('sin', i));
+    inputs1.push(values);
+  }
+  let inputs2 = [['Input', 'Ease', 'EaseIn', 'EaseOut', 'EaseInOut', 'Linear']];
+  for (let i = 0.0; i <= 1.0; i += 0.01) {
+    let values = [];
+    values.push(i);
+    values.push(TmaTimeline.convert('ease', i));
+    values.push(TmaTimeline.convert('ease-in', i));
+    values.push(TmaTimeline.convert('ease-out', i));
+    values.push(TmaTimeline.convert('ease-in-out', i));
+    values.push(TmaTimeline.convert('linear', i));
+    inputs2.push(values);
+  }
+  var data1 = google.visualization.arrayToDataTable(inputs1);
+  var data2 = google.visualization.arrayToDataTable(inputs2);
+
+  var options = {
+    title: 'TmaTimeline',
+    curveType: 'function',
+    legend: { position: 'bottom' }
+  };
+
+  var chart1 =
+      new google.visualization.LineChart(document.getElementById('chart1'));
+  var chart2 =
+      new google.visualization.LineChart(document.getElementById('chart2'));
+
+  chart1.draw(data1, options);
+  chart2.draw(data2, options);
+}
+</script>
+</head>
+<body>
+<div id="chart1" style="width: 900px; height: 500px"></div>
+<div id="chart2" style="width: 900px; height: 500px"></div>
+</body>
+</html>
