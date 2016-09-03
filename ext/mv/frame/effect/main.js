@@ -54,6 +54,11 @@ MajVj.frame.effect.load = function () {
  */
 MajVj.frame.effect.prototype.onresize = function (aspect) {
     this._aspect = aspect;
+    var i;
+    for (i = 0; i < this._frames.length; ++i)
+        this._frames[i].onresize(aspect);
+    for (i = 0; i < this._effects.length; ++i)
+        this._effects[i].onresize(aspect);
 };
 
 /**

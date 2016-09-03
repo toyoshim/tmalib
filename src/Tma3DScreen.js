@@ -12,19 +12,17 @@
  * @param height screen height
  */
 function Tma3DScreen (width, height) {
-    this.width = width;
-    this.height = height;
     this.canvas = document.createElement('canvas');
-    this.canvas.width = width;
-    this.canvas.height = height;
     this.canvas.style.backgroundColor = '#000000';
+    this.resize(width, height);
+    this.gl = this.canvas.getContext('webgl', { preserveDrawingBuffer: true });
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     this.canvas.onmousemove = this._onmousemove.bind(this);
     this.canvas.onmouseout = this._onmouseout.bind(this);
     this.canvas.onmousedown = this._onmousedown.bind(this);
     this.canvas.onmouseup = this._onmouseup.bind(this);
     this.canvas2d = document.createElement('canvas');
     this.context = this.canvas2d.getContext('2d');
-    this.gl = this.canvas.getContext('webgl', { preserveDrawingBuffer: true });
     if (!this.gl) {
         tma.log('WebGL: webgl is not supported. Try experimental-webgl...');
         this.gl = this.canvas.getContext('experimental-webgl');
@@ -39,7 +37,6 @@ function Tma3DScreen (width, height) {
     if (this.gl.getExtension('OES_texture_float') == null) {
         tma.log('WebGL: float texture is not supported.');
     }
-    this.gl.viewport(0, 0, width, height);
     this.setAlphaMode(false);
     this.setCullingMode(false, true);
     this._currentAlphaMode = {};
@@ -123,12 +120,13 @@ Tma3DScreen.prototype.detachFrom = function (element) {
 Tma3DScreen.prototype.resize = function (width, height) {
     this.width = width;
     this.height = height;
-    var ratio = window.devicePixelRatio;
-    this.canvas.width = width * ratio;
-    this.canvas.height = height * ratio;
+    var dpr = window.devicePixelRatio || 1;
+    this.canvas.width = width * dpr;
+    this.canvas.height = height * dpr;
     this.canvas.style.width = width + 'px';
     this.canvas.style.height = height + 'px';
-    this.gl.viewport(0, 0, width * ratio, height * ratio);
+    if (this.gl)
+        this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 };
 
 /**
@@ -483,7 +481,7 @@ Tma3DScreen.prototype.bind = function () {
     var last = this._lastBoundFrameBuffer;
     this._lastBoundFrameBuffer = this;
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
-    this.gl.viewport(0, 0, this.width, this.height);
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     return last;
 };
 
