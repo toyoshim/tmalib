@@ -38,7 +38,7 @@ Box.prototype.draw = function (api) {
     api.color = this._c[i];
     api.drawCube(this._s[i], this._s[i], this._s[i],
                 [this._x[i], this._y[i], this._z[i]],
-                [this._r[i], 0.0, 0.0]);
+                [[this._r[i], 0.0, 0.0]]);
     this._r[i] += rs;
     this._z[i] += speed;
     if (this._z[i] > 10000)

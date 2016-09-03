@@ -56,7 +56,7 @@ MajVj.frame.nicofarre3d.modules.cube.object.prototype.draw =
         function (api, cube, rotate, speed) {
     api.color = this._color;
     var s = this._size;
-    api.drawPrimitive(cube, s, s, s, this._position, [this._rotate, 0.0, 0.0]);
+    api.drawPrimitive(cube, s, s, s, this._position, [[this._rotate, 0.0, 0.0]]);
     this._rotate += rotate;
     this._position[2] += speed;
     if (this._position[2] > 10000)

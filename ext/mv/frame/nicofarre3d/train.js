@@ -72,7 +72,7 @@ MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
             api.drawPrimitive(this._box,
                     2000, rail.houseRH, rail.houseR,
                     [x + xdiff * 20, -500.0 - this._fly, z - zdiff * 20],
-                    [0, -r, 0]);
+                    [[0, -r, 0]]);
             api.color = color;
 
         }
@@ -81,7 +81,7 @@ MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
             api.drawPrimitive(this._box,
                     2000, rail.houseLH, rail.houseL,
                     [x - xdiff * 20, -500.0 - this._fly, z + zdiff * 20],
-                    [0, -r, 0]);
+                    [[0, -r, 0]]);
             api.color = color;
         }
         z -= 1000 * Math.cos(r);
@@ -106,7 +106,7 @@ MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
             api.drawPrimitive(this._box,
                     2000, rail.houseRH, rail.houseR,
                     [x + xdiff * 20, -500.0 - this._fly, z - zdiff * 20],
-                    [0, -r, 0]);
+                    [[0, -r, 0]]);
             api.color = color;
 
         }
@@ -115,7 +115,7 @@ MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
             api.drawPrimitive(this._box,
                     2000, rail.houseLH, rail.houseL,
                     [x - xdiff * 20, -500.0 - this._fly, z + zdiff * 20],
-                    [0, -r, 0]);
+                    [[0, -r, 0]]);
             api.color = color;
         }
         z += 1000 * Math.cos(r);

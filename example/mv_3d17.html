@@ -45,7 +45,7 @@ Box.prototype.draw = function (api) {
     api.drawPrimitive(this._box,
         this._s[i], this._s[i], this._s[i],
         [this._x[i], this._y[i], this._z[i]],
-        [this._r[i], 0.0, 0.0]);
+        [[this._r[i], 0.0, 0.0]]);
     this._r[i] += rs;
     this._z[i] += speed;
     if (this._z[i] > 10000)

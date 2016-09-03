@@ -47,12 +47,7 @@ MajVj.frame.api3d = function (options) {
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.api3d._fPointShader));
 
-    // TODO: Calculate right perspectives.
-    // This may be a reason there is an unknown black box region in the screen
-    // there objects get to be invisible.
     this._mvMatrixStage = mat4.identity();
-    this._mvMatrixStage =
-            mat4.translate(this._mvMatrixStage, [0.0, 0.0, -500.0]);
     this._iMatrix = mat4.identity();
     this._matrix = mat4.create();
 
@@ -233,7 +228,6 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
     program.setAttributeArray(
             'aCoord', o.getVerticesBuffer(this._screen), 0, 3, 0);
     if (texture) {
-        // TODO: Texture isn't used correctly in mv_3d11 example.
         program.setAttributeArray(
                'aTexCoord', o.getCoordsBuffer(this._screen), 0, 2, 0);
         program.setTexture('uTexture', texture);
@@ -246,18 +240,11 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
 
     mat4.translate(this._iMatrix, p, this._matrix);
     if (r) {
-        if (typeof r[0] === 'number') {
-            // TODO: Remove this useless mod. Exist just for compat.
-            mat4.rotateX(this._matrix, r[0]);
-            mat4.rotateY(this._matrix, r[1]);
-            mat4.rotateZ(this._matrix, r[2]);
-        } else {
-            for (var i = r.length - 1; i >= 0; --i) {
-                var rotate = r[i];
-                mat4.rotateX(this._matrix, rotate[0]);
-                mat4.rotateY(this._matrix, rotate[1]);
-                mat4.rotateZ(this._matrix, rotate[2]);
-            }
+        for (var i = r.length - 1; i >= 0; --i) {
+            var rotate = r[i];
+            mat4.rotateX(this._matrix, rotate[0]);
+            mat4.rotateY(this._matrix, rotate[1]);
+            mat4.rotateZ(this._matrix, rotate[2]);
         }
     }
     mat4.scale(this._matrix, [w, h, d]);

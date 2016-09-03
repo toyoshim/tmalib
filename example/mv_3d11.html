@@ -6,7 +6,7 @@
 <script>
 var init = false;
 var s = null;
-var t = 0;
+var t = Math.PI * 5 / 4;
 var img = new Image();
 img.ready = false;
 img.onload = function () {
@@ -35,7 +35,7 @@ var draw = function (api) {
   api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
   var p = [2000 * Math.cos(t), 0, 2000 * Math.sin(t)];
   t += 0.005;
-  api.drawPrimitive(s, 200, 200, 200, p, [Math.PI / 2.0, 0.0, t * 3]);
+  api.drawPrimitive(s, 200, 200, 200, p, [[Math.PI / 2.0, 0.0, t * 3]]);
 };
 
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
@@ -43,6 +43,7 @@ tma.onload = function () {
   var vj = new MajVj(window.innerWidth, window.innerHeight, true);
   MajVj.loadAllPlugins().then(_(function () {
     var wall = vj.create('frame', 'api3d', { draw: draw });
+    vj.screen().setAlphaMode(false);
     vj.run(function (delta) {
       wall.draw(delta);
       vj.screen().flush();
