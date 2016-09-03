@@ -1,0 +1,98 @@
+<html>
+<head>
+
+<script id='v_screen' type='x-shader/x-vertex'>
+attribute vec2 aCoord;
+attribute vec2 aTexCoord;
+varying vec2 vCoord;
+
+void main() {
+  gl_Position = vec4(aCoord, 0.0, 1.0);
+  vCoord = aTexCoord;
+}
+</script>
+
+<script id='f_screen' type='x-shader/x-fragment'>
+precision mediump float;
+varying vec2 vCoord;
+uniform sampler2D uTexture;
+
+void main() {
+  gl_FragColor = texture2D(uTexture, vCoord);
+}
+</script>
+
+<script id='v_draw' type='x-shader/x-vertex'>
+attribute vec3 aCoord;
+uniform mat4 uPMatrix;
+uniform mat4 uMVMatrix;
+uniform mat4 uMatrix;
+
+void main() {
+  gl_Position = uPMatrix * uMVMatrix * uMatrix * vec4(aCoord, 1.0);
+}
+</script>
+
+<script id='f_draw' type='x-shader/x-fragment'>
+precision mediump float;
+uniform vec4 uColor;
+
+void main() {
+  gl_FragColor = uColor;
+}
+</script>
+
+<script id='v_texture' type='x-shader/x-vertex'>
+attribute vec3 aCoord;
+attribute vec2 aTexCoord;
+uniform mat4 uPMatrix;
+uniform mat4 uMVMatrix;
+uniform mat4 uMatrix;
+varying vec2 vTexCoord;
+
+void main() {
+  gl_Position = uPMatrix * uMVMatrix * uMatrix * vec4(aCoord, 1.0);
+  vTexCoord = aTexCoord;
+}
+</script>
+
+<script id='f_texture' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture;
+varying vec2 vTexCoord;
+
+void main() {
+  gl_FragColor = texture2D(uTexture, vTexCoord);
+}
+</script>
+
+<script id='v_point' type='x-shader/x-vertex'>
+attribute vec3 aCoord;
+attribute vec4 aColor;
+uniform mat4 uPMatrix;
+uniform mat4 uMVMatrix;
+uniform mat4 uMatrix;
+varying vec4 vColor;
+
+void main() {
+  vec4 position = uPMatrix * uMVMatrix * uMatrix * vec4(aCoord, 1.0);
+  gl_Position = position;
+  gl_PointSize = 1000.0 / (abs(position.z / 100.0) + 1.0);
+  vColor = aColor;
+}
+</script>
+
+<script id='f_point' type='x-shader/x-fragment'>
+precision mediump float;
+varying vec4 vColor;
+
+void main() {
+  vec2 coord = gl_PointCoord * 2.0 - vec2(1.0, 1.0);
+  float l = 1.0 - length(coord);
+  gl_FragColor = vColor * vec4(l, l, l, 1.0);
+}
+</script>
+
+
+</head>
+</html>
