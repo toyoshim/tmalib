@@ -68,6 +68,7 @@ tma.onload = function () {
     // Periodical rendering.
     function main () {
         // Draw
+        screen.fillColor(0, 0, 0, 1);
         mat4.set(mvMatrixBase, mvMatrix);
         mat4.translate(mvMatrix, [0.0, 0.0, -50.0]);
         mat4.rotate(mvMatrix, r, [1.0, 0.5, 1]);
