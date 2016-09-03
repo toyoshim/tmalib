@@ -7,8 +7,8 @@ MajVj.frame.api3d = function (options) {
     this._screen = options.screen;
     this._width = options.width;
     this._height = options.height;
-    this._aspect = options.aspect;
     this._controller = options.controller;
+    this.onresize(options.aspect);
     this._api = {
       clear: this._clear.bind(this),
       color: [1.0, 1.0, 1.0, 1.0],
@@ -47,9 +47,9 @@ MajVj.frame.api3d = function (options) {
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.api3d._fPointShader));
 
-    this._pMatrixStage = mat4.perspective(60, this._aspect, 0.1, 10000.0, mat4.create());
     this._mvMatrixStage = mat4.identity();
-    this._mvMatrixStage = mat4.translate(this._mvMatrixStage, [0.0, 0.0, -10000.0]);
+    this._mvMatrixStage =
+            mat4.translate(this._mvMatrixStage, [0.0, 0.0, -10000.0]);
     this._iMatrix = mat4.identity();
     this._matrix = mat4.create();
 
@@ -64,7 +64,6 @@ MajVj.frame.api3d = function (options) {
     opt.api = this._api;
     this._module = options.module ? new options.module(opt)
             : { draw: options.draw, clear: options.clear };
-    console.log(this._module);
 };
 
 // Shader programs.
@@ -114,6 +113,7 @@ MajVj.frame.api3d.load = function () {
  */
 MajVj.frame.api3d.prototype.onresize = function (aspect) {
     this._aspect = aspect;
+    this._pMatrixStage = mat4.perspective(60, this._aspect, 0.1, 10000.0, mat4.create());
 };
 
 /**

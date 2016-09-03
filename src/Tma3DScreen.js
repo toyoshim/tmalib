@@ -116,6 +116,22 @@ Tma3DScreen.prototype.detachFrom = function (element) {
 };
 
 /**
+ * Resizes canvas and viewport.
+ * @param width width
+ * @param height height
+ */
+Tma3DScreen.prototype.resize = function (width, height) {
+    this.width = width;
+    this.height = height;
+    var ratio = window.devicePixelRatio;
+    this.canvas.width = width * ratio;
+    this.canvas.height = height * ratio;
+    this.canvas.style.width = width + 'px';
+    this.canvas.style.height = height + 'px';
+    this.gl.viewport(0, 0, width * ratio, height * ratio);
+};
+
+/**
  * Compiles a shader program.
  * @param type shader type
  * @param program shader program in text

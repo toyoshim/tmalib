@@ -43,16 +43,15 @@ MajVj.prototype.adjustPosition = function (x, y) {
 
 /**
  * Handles screen resize.
+ * @return aspect ratio
  */
 MajVj.prototype.onresize = function () {
     if (!this._fullscreen)
         return;
-    this._screen.canvas.style.width = window.innerWidth + 'px';
-    this._screen.canvas.style.height = window.innerHeight + 'px';
-    this._aspect =
-            this._screen.canvas.clientWidth / this._screen.canvas.clientHeight;
-    tma.log('resize: ' + this._screen.canvas.clientWidth + 'x' +
-            this._screen.canvas.clientHeight);
+    this._screen.resize(window.innerWidth, window.innerHeight);
+    this._aspect = window.innerWidth / window.innerHeight;
+    tma.log('resize: ' + window.innerWidth + 'x' + window.innerHeight);
+    return this._aspect;
 };
 
 /**
