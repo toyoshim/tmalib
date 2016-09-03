@@ -1,6 +1,8 @@
 var controller = {};
 controller.volume = [0.0, 0.0];
 controller.nano2 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+controller.orientation = [0.0, 0.0, 0.0];
+controller.hasOrientation = false;
 var emulate = true;
 document.body.addEventListener('keydown', function (e) {
   switch (e.which) {
@@ -69,6 +71,36 @@ window.addEventListener('message', function (e) {
   else if (e.data.type == 'button')
     console.log(e.data.value);
 });
+
+var ws = new WebSocket('wss://wshub.herokuapp.com/majvj', ['x-wshub']);
+ws.onmessage = function (e) {
+  console.log(e.data);
+  try {
+    var data = JSON.parse(e.data);
+  } catch (e) {
+    return;
+  }
+  if (data.client != 'majvj')
+    return;
+  if (data.type == 'log')
+    console.log(data.data);
+  if (data.type == 'deviceorientation' && !controller.hasOrientation)
+    controller.orientation = [e.alpha, e.beta, e.gamma];
+};
+
+window.addEventListener('deviceorientation', function (e) {
+  controller.hasOrientation = true;
+  controller.orientation = [e.alpha, e.beta, e.gamma];
+  if (ws.readyState != ws.OPEN)
+    return;
+  ws.send(JSON.stringify({
+    client: 'majvj',
+    type: 'deviceorientation',
+    alpha: e.alpha,
+    beta: e.beta,
+    gamma: e.gamma
+  }));
+}, true);
 
 function _(f){return function(){try{f();}catch(e){console.error(e.stack);}}}
 
