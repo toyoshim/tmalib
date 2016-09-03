@@ -24,6 +24,7 @@ MajVj.frame.api3d = function (options) {
       gl: this._screen.gl,
       screen: this._screen,
       setAlphaMode: this._screen.setAlphaMode,
+      vr: false
     };
 
     this._screenProgram = this._screen.createProgram(
@@ -47,7 +48,8 @@ MajVj.frame.api3d = function (options) {
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.api3d._fPointShader));
 
-    this._mvMatrixStage = mat4.identity();
+    this._pMatrix = mat4.identity();    this._mvMatrixL = mat4.identity();
+    this._mvMatrixR = mat4.identity();
     this._iMatrix = mat4.identity();
     this._matrix = mat4.create();
 
@@ -113,7 +115,6 @@ MajVj.frame.api3d.load = function () {
  */
 MajVj.frame.api3d.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    this._pMatrixStage = mat4.perspective(60, this._aspect, 0.1, 10000.0, mat4.create());
 };
 
 /**
@@ -122,6 +123,30 @@ MajVj.frame.api3d.prototype.onresize = function (aspect) {
  */
 MajVj.frame.api3d.prototype.draw = function (delta) {
     this._screen.pushAlphaMode();
+
+    var aspect = this._aspect;
+
+    if (this._controller && this._controller.orientation) {
+        // TODO: Something is wrong on looking at sides.
+        var orientation = this._controller.orientation;
+        var rx = (90 + orientation[2]) / 360 * Math.PI * 2;
+        var ry = -orientation[0] / 360 * Math.PI * 2;
+        var rz = orientation[1] / 360 * Math.PI * 2;
+        var mat = mat4.identity();
+        mat = mat4.rotateZ(mat, rz);
+        mat = mat4.rotateY(mat, ry);
+        mat = mat4.rotateX(mat, rx);
+        this._mvMatrixL = mat;
+
+        this._api.vr = !!this._controller.vr;
+    }
+    if (this._api.vr) {
+        aspect /= 2;
+        mat4.translate(this._mvMatrixL, [-100, 0, 0], this._mvMatrixR);
+        mat4.translate(this._mvMatrixL, [100, 0, 0], this._mvMatrixL);
+    }
+    this._pMatrix = mat4.perspective(60, aspect, 0.1, 10000.0, mat4.create());
+    this._viewport(this._api.vr ? 1 : 0);
 
     this._api.delta = delta;
     this._module.clear(this._api);
@@ -139,6 +164,17 @@ MajVj.frame.api3d.prototype.setController = function (controller) {
 };
 
 /**
+ * Sets viewport.
+ * @param mode 0: normal, 1: left, 2: right
+ */
+MajVj.frame.api3d.prototype._viewport = function (view) {
+    var c = this._screen.canvas.width / 2;
+    var x = view == 2 ? c : 0;
+    var w = view == 0 ? this._screen.canvas.width : c;
+    this._screen.gl.viewport(x, 0, w, this._screen.canvas.height);
+};
+
+/**
  * Clears all displays.
  * @param flag flag, e.g., gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
  */
@@ -146,6 +182,11 @@ MajVj.frame.api3d.prototype._clear = function (flag) {
     this._screen.gl.clearColor(this._api.color[0], this._api.color[1],
                                this._api.color[2], this._api.color[3]);
     this._screen.gl.clear(flag);
+    if (this._api.vr) {
+        this._viewport(2);
+        this._screen.gl.clear(flag);
+        this._viewport(1);
+    }
 };
 
 /**
@@ -205,9 +246,16 @@ MajVj.frame.api3d.prototype._drawLine = function (src, dst) {
     this._drawProgram.setUniformVector('uColor', this._api.color);
     this._drawProgram.setUniformMatrix('uMatrix', this._iMatrix);
 
-    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrixStage);
-    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixStage);
+    this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrix);
+    this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixL);
     this._drawProgram.drawArrays(Tma3DScreen.MODE_LINES, 0, 2);
+
+    if (this._api.vr) {
+        this._viewport(2);
+        this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixR);
+        this._drawProgram.drawArrays(Tma3DScreen.MODE_LINES, 0, 2);
+        this._viewport(1);
+    }
 };
 
 /**
@@ -250,9 +298,15 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
     mat4.scale(this._matrix, [w, h, d]);
     program.setUniformMatrix('uMatrix', this._matrix);
 
-    program.setUniformMatrix('uPMatrix', this._pMatrixStage);
-    program.setUniformMatrix('uMVMatrix', this._mvMatrixStage);
+    program.setUniformMatrix('uPMatrix', this._pMatrix);
+    program.setUniformMatrix('uMVMatrix', this._mvMatrixL);
     program.drawElements(mode, o.getIndicesBuffer(this._screen), 0, o.items());
+    if (this._api.vr) {
+        this._viewport(2);
+        program.setUniformMatrix('uMVMatrix', this._mvMatrixR);
+        program.drawElements(mode, o.getIndicesBuffer(this._screen), 0, o.items());
+        this._viewport(1);
+    }
 };
 
 /**
@@ -267,6 +321,11 @@ MajVj.frame.api3d.prototype._fill = function (color) {
     this._drawProgram.setUniformMatrix('uMVMatrix', this._iMatrix);
     this._drawProgram.setUniformMatrix('uMatrix', this._iMatrix);
     this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+    if (this._api.vr) {
+        this._viewport(2);
+        this._drawProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+        this._viewport(1);
+    }
 };
 
 /**

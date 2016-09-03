@@ -1,8 +1,9 @@
 var controller = {};
 controller.volume = [0.0, 0.0];
 controller.nano2 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-controller.orientation = [0.0, 0.0, 0.0];
+controller.orientation = [0.0, 0.0, -90.0];
 controller.hasOrientation = false;
+controller.vr = true;
 var emulate = true;
 document.body.addEventListener('keydown', function (e) {
   switch (e.which) {
@@ -23,6 +24,7 @@ document.body.addEventListener('keydown', function (e) {
       break;
     case 88:  // x
       emulate = !emulate;
+      controller.vr = !controller.vr;
       break;
     default:
       console.log(e.which);
@@ -72,11 +74,12 @@ window.addEventListener('message', function (e) {
     console.log(e.data.value);
 });
 
-var ws = new WebSocket('wss://wshub.herokuapp.com/majvj', ['x-wshub']);
+var ws = {};
+//ws = new WebSocket('wss://wshub.herokuapp.com/majvj', ['x-wshub']);
 ws.onmessage = function (e) {
-  console.log(e.data);
+  var data;
   try {
-    var data = JSON.parse(e.data);
+    data = JSON.parse(e.data);
   } catch (e) {
     return;
   }
@@ -84,13 +87,20 @@ ws.onmessage = function (e) {
     return;
   if (data.type == 'log')
     console.log(data.data);
-  if (data.type == 'deviceorientation' && !controller.hasOrientation)
-    controller.orientation = [e.alpha, e.beta, e.gamma];
+  if (data.type == 'deviceorientation' && !controller.hasOrientation) {
+    controller.orientation[0] = data.alpha;
+    controller.orientation[1] = data.beta;
+    controller.orientation[2] = data.gamma;
+  }
 };
 
 window.addEventListener('deviceorientation', function (e) {
+  if (e.alpha == null)
+    return;
   controller.hasOrientation = true;
-  controller.orientation = [e.alpha, e.beta, e.gamma];
+  controller.orientation[0]= e.alpha;
+  controller.orientation[1]= e.beta;
+  controller.orientation[2]= e.gamma;
   if (ws.readyState != ws.OPEN)
     return;
   ws.send(JSON.stringify({

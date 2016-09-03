@@ -61,8 +61,10 @@ tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
   var vj = new MajVj(window.innerWidth, window.innerHeight, true);
   MajVj.loadAllPlugins().then(_(function () {
-    var wall = vj.create('frame', 'api3d',
-                         { draw: line.draw.bind(line) });
+    var wall = vj.create('frame', 'api3d', {
+      draw: line.draw.bind(line),
+      controller: controller
+    });
     vj.run(_(function (delta) {
       wall.draw(delta);
       vj.screen().flush();
