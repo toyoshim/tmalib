@@ -47,9 +47,12 @@ MajVj.frame.api3d = function (options) {
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.api3d._fPointShader));
 
+    // TODO: Calculate right perspectives.
+    // This may be a reason there is an unknown black box region in the screen
+    // there objects get to be invisible.
     this._mvMatrixStage = mat4.identity();
     this._mvMatrixStage =
-            mat4.translate(this._mvMatrixStage, [0.0, 0.0, -10000.0]);
+            mat4.translate(this._mvMatrixStage, [0.0, 0.0, -500.0]);
     this._iMatrix = mat4.identity();
     this._matrix = mat4.create();
 
@@ -62,8 +65,10 @@ MajVj.frame.api3d = function (options) {
     var opt = options.options || {};
     opt.screen = this._screen;
     opt.api = this._api;
-    this._module = options.module ? new options.module(opt)
-            : { draw: options.draw, clear: options.clear };
+    this._module = options.module ? new options.module(opt) : {
+        draw: options.draw,
+        clear: options.clear || function (api) {}
+    };
 };
 
 // Shader programs.
@@ -228,6 +233,7 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
     program.setAttributeArray(
             'aCoord', o.getVerticesBuffer(this._screen), 0, 3, 0);
     if (texture) {
+        // TODO: Texture isn't used correctly in mv_3d11 example.
         program.setAttributeArray(
                'aTexCoord', o.getCoordsBuffer(this._screen), 0, 2, 0);
         program.setTexture('uTexture', texture);
@@ -257,7 +263,6 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
     mat4.scale(this._matrix, [w, h, d]);
     program.setUniformMatrix('uMatrix', this._matrix);
 
-    if (texture) program.setTexture('uTexture', texture);
     program.setUniformMatrix('uPMatrix', this._pMatrixStage);
     program.setUniformMatrix('uMVMatrix', this._mvMatrixStage);
     program.drawElements(mode, o.getIndicesBuffer(this._screen), 0, o.items());

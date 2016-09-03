@@ -1,0 +1,28 @@
+<html>
+<head><title>Nicofarre test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script src="mv_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  MajVj.loadAllPlugins().then(_(function () {
+    var vj = new MajVj(window.innerWidth, window.innerHeight, true);
+    var nico3db = vj.create('frame', 'api3d', { module: MajVj.frame.nicofarre3d.modules.beams });
+    var nico3d = vj.create('frame', 'api3d', { module: MajVj.frame.nicofarre3d.modules.train });
+    vj.run(function (delta) {
+      nico3db.draw(delta);
+      vj.screen().setAlphaMode(true, vj.screen().gl.ONE, vj.screen().gl.ONE);
+      nico3d.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      var ratio = vj.onresize();
+      nico3db.onresize(ratio);
+      nico3d.onresize(ratio);
+    };
+  }), function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

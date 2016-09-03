@@ -1,0 +1,36 @@
+<html>
+<head><title>Nicofarre test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../tma.js"></script>
+<script src="mv_common.js"></script>
+<script>
+function draw (api) {
+  var p = function () { return (Math.random() - 0.5) * 100000; };
+  api.setAlphaMode(true, api.gl.DST_COLOR, api.gl.ZERO);
+  var rate = 0.95;
+  api.fill([rate, rate, rate, 1.0]);
+  api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
+  for (var i = 0; i < 512; ++i) {
+    api.color = [Math.random(), Math.random(), Math.random(), Math.random()];
+    api.drawLine([p(), p(), p()], [p(), p(), p()]);
+  }
+}
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj(window.innerWidth, window.innerHeight, true);
+  MajVj.loadAllPlugins().then(_(function () {
+    var wall = vj.create('frame', 'api3d', { draw: draw });
+    vj.run(_(function (delta) {
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      wall.draw(delta);
+      vj.screen().flush();
+    }));
+    window.onresize = function () {
+      wall.onresize(vj.onresize());
+    };
+  }), function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
