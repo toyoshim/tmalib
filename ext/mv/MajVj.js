@@ -28,7 +28,7 @@ var MajVj = function (width, height, fullscreen, parent) {
     this._fpsAvg = 0.0;
     this.adjustPosition(0, 0);
     this.onresize();
-}
+};
 
 /**
  * Adjust canvas position relative to the parent.
@@ -48,10 +48,18 @@ MajVj.prototype.adjustPosition = function (x, y) {
 MajVj.prototype.onresize = function () {
     if (!this._fullscreen)
         return;
-    this._screen.resize(window.innerWidth, window.innerHeight);
-    this._aspect = window.innerWidth / window.innerHeight;
-    tma.log('resize: ' + window.innerWidth + 'x' + window.innerHeight);
+    this.resize(window.innerWidth, window.innerHeight);
     return this._aspect;
+};
+
+/**
+ * Resizes screen.
+ */
+MajVj.prototype.resize = function (width, height) {
+    this._width = width;
+    this._height = height;
+    this._aspect = width / height;
+    this._screen.resize(width, height);
 };
 
 /**
@@ -69,8 +77,8 @@ MajVj.prototype.create = function (type, name, options) {
     var opt = options || {};
     opt.mv = this;
     opt.screen = this._screen;
-    opt.width = opt.width || this._width;  // offscreen width
-    opt.height = opt.height || this._height;  // offscreen height
+    opt.width = opt.width || this._screen.canvas.width;  // offscreen width
+    opt.height = opt.height || this._screen.canvas.height;  // offscreen height
     // screen aspect / offscreen aspect
     opt.aspect = opt.aspect || this.aspect();
     opt.controller = opt.controller || {
@@ -94,6 +102,14 @@ MajVj.prototype.screen = function () {
  */
 MajVj.prototype.aspect = function () {
     return this._aspect;
+};
+
+MajVj.prototype.size = function () {
+    return {
+        width: this._screen.canvas.width,
+        height: this._screen.canvas.height,
+        aspect: this._aspect,
+    };
 };
 
 /**

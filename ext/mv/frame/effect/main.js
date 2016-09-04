@@ -5,6 +5,7 @@
  */
 MajVj.frame.effect = function (options) {
     this._screen = options.screen;
+    this._mv = options.mv;
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
@@ -20,6 +21,8 @@ MajVj.frame.effect = function (options) {
         opts.width = opts.width || this._width;
         opts.height = opts.height || this._height;
         opts.aspect = opts.aspect || this._aspect;
+        opts.screen = this._screen;
+        opts.mv = this._mv;
         return options.mv.create(type, frame, opts);
     }.bind(this);
 
@@ -54,7 +57,14 @@ MajVj.frame.effect.load = function () {
  */
 MajVj.frame.effect.prototype.onresize = function (aspect) {
     this._aspect = aspect;
+    var size = this._mv.size();
+    this._width = size.width;
+    this._height = size.height;
     var i;
+    for (i = 0; i < this._fbo.length; ++i) {
+        this._fbo[i] =
+            this._screen.createFrameBuffer(this._width, this._height);
+    }
     for (i = 0; i < this._frames.length; ++i)
         this._frames[i].onresize(aspect);
     for (i = 0; i < this._effects.length; ++i)
