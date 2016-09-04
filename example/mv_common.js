@@ -1,9 +1,38 @@
-var controller = {};
-controller.volume = [0.0, 0.0];
-controller.nano2 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-controller.orientation = [0.0, 0.0, -90.0];
-controller.hasOrientation = false;
-controller.vr = true;
+var controller = {
+  volume: [0.0, 0.0],
+  nano2: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+  orientation: [0.0, 0.0, -90.0],
+  hasOrientation: false,
+  get vr() {
+    if (!this._vrUsed) {
+      this._vrUsed = true;
+      var button = document.createElement('button');
+      button.id = 'button';
+      button.innerText = '|o o|';
+      button.style.position = 'absolute';
+      button.style.top = 0;
+      button.style.left = 0;
+      button.addEventListener('click', function (e) {
+        document.body.webkitRequestFullscreen();
+        screen.orientation.lock('landscape').then();
+        button.style.display = 'none';
+        controller._vr = true;
+      }, false);
+      document.body.appendChild(button);
+      window.addEventListener('resize', function (e) {
+        if (document.webkitFullscreenElement)
+          return;
+        document.getElementById('button').style.display = 'block';
+        controller._vr = false;
+      }, false);
+    }
+    return this._vr;
+  },
+  _vr: false,
+  _vrUsed: false
+};
+
+
 var emulate = true;
 document.body.addEventListener('keydown', function (e) {
   switch (e.which) {
@@ -24,7 +53,7 @@ document.body.addEventListener('keydown', function (e) {
       break;
     case 88:  // x
       emulate = !emulate;
-      controller.vr = !controller.vr;
+      controller._vr = !controller._vr;
       break;
     default:
       console.log(e.which);
