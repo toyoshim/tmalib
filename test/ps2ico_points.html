@@ -43,12 +43,11 @@ tma.onload = function () {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'data/CDIMAGE04060.BIN');
     xhr.responseType = 'arraybuffer';
-    xhr.onload = function () {
+    xhr.onload = () => {
         var ico = new TmaModelPs2Ico();
-        ico.load(this.response);
-        var shape = ico.getVertices(0);
-        vertices = screen.createBuffer(shape);
-        vertices.items = shape.length / 3;
+        ico.load(screen, xhr.response);
+        vertices = ico.getVerticesBuffer(screen);
+        vertices.items = ico.items();
         setInterval(main, 10);
     };
     xhr.send();

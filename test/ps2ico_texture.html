@@ -11,13 +11,13 @@ tma.onload = function () {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'data/CDIMAGE04060.BIN');
     xhr.responseType = 'arraybuffer';
-    xhr.onload = function () {
+    xhr.onload = () => {
         var ico = new TmaModelPs2Ico();
-        ico.load(this.response);
+        ico.load(new Tma3DScreen, xhr.response);
         var texture = ico.getTexture();
         var data = screen.lock().data;
         for (var i = 0; i < data.byteLength; ++i)
-            data[i] = texture[i];
+            data[i] = texture.image.data[i];
         screen.unlock();
     };
     xhr.send();

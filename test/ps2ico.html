@@ -10,7 +10,7 @@
             xhr.onload = function () {
                 tma.log('ps2ico loaded.');
                 var ico = new TmaModelPs2Ico();
-                ico.load(xhr.response);
+                ico.load(new Tma3DScreen(), xhr.response);
                 _ = ico;
             };
             xhr.send();

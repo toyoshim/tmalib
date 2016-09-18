@@ -12,9 +12,14 @@ function TmaModelPs2Ico() {
     this.shapes = 0;
     this.frames = 0;
     this._vertices = null;
-    this._coord = null;
+    this._coords = null;
+    this._indices = null;
+    this._verticesBuffer = null;
+    this._coordsBuffer = null;
+    this._indicesBuffer = null;
     this._texture = null;
     this._weights = null;
+    this._mode = Tma3DScreen.MODE_TRIANGLES;
 }
 
 /**
@@ -34,10 +39,11 @@ TmaModelPs2Ico._ATTRIB_RLE = 8;
 
 /**
  * Loads a model data in PlayStation 2 ICO format.
+ * @param screen Tma3DScreen
  * @param data ArrayBuffer
  * @return true if specified |data| is in valid ICO format
  */
-TmaModelPs2Ico.prototype.load = function (data) {
+TmaModelPs2Ico.prototype.load = function (screen, data) {
     var view = new DataView(data);
     var version = view.getUint32(TmaModelPs2Ico._OFFSET_VERSION, true);
     if (version != 0x00010000) {
@@ -64,7 +70,10 @@ TmaModelPs2Ico.prototype.load = function (data) {
     this._vertices = new Array(nbsp);
     for (var shape = 0; shape < nbsp; ++shape)
         this._vertices[shape] = new Array(nbvtx * 3);
-    this._coord = new Array(nbvtx * 2);
+    this._indices = new Array(nbvtx);
+    for (var index = 0; index < nbvtx; ++index)
+        this._indices[index] = index;
+    this._coords = new Array(nbvtx * 2);
     for (var i = 0; i < nbvtx; ++i) {
         for (shape = 0; shape < nbsp; ++shape) {
             var vx = view.getInt16(offset + 0, true) / 1024;
@@ -83,8 +92,8 @@ TmaModelPs2Ico.prototype.load = function (data) {
 
         var sx = view.getInt16(offset + 0, true) / 4096;
         var sy = view.getInt16(offset + 2, true) / 4096;
-        this._coord[i * 2 + 0] = sx;
-        this._coord[i * 2 + 1] = 1 - sy;
+        this._coords[i * 2 + 0] = sx;
+        this._coords[i * 2 + 1] = 1 - sy;
         offset += 4;
 
         var color = view.getUint32(offset, false);  // RGBA
@@ -153,15 +162,19 @@ TmaModelPs2Ico.prototype.load = function (data) {
         tma.error('PS2ICO: texture data size is wrong')
         return false;
     }
-    this._texture = new Array(128 * 128 * 4);
-    for (i = 0; i < this._texture.length; i += 4) {
+    var texture = new Array(128 * 128 * 4);
+    for (i = 0; i < texture.length; i += 4) {
         var psmct16 = view.getUint16(offset, true);
         offset += 2;
-        this._texture[i + 0] = ((psmct16 >>  0) & 0x1f) << 3;
-        this._texture[i + 1] = ((psmct16 >>  5) & 0x1f) << 3;
-        this._texture[i + 2] = ((psmct16 >> 10) & 0x1f) << 3;
-        this._texture[i + 3] = 0xff;
+        texture[i + 0] = ((psmct16 >>  0) & 0x1f) << 3;
+        texture[i + 1] = ((psmct16 >>  5) & 0x1f) << 3;
+        texture[i + 2] = ((psmct16 >> 10) & 0x1f) << 3;
+        texture[i + 3] = 0xff;
     }
+    this._texture = screen.createTexture(
+            screen.createImage(128, 128, texture),
+            true,
+            Tma3DScreen.FILTER_LINEAR);
     return true;
 };
 
@@ -178,12 +191,20 @@ TmaModelPs2Ico.prototype.scale = function (scale) {
 };
 
 /**
+ * Gets number of vertices.
+ * @return number of vertices.
+ */
+TmaModelPs2Ico.prototype.items = function () {
+    return this._indices.length;
+};
+
+/**
  * Gets model's vertices array of a shape.
  * @param shape shape number
  * @return model's vertices in Array
  */
 TmaModelPs2Ico.prototype.getVertices = function (shape) {
-    return this._vertices[shape];
+    return this._vertices[shape || 0];
 };
 
 /**
@@ -191,7 +212,48 @@ TmaModelPs2Ico.prototype.getVertices = function (shape) {
  * @return texture coord in Array.
  */
 TmaModelPs2Ico.prototype.getCoords = function () {
-    return this._coord;
+    return this._coords;
+};
+
+/**
+ * Gets model's vertex indices.
+ * @return model's vertex indices in Array
+ */
+TmaModelPs2Ico.prototype.getIndices = function () {
+    return this._indices;
+};
+
+/**
+ * Gets an array buffer bound to the vertices. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object
+ */
+TmaModelPs2Ico.prototype.getVerticesBuffer = function (screen) {
+    if (!this._verticesBuffer)
+        this._verticesBuffer = screen.createBuffer(this.getVertices());
+    return this._verticesBuffer;
+};
+
+/**
+ * Gets an array buffer bound to the coords. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object for texture coords
+ */
+TmaModelPs2Ico.prototype.getCoordsBuffer = function (screen) {
+    if (!this._coordsBuffer)
+        this._coordsBuffer = screen.createBuffer(this.getCoords());
+    return this._coordsBuffer;
+};
+
+/**
+ * Gets an element buffer bound to the indices. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an element buffer object
+ */
+TmaModelPs2Ico.prototype.getIndicesBuffer = function (screen) {
+    if (!this._indicesBuffer)
+        this._indicesBuffer = screen.createElementBuffer(this.getIndices());
+    return this._indicesBuffer;
 };
 
 /**
@@ -200,6 +262,14 @@ TmaModelPs2Ico.prototype.getCoords = function () {
  */
 TmaModelPs2Ico.prototype.getTexture = function () {
     return this._texture;
+};
+
+/**
+ * Gets a recommended drawing mode.
+ * @return a drawing mode, e.g. Tma3DScreen.MODE_TRIANGLES
+ */
+TmaModelPs2Ico.prototype.getDrawMode = function () {
+    return this._mode;
 };
 
 /**

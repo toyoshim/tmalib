@@ -79,9 +79,9 @@ tma.onload = function () {
 //    xhr.open('GET', 'data/CDIMAGE05519.BIN');
 //    xhr.open('GET', 'data/CDIMAGE05520.BIN');
     xhr.responseType = 'arraybuffer';
-    xhr.onload = function () {
+    xhr.onload = () => {
         ico = new TmaModelPs2Ico();
-        ico.load(this.response);
+        ico.load(screen, xhr.response);
         ico.items = ico.getVertices(0).length / 3;
         for (var i = 0; i < ico.shapes; ++i) {
             var shapeArray = ico.getVertices(i);
@@ -93,9 +93,7 @@ tma.onload = function () {
             program.setUniformVector('uWeightShape' + i, [ 0 ]);
         var coords = screen.createBuffer(ico.getCoords());
         program.setAttributeArray('aTextureCoord', coords, 0, 2, 0);
-        var image = screen.createImage(128, 128, ico.getTexture());
-        var texture = screen.createTexture(image, true,
-                Tma3DScreen.FILTER_LINEAR);
+        var texture = ico.getTexture();
         program.setTexture('uSampler', texture);
         setInterval(main, 15);
     };

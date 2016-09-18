@@ -43,12 +43,11 @@ tma.onload = function () {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'data/CDIMAGE04060.BIN');
     xhr.responseType = 'arraybuffer';
-    xhr.onload = function () {
+    xhr.onload = () => {
         var ico = new TmaModelPs2Ico();
-        ico.load(this.response);
-        var shape = ico.getVertices(0);
-        vertices = screen.createBuffer(shape);
-        vertices.items = shape.length / 3;
+        ico.load(screen, xhr.response);
+        vertices = ico.getVerticesBuffer(screen);
+        vertices.items = ico.items();
         var index = new Array(vertices.items * 2);
         for (var i = 0; i < vertices.items; ++i) {
              if (i % 3) {
@@ -74,7 +73,7 @@ tma.onload = function () {
         mat4.rotate(mvMatrix, r, [1.0, 0.5, 1]);
         program.setAttributeArray('aVertexPosition', vertices, 0, 3, 0);
         program.setUniformMatrix('uMVMatrix', mvMatrix);
-        program.drawElements(Tma3DScreen.MODE_LINE_STRIP, indices, 0,
+        program.drawElements(Tma3DScreen.MODE_LINES, indices, 0,
                 indices.items);
 
         // Apply Animation.
