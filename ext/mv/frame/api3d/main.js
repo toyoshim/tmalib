@@ -63,14 +63,12 @@ MajVj.frame.api3d = function (options) {
     opt.screen = this._screen;
     opt.api = this._api;
     this._module = options.module ? new options.module(opt) : {
-        draw: options.draw,
+        draw: options.draw || function (api) {},
         clear: options.clear || function (api) {}
     };
 };
 
 // Shader programs.
-MajVj.frame.api3d._vScreenShader = null;
-MajVj.frame.api3d._fScreenShader = null;
 MajVj.frame.api3d._vDrawShader = null;
 MajVj.frame.api3d._fDrawShader = null;
 MajVj.frame.api3d._vTextureShader = null;
@@ -87,8 +85,6 @@ MajVj.frame.api3d.load = function () {
         var name = 'api3d';
         var path = 'shaders.html';
         Promise.all([
-                MajVj.loadShader('frame', name, path, 'v_screen'),
-                MajVj.loadShader('frame', name, path, 'f_screen'),
                 MajVj.loadShader('frame', name, path, 'v_draw'),
                 MajVj.loadShader('frame', name, path, 'f_draw'),
                 MajVj.loadShader('frame', name, path, 'v_texture'),
@@ -96,14 +92,12 @@ MajVj.frame.api3d.load = function () {
                 MajVj.loadShader('frame', name, path, 'v_point'),
                 MajVj.loadShader('frame', name, path, 'f_point'),
         ]).then(function (results) {
-            MajVj.frame.api3d._vScreenShader = results[0];
-            MajVj.frame.api3d._fScreenShader = results[1];
-            MajVj.frame.api3d._vDrawShader = results[2];
-            MajVj.frame.api3d._fDrawShader = results[3];
-            MajVj.frame.api3d._vTextureShader = results[4];
-            MajVj.frame.api3d._fTextureShader = results[5];
-            MajVj.frame.api3d._vPointShader = results[6];
-            MajVj.frame.api3d._fPointShader = results[7];
+            MajVj.frame.api3d._vDrawShader = results[0];
+            MajVj.frame.api3d._fDrawShader = results[1];
+            MajVj.frame.api3d._vTextureShader = results[2];
+            MajVj.frame.api3d._fTextureShader = results[3];
+            MajVj.frame.api3d._vPointShader = results[4];
+            MajVj.frame.api3d._fPointShader = results[5];
             resolve();
         }, function () { reject('api3d.load fails'); });
     });

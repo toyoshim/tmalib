@@ -1,27 +1,6 @@
 <html>
 <head>
 
-<script id='v_screen' type='x-shader/x-vertex'>
-attribute vec2 aCoord;
-attribute vec2 aTexCoord;
-varying vec2 vCoord;
-
-void main() {
-  gl_Position = vec4(aCoord, 0.0, 1.0);
-  vCoord = aTexCoord;
-}
-</script>
-
-<script id='f_screen' type='x-shader/x-fragment'>
-precision mediump float;
-varying vec2 vCoord;
-uniform sampler2D uTexture;
-
-void main() {
-  gl_FragColor = texture2D(uTexture, vCoord);
-}
-</script>
-
 <script id='v_draw' type='x-shader/x-vertex'>
 attribute vec3 aCoord;
 uniform mat4 uPMatrix;
