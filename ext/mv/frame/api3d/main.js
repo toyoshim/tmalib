@@ -49,7 +49,8 @@ MajVj.frame.api3d = function (options) {
       properties: this.properties
     };
 
-    this._pMatrix = mat4.identity();    this._mvMatrixL = mat4.identity();
+    this._pMatrix = mat4.identity();
+    this._mvMatrixL = mat4.identity();
     this._mvMatrixR = mat4.identity();
     this._iMatrix = mat4.identity();
     this._matrix = mat4.create();
