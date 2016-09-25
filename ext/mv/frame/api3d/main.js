@@ -7,8 +7,28 @@ MajVj.frame.api3d = function (options) {
     this._screen = options.screen;
     this._width = options.width;
     this._height = options.height;
+    // TODO: Deprecate controller in favor of properties approarch.
     this._controller = options.controller;
+    this.properties = {};
     this.onresize(options.aspect);
+
+    this._drawProgram = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.frame.api3d._vDrawShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.frame.api3d._fDrawShader));
+    this._textureProgram = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.frame.api3d._vTextureShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    options.textureModeFragmentShader ||
+                    MajVj.frame.api3d._fTextureShader));
+    this._pointProgram = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.frame.api3d._vPointShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.frame.api3d._fPointShader));
+
     this._api = {
       clear: this._clear.bind(this),
       color: [1.0, 1.0, 1.0, 1.0],
@@ -24,29 +44,10 @@ MajVj.frame.api3d = function (options) {
       gl: this._screen.gl,
       screen: this._screen,
       setAlphaMode: this._screen.setAlphaMode,
-      vr: false
+      textureModeShader: this._textureProgram,
+      vr: false,
+      properties: this.properties
     };
-
-    this._screenProgram = this._screen.createProgram(
-            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.frame.api3d._vScreenShader),
-            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
-                    MajVj.frame.api3d._fScreenShader));
-    this._drawProgram = this._screen.createProgram(
-            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.frame.api3d._vDrawShader),
-            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
-                    MajVj.frame.api3d._fDrawShader));
-    this._textureProgram = this._screen.createProgram(
-            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.frame.api3d._vTextureShader),
-            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
-                    MajVj.frame.api3d._fTextureShader));
-    this._pointProgram = this._screen.createProgram(
-            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.frame.api3d._vPointShader),
-            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
-                    MajVj.frame.api3d._fPointShader));
 
     this._pMatrix = mat4.identity();    this._mvMatrixL = mat4.identity();
     this._mvMatrixR = mat4.identity();

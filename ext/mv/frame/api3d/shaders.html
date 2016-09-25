@@ -28,10 +28,13 @@ uniform mat4 uPMatrix;
 uniform mat4 uMVMatrix;
 uniform mat4 uMatrix;
 varying vec2 vTexCoord;
+varying vec3 vCoord;
 
 void main() {
-  gl_Position = uPMatrix * uMVMatrix * uMatrix * vec4(aCoord, 1.0);
+  vec4 coord = uMVMatrix * uMatrix * vec4(aCoord, 1.0);
+  gl_Position = uPMatrix * coord;
   vTexCoord = aTexCoord;
+  vCoord = coord.xyz;
 }
 </script>
 
