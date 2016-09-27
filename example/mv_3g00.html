@@ -117,9 +117,8 @@ tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
   Promise.all([MajVj.loadImageFrom('data/jupiter.jpg'),
                MajVj.loadAllPlugins()]).then((values) => {
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    var vj = new MajVj(width, height, true);
+    var vj = new MajVj(window.innerWidth, window.innerHeight, true);
+    var size = vj.size();
     var sphere = TmaModelPrimitives.createSphere(
         4, TmaModelPrimitives.SPHERE_METHOD_EVEN);
     sphere.setTexture(vj.screen().createTexture(
@@ -153,8 +152,8 @@ tma.onload = function () {
         api.drawPrimitive(sphere, 10, 10, 10, [0, 0, -30], rotate);
       }
     });
-    var fbo1 = vj.screen().createFrameBuffer(width, height);
-    var fbo2 = vj.screen().createFrameBuffer(width, height);
+    var fbo1 = vj.screen().createFrameBuffer(size.width, size.height);
+    var fbo2 = vj.screen().createFrameBuffer(size.width, size.height);
     vj.screen().setAlphaMode(false);
     vj.run(function (delta) {
       glow._controller.volume[1] = Math.random() * 0.2;
@@ -175,6 +174,9 @@ tma.onload = function () {
     });
     window.onresize = function () {
       frame.onresize(vj.onresize());
+      var size = vj.size();
+      fbo1 = vj.screen().createFrameBuffer(size.width, size.height);
+      fbo2 = vj.screen().createFrameBuffer(size.width, size.height);
     };
   });
 };
