@@ -35,7 +35,8 @@ tma.onload = function () {
                             { name: 'sandbox', options: { id: '18568.0' } }
                           ]});
     var fx = vj.create('effect', 'nicofarre');
-    fx.setController(controller);
+    // TODO: Controller support for mv_nico3.html to mv_nico25.html.
+    // TODO: High DPI support for mv_nico3.html to mv_nico25.html.
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.screen().setAlphaMode(false);
     vj.run(function (delta) {

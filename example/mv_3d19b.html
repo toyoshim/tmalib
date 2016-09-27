@@ -9,7 +9,6 @@ tma.onload = function () {
   MajVj.loadAllPlugins().then(_(function () {
     var vj = new MajVj(window.innerWidth, window.innerHeight, true);
     var api3d = { name: 'api3d', options: {
-        controller: controller,
         module: MajVj.frame.nicofarre3d.modules.waypoints,
         options: {
           gravity: 50,
@@ -20,17 +19,15 @@ tma.onload = function () {
         }
       }
     };
-    //var glowController = { volume: [0.5, 0.0] };
-    var glowController = { volume: [0.0, 0.0] };
-    var glow = { name: 'glow', options: { controller: glowController } };
-    //var rgbController = { volume: [0.01] };
-    var rgbController = { volume: [0.0] };
-    var rgb = { name: 'rgb', options: { controller: rgbController } };
+    var glow = { name: 'glow' };
+    var rgb = { name: 'rgb' };
     var wall = vj.create('frame', 'effect', {
         frames: [api3d],
         effects: [glow, rgb] });
+    wall.getEffect(0).volume = 0.5;
+    wall.getEffect(1).volume = 0.01;
     vj.run(function (delta) {
-      glowController.volume[0] = controller.nano2[0];
+      wall.getEffect(0).volume = controller.nano2[0];
       wall.draw(delta);
     });
     window.onresize = function () {

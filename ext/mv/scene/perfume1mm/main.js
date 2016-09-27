@@ -5,7 +5,7 @@
  */
 MajVj.scene.perfume1mm = function (options) {
   this._mv = options.mv;
-  this._controller = options.controller;
+  this.properties = {};
   this._sound = options.sound;
 
   this._skip = 0;
@@ -19,6 +19,7 @@ MajVj.scene.perfume1mm = function (options) {
   //this._skip = (2300 + 2184 * 97) / 1000;  // I1
   //this._skip = (2300 + 2184 * 105) / 1000;  // I2
 
+  // TODO: Fix to use properties.
   this._fftController = { sound: { fftDb: this._controller.sound.fftDb } };
   this._glowController = { volume: [ 1.0, 0.0 ] };
   this._trainController = { volume: [ 0.5, 0.0 ] };

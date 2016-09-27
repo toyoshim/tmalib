@@ -8,7 +8,7 @@ MajVj.frame.nicofarre3d = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = {};
     this._clearCallback = options.clear;
     this._drawCallback = options.draw;
     this._modules = [];
@@ -124,6 +124,7 @@ MajVj.frame.nicofarre3d = function (options) {
         var opt = options.options || {};
         opt.screen = this._screen;
         opt.api = this._api;
+        opt.properties = this.properties;
         this._modules[0] =
                 new MajVj.frame.nicofarre3d.modules[options.module](opt);
     } else if (options.modules) {
@@ -132,6 +133,7 @@ MajVj.frame.nicofarre3d = function (options) {
             var opt = module.options || {};
             opt.screen = this._screen;
             opt.api = this._api;
+            opt.properties = this.properties;
             this._modules[i] =
                     new MajVj.frame.nicofarre3d.modules[module.name](opt);
         }
@@ -227,14 +229,6 @@ MajVj.frame.nicofarre3d.prototype.draw = function (delta) {
     this._screenProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 8, 4);
     this._screenProgram.setTexture('uTexture', this._fboBack.texture);
     this._screenProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 12, 4);
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.nicofarre3d.prototype.setController = function (controller) {
-    this._controller = controller;
 };
 
 /**

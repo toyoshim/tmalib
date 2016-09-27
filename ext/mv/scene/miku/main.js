@@ -5,6 +5,7 @@
  */
 MajVj.scene.miku = function (options) {
   this._mv = options.mv;
+  // TODO: Use properties.
   this._controller = options.controller;
 
   this._fftController = {

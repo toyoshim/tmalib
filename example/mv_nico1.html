@@ -12,9 +12,11 @@ tma.onload = function () {
   MajVj.loadAllPlugins().then(function () {
     var movie = vj.create('frame', 'movie', {url: 'data/04_space_out.mp4'});
     var fx = vj.create('effect', 'nicofarre');
-    fx.setController(controller);
-    var fbo = vj.screen().createFrameBuffer(width, height);
+    var size = vj.size();
+    var fbo = vj.screen().createFrameBuffer(size.width, size.height);
     vj.run(function (delta) {
+      fx.properties.volume[0] = controller.volume[0];
+      fx.properties.volume[1] = controller.volume[1];
       if (emulate) {
         fbo.bind();
         vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);

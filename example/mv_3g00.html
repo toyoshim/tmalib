@@ -137,9 +137,9 @@ tma.onload = function () {
       }
     };
     var glow = vj.create('effect', 'glow');
-    glow.setController({ volume: [0.01, 0.0] });
+    glow.properties.volume = 0.01;
     var rgb = vj.create('effect', 'rgb');
-    rgb.setController({ volume: [0.0] });
+    rgb.properties.volume = 0.0;
     var frame = vj.create('frame', 'api3d', {
       textureModeFragmentShader: document.getElementById('fshader').text,
       draw: api => {
@@ -156,12 +156,12 @@ tma.onload = function () {
     var fbo2 = vj.screen().createFrameBuffer(size.width, size.height);
     vj.screen().setAlphaMode(false);
     vj.run(function (delta) {
-      glow._controller.volume[1] = Math.random() * 0.2;
+      glow.properties.t = Math.random() * 0.2;
       if (Math.random() < 0.98)
-        glow._controller.volume[1] = 0.0;
-      rgb._controller.volume[0] = Math.random() * 0.03;
+        glow.properties.t = 0.0;
+      rgb.properties.volume = Math.random() * 0.03;
       if (Math.random() < 0.85)
-        rgb._controller.volume[0] = 0.0;
+        rgb.properties.volume = 0.0;
       fbo1.bind();
       vj.screen().fillColor(0.0, 0.0, 0.01, 1.0);
       frame.draw(delta);

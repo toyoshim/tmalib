@@ -8,7 +8,7 @@ MajVj.frame.nico_test = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = {};
     this._speed = 4;
     this._x = 0;
     this._y = 0;
@@ -141,12 +141,6 @@ MajVj.frame.nico_test.prototype.draw = function (delta) {
         this._ay = this._speed;
     else if (this._y > 320)
         this._ay = -this._speed;
-    if (this._controller && this._controller.volume &&
-        this._controller.volume[2]) {
-        this._az = 0;
-        this._z += this._controller.volume[2];
-        uma.log(this._z);
-    }
     this._z += this._az;
     if (this._z < 0)
         this._az = this._speed;
@@ -174,12 +168,4 @@ MajVj.frame.nico_test.prototype.draw = function (delta) {
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 20, 4);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 24, 4);
     this._screen.popAlphaMode();
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.nico_test.prototype.setController = function (controller) {
-    this._controller = controller;
 };

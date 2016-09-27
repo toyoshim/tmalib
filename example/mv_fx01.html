@@ -47,7 +47,8 @@ tma.onload = function () {
   const width = 1920 / r;
   const height = 540 / r;
   const vj = new MajVj(width, height, false);
-  const fbo = vj.screen().createFrameBuffer(width, height);
+  const size = vj.size();
+  const fbo = vj.screen().createFrameBuffer(size.width, size.height);
   MajVj.loadAllPlugins().then(function () {
     const shader = document.getElementById('shader').text;
     const sandbox = vj.create('frame', 'sandbox', { shader: shader });
@@ -64,8 +65,8 @@ tma.onload = function () {
       color: [0.3, 0.3, 0.9]
     });
     window.addEventListener('keydown', e => {
-      fx.restart();
-      fx._origin = origins[++originIndex % origins.length]
+      fx.properties.time = 0.0;
+      fx.properties.origin = origins[++originIndex % origins.length]
     });
     vj.run(function (delta) {
       fbo.bind();

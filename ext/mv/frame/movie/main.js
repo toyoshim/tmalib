@@ -8,7 +8,7 @@ MajVj.frame.movie = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = {};
     this._video = null;
     this._texture = null;
     this._zoom = 1.0;
@@ -89,11 +89,4 @@ MajVj.frame.movie.prototype.draw = function (delta) {
     this._program.setUniformVector('uZoom', [this._zoom]);
     this._program.setTexture('uTexture', this._texture);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
-};
-
-/**
- * Sets a controller.
- */
-MajVj.frame.movie.prototype.setController = function (controller) {
-    this._controller = controller;
 };

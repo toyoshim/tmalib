@@ -6,7 +6,10 @@
 MajVj.frame.rolline = function (options) {
     this._screen = options.screen;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = { keymap: [] };
+    var i;
+    for (i = 0; i < 128; ++i)
+        this.properties.keymap[i] = (Math.random() * 127) | 0;
     this._time = 0.0;
 
     this._program = this._screen.createProgram(
@@ -15,7 +18,6 @@ MajVj.frame.rolline = function (options) {
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.rolline._fragmentShader));
     var points = new Array(6 * 128);
-    var i;
     for (i = 0; i < points.length; ++i) points[i] = 0.0;
     this._lines = this._screen.createBuffer(points);
     this._lines.items = 128 * 2;
@@ -75,10 +77,8 @@ MajVj.frame.rolline.prototype.draw = function (delta) {
         var y = Math.cos(t + 3 * Math.sin(Math.cos(t)));
         var dx = Math.cos(r);
         var dy = Math.sin(r);
-        if (this._controller && this._controller.midi) {
-            dx *= this._controller.midi.keymap[i] / 32.0;
-            dy *= this._controller.midi.keymap[i] / 32.0;
-        }
+        dx *= this.properties.keymap[i] / 32.0;
+        dy *= this.properties.keymap[i] / 32.0;
         points[offset + 0] = x + dx;
         points[offset + 1] = y + dy;
         points[offset + 2] = 0.0;
@@ -104,12 +104,4 @@ MajVj.frame.rolline.prototype.draw = function (delta) {
     this._program.setAttributeArray(
             'aVertexColor', this._colors, 0, 3, 0);
     this._program.drawArrays(Tma3DScreen.MODE_LINES, 0, this._lines.items);
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.rolline.prototype.setController = function (controller) {
-    this._controller = controller;
 };

@@ -5,6 +5,7 @@
  */
 MajVj.scene.roll = function (options) {
   this._mv = options.mv;
+  // TODO: Fix to use properties.
   this._controller = options.controller;
   this._fftController = {
     sound: { fftDb: this._controller.sound.fftDb }

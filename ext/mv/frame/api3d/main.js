@@ -7,9 +7,10 @@ MajVj.frame.api3d = function (options) {
     this._screen = options.screen;
     this._width = options.width;
     this._height = options.height;
-    // TODO: Deprecate controller in favor of properties approarch.
-    this._controller = options.controller;
-    this.properties = {};
+    this.properties = {
+        vr: false,
+        orientation: [ 0.0, 0.0, -90.0 ]
+    };
     this.onresize(options.aspect);
 
     this._drawProgram = this._screen.createProgram(
@@ -122,20 +123,19 @@ MajVj.frame.api3d.prototype.draw = function (delta) {
 
     var aspect = this._aspect;
 
-    if (this._controller && this._controller.orientation) {
-        // TODO: Something is wrong on looking at sides.
-        var orientation = this._controller.orientation;
-        var rx = (90 + orientation[2]) / 360 * Math.PI * 2;
-        var ry = -orientation[0] / 360 * Math.PI * 2;
-        var rz = orientation[1] / 360 * Math.PI * 2;
-        var mat = mat4.identity();
-        mat = mat4.rotateZ(mat, rz);
-        mat = mat4.rotateY(mat, ry);
-        mat = mat4.rotateX(mat, rx);
-        this._mvMatrixL = mat;
+    // TODO: Something is wrong on looking at sides.
+    var orientation = this.properties.orientation;
+    var rx = (90 + orientation[2]) / 360 * Math.PI * 2;
+    var ry = -orientation[0] / 360 * Math.PI * 2;
+    var rz = orientation[1] / 360 * Math.PI * 2;
+    var mat = mat4.identity();
+    mat = mat4.rotateZ(mat, rz);
+    mat = mat4.rotateY(mat, ry);
+    mat = mat4.rotateX(mat, rx);
+    this._mvMatrixL = mat;
 
-        this._api.vr = !!this._controller.vr;
-    }
+    this._api.vr = this.properties.vr;
+
     if (this._api.vr) {
         aspect /= 2;
         mat4.translate(this._mvMatrixL, [-100, 0, 0], this._mvMatrixR);
@@ -149,14 +149,6 @@ MajVj.frame.api3d.prototype.draw = function (delta) {
     this._module.draw(this._api);
 
     this._screen.popAlphaMode();
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.api3d.prototype.setController = function (controller) {
-    this._controller = controller;
 };
 
 /**

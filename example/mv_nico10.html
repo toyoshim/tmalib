@@ -63,7 +63,6 @@ tma.onload = function () {
     var wall = vj.create('frame', 'nicofarre3d', { draw: box.draw.bind(box) });
     var fx = vj.create('effect', 'nicofarre', { front: false,
                                                 position: [0, 0, 0]});
-    fx.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.screen().setAlphaMode(false);
     vj.run(function (delta) {

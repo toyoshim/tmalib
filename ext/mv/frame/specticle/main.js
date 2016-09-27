@@ -9,7 +9,7 @@ MajVj.frame.specticle = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = { fftDb: new Float32Array(1024) };
     this._color = options.color || [0.7, 0.2, 0.5, 1.0];
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
@@ -74,19 +74,15 @@ MajVj.frame.specticle.prototype.draw = function (delta) {
     this._t += delta;
     var t = this._t / 10000;
     var buffer = this._coords.buffer();
-    var fft = this._controller && this._controller.sound &&
-          this._controller.sound.fftDb && this._controller.sound.fftDb.length;
-    var useLength = !fft || this._controller.sound.fftDb.length - 128;
+    var useLength = this.properties.fftDb.length - 128;
     for (var i = 0; i < this._n; ++i) {
         var y = Math.sin(t * this._sv[i] + this._dv[i]) * 10;
         var r = 1.0;
-        if (fft) {
-            var n = 0 | (useLength * (y + 10) / 20);
-            var d = 80.0 + this._controller.sound.fftDb[128 + n];
-            if (d < 0)
-                d = 0;
-            r = d / 20;
-        }
+        var n = 0 | (useLength * (y + 10) / 20);
+        var d = 80.0 + this.properties.fftDb[128 + n];
+        if (d < 0)
+            d = 0;
+        r = d / 20;
         buffer[i * 3 + 0] =
             Math.cos(t * this._sh[i] + this._dh[i]) * this._r[i] * r;
         buffer[i * 3 + 1] = y;
@@ -99,12 +95,4 @@ MajVj.frame.specticle.prototype.draw = function (delta) {
     this._program.setUniformMatrix('uMatrix', this._matrix);
     this._program.setUniformVector('uColor', this._color);
     this._program.drawArrays(Tma3DScreen.MODE_POINTS, 0, this._n);
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.specticle.prototype.setController = function (controller) {
-    this._controller = controller;
 };

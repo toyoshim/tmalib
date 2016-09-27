@@ -5,7 +5,7 @@
  */
 MajVj.scene.church = function (options) {
   this._mv = options.mv;
-  this._controller = options.controller;
+  this.properties = {};
 
   this._frame = this._mv.create('frame', 'nicofarre', {
       led: MajVj.frame.nicofarre.LED_WHOLE_WALLS,

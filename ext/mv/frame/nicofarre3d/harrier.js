@@ -3,7 +3,8 @@
  *  - MajVj extension - frame plugin - nicofarre3d - harrier module
  */
 MajVj.frame.nicofarre3d.modules.harrier = function (options) {
-  this._controller = options.controller;
+  this.properties = options.properties;
+  this.properties.harrier = 0.0;
   this._zspeed = options.zspeed || 10.0;
   this._xspeed = options.xspeed || 0.00;
   this._zinterval = options.zinterval || 50.0;
@@ -35,9 +36,7 @@ MajVj.frame.nicofarre3d.modules.harrier.prototype.draw = function (api) {
   var l = 1000000;
   var c = 0;
   var t = this._t / 1000 * this._zspeed;
-  var y = 5000;
-  if (this._controller && this._controller.volume)
-    y *= (1 + this._controller.volume[0] * 10);
+  var y = 5000 * (1 + this.properties.harrier * 10);
   for (var z = -s; z < s; z += 10000) {
     c = (1.0 + Math.sin(t + z / s * this._zinterval)) / 2.0;
     api.color =

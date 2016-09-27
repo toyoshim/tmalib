@@ -35,7 +35,6 @@ var main = function () {
   scene = vj.create('scene', name);
   var fbo = vj.screen().createFrameBuffer(width, height);
   var fx = vj.create('effect', 'nicofarre');
-  fx.setController(controller);
   vj.run(function (delta) {
     if (emulate)
       fbo.bind();

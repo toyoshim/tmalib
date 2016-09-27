@@ -5,6 +5,7 @@
  */
 MajVj.scene.white = function (options) {
   this._mv = options.mv;
+  this.properties = {};
 };
 
 /**

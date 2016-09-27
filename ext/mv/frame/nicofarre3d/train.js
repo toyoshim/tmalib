@@ -7,7 +7,8 @@ MajVj.frame.nicofarre3d.modules.train = function (options) {
     this._container = new TmaParticle.Container(
             MajVj.frame.nicofarre3d.modules.train.Particle);
     this._period = options.period || 500;
-    this._controller = options.controller;
+    this.properties = options.properties;
+    this.properties.train = [ 0.0, 0.0 ];
     this._tick = 0;
     this._nextTime = 0;
     this._frontRails = [];
@@ -40,10 +41,8 @@ MajVj.frame.nicofarre3d.modules.train.prototype.clear = function (api) {
  * @param api nicofarre3d interfaces
  */
 MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
-    if (this._controller && this._controller.volume) {
-        this._r = this._controller.volume[0] - 0.5;
-        this._fly = 10000 * this._controller.volume[1];
-    }
+    this._r = this.properties.train[0] - 0.5;
+    this._fly = 10000 * this.properties.train[1];
     api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
 
     this._tick += api.delta;

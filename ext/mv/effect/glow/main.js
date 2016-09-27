@@ -8,7 +8,7 @@ MajVj.effect.glow = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = { volume: 0.1, t: 0.0 };
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.effect.glow._vertexShader),
@@ -59,13 +59,8 @@ MajVj.effect.glow.prototype.onresize = function (aspect) {
  * @param texture texture data
  */
 MajVj.effect.glow.prototype.draw = function (delta, texture) {
-    var volume = 1.0;
-    var t = 0.0;
-    if (this._controller && this._controller.volume) {
-        volume = 3.0 * this._controller.volume[0];
-        if (this._controller.volume.length > 1)
-            t = this._controller.volume[1];
-    }
+    var volume = this.properties.volume * 3.0;
+    var t = this.properties.t;
     if (volume != 0.0) {
         this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
         this._program.setTexture('uTexture', texture);
@@ -77,12 +72,4 @@ MajVj.effect.glow.prototype.draw = function (delta, texture) {
         this._noEffect.setTexture('uTexture', texture);
         this._noEffect.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
     }
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.effect.glow.prototype.setController = function (controller) {
-    this._controller = controller;
 };

@@ -2,6 +2,7 @@ var controller = {
   volume: [0.0, 0.0],
   nano2: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
   orientation: [0.0, 0.0, -90.0],
+  sound: {},
   hasOrientation: false,
   get vr() {
     if (!this._vrUsed) {

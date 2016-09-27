@@ -8,7 +8,7 @@ MajVj.frame.snow = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = { slider: 1.0 };
     this._ps = new TmaParticle.Container(MajVj.frame.snow.ps);
     this._coords = this._screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
     this._program = this._screen.createProgram(
@@ -59,12 +59,10 @@ MajVj.frame.snow.prototype.onresize = function (aspect) {
  * @param delta delta time from the last rendering
  */
 MajVj.frame.snow.prototype.draw = function (delta) {
-    var volume = 1.0;
-    if (this._controller && this._controller.slider) {
-        volume = this._controller.slider;
-        if (volume == 0.0)
-            return;
-    }
+    var volume = this.properties.slider;
+    if (volume == 0.0)
+        return;
+
     var i;
     var n = delta|0;
     if (n > 20)
@@ -85,15 +83,6 @@ MajVj.frame.snow.prototype.draw = function (delta) {
     this._program.setUniformVector('uVolume', [volume]);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.snow.prototype.setController = function (controller) {
-    this._controller = controller;
-};
-
 
 /**
  * snow.ps prototype.

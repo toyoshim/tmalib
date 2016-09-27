@@ -8,7 +8,7 @@ MajVj.effect.nicofarre = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = { volume: [ 0.0, 0.0 ] };
     this._front = (options.front !== undefined) ? options.front : true;
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
@@ -154,11 +154,8 @@ MajVj.effect.nicofarre.prototype.onresize = function (aspect) {
  */
 MajVj.effect.nicofarre.prototype.draw = function (delta, texture) {
     var mvMatrix = mat4.create(this._mvMatrix);
-    if (this._controller && this._controller.volume) {
-        var v = this._controller.volume;
-        mat4.translate(mvMatrix, [0, 0, 1000 * v[0]]);
-        mat4.rotate(mvMatrix, Math.PI * v[1], [0, 1, 0]);
-    }
+    mat4.translate(mvMatrix, [0, 0, 1000 * this.properties.volume[0]]);
+    mat4.rotate(mvMatrix, Math.PI * this.properties.volume[1], [0, 1, 0]);
     this._screen.pushAlphaMode();
     this._screen.setAlphaMode(false);
     this._screen.pushCullingMode();
@@ -186,12 +183,4 @@ MajVj.effect.nicofarre.prototype.draw = function (delta, texture) {
     this._programForCeiling.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 24, 4);
     this._screen.popCullingMode();
     this._screen.popAlphaMode();
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.effect.nicofarre.prototype.setController = function (controller) {
-    this._controller = controller;
 };

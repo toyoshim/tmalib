@@ -13,12 +13,11 @@ tma.onload = function () {
 		var at = vj.create('frame', 'at');
 		var wired = vj.create('frame', 'wired');
 		var effect = vj.create('effect', 'glow');
-		effect.setController({ volume: [0.1, 0.0] });
 		var fbo = vj.screen().createFrameBuffer(resolution, resolution);
 		vj.run(function (delta) {
-			effect._controller.volume[1] = Math.random() * 0.2;
+			effect.properties.t = Math.random() * 0.2;
 			if (Math.random() < 0.95)
-				effect._controller.volume[1] = 0.0;
+				effect.properties.t = 0.0;
 			fbo.bind();
 			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
 			wired.draw(delta);

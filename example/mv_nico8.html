@@ -68,7 +68,6 @@ tma.onload = function () {
                          { draw: line.draw.bind(line) });
     var fx = vj.create('effect', 'nicofarre', { front: false,
                                                 position: [0, 0, 0]});
-    fx.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.screen().setAlphaMode(false);
     vj.run(_(function (delta) {

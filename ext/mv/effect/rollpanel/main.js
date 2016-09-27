@@ -12,7 +12,7 @@ MajVj.effect.rollpanel = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = {};
     this._panels = options.panels || 3;
     this._delay = options.delay || 0.25;
     this._delay *= 2 * Math.PI;
@@ -92,14 +92,6 @@ MajVj.effect.rollpanel.prototype.draw = function (delta, texture) {
         this._program.setUniformMatrix('uMvMatrix', matrix);
         this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 4 * i, 4);
     }
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.effect.rollpanel.prototype.setController = function (controller) {
-    this._controller = controller;
 };
 
 /**

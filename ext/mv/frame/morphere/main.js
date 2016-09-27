@@ -8,7 +8,7 @@ MajVj.frame.morphere = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = { volume: 1.0 };
 
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
@@ -83,10 +83,7 @@ MajVj.frame.morphere.prototype.draw = function (delta) {
         vertices[i] = this._b[i] + sin(this._t[i]) * this._r[i];
     }
     buffer.update();
-    var size = 2.0;
-    if (this._controller && this._controller.volume &&
-            this._controller.volume[0])
-        size *= this._controller.volume[0];
+    var size = 2.0 * this.properties.volume;
     this._screen.pushAlphaMode();
     this._screen.setAlphaMode(false);
     var matrix = mat4.create();
@@ -99,12 +96,4 @@ MajVj.frame.morphere.prototype.draw = function (delta) {
                                0,
                                this._sphere.items());
     this._screen.popAlphaMode();
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.morphere.prototype.setController = function (controller) {
-    this._controller = controller;
 };

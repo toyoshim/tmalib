@@ -8,12 +8,14 @@ tma.onload = function () {
 	MajVj.loadAllPlugins().then(function () {
 		var effect = vj.create('effect', 'glow');
 		var wired = vj.create('frame', 'wired');
-		var fbo = vj.screen().createFrameBuffer(512, 512);
+                var size = vj.size();
+		var fbo = vj.screen().createFrameBuffer(size.width, size.height);
 		vj.run(function (delta) {
 			fbo.bind();
 			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
 			wired.draw(delta);
 			vj.screen().bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
 			effect.draw(delta, fbo.texture);
 			vj.screen().flush();
 		});

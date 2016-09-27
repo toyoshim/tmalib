@@ -30,7 +30,6 @@ tma.onload = function () {
     var fx = vj.create('effect', 'rgb', { controller: fftController });
     var fxb = vj.screen().createFrameBuffer(width, height);
     var emu = vj.create('effect', 'nicofarre');
-    emu.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.run(function (delta) {
       snd.getFloatFrequencyData(fft);

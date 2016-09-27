@@ -8,7 +8,7 @@ MajVj.frame.crlogo = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = { knob: 0.0, slider: 0.0 };
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.crlogo._vertexShader),
@@ -227,9 +227,7 @@ MajVj.frame.crlogo.prototype.onresize = function (aspect) {
  */
 MajVj.frame.crlogo.prototype.draw = function (delta) {
     this._program.setUniformMatrix('uMVMatrix', this._mvMatrix);
-    var rotate = 0.002 * delta;
-    if (this._controller && this._controller.slider)
-        rotate = rotate * (0.5 + this._controller.slider * 1.5);
+    var rotate = 0.002 * delta * (0.5 + this.properties.slider * 1.5);
     this._rotate += rotate;
     mat4.rotate(this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
 
@@ -241,31 +239,6 @@ MajVj.frame.crlogo.prototype.draw = function (delta) {
     this._program.drawArrays(
             Tma3DScreen.MODE_TRIANGLES, 0, this._vertices.items);
     this._ps.update(delta);
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.crlogo.prototype.setController = function (controller) {
-    if (this._controller) {
-        this._controller.onsolo = null;
-        this._controller.onmute = null;
-        this._controller.onrecord = null;
-    }
-    this._controller = controller;
-    if (!controller)
-        return;
-    this._controller.onsolo = function (on) {
-        if (!on)
-            return;
-        this.crash();
-    }.bind(this._ps);
-    this._controller.onmute = function (on) {
-        if (!on)
-            return;
-        this._mode = 1;
-    }.bind(this._ps);
 };
 
 MajVj.frame.crlogo.ps = function(parent, index) {
@@ -330,9 +303,8 @@ MajVj.frame.crlogo.ps.prototype.pilot = function () {
         this._autoCount--;
         return;
     }
-    var timeout = Math.random() * 100;
-    if (this._parent._controller && this._parent._controller.knob)
-        timeout = timeout / (this._parent._controller.knob * 2.2 + 0.2);
+    var timeout = Math.random() * 100 /
+            (this._parent.properties.knob * 2.2 + 0.2);
 
     this._mode = Math.floor(Math.random() * 4);
     if (this._mode == 0)

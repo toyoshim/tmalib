@@ -8,7 +8,7 @@ MajVj.frame.mixer = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = { volume: [0.0, 0.0, 0.0] };
     this._channel = options.channel || 1;
     var fragmentShader =
             (this._channel == 1) ?  MajVj.frame.mixer._fragment1Shader :
@@ -69,26 +69,18 @@ MajVj.frame.mixer.prototype.draw =
         function (delta, texture0, texture1, texture2) {
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setTexture('uTexture0', this._fbo[0].texture);
-    this._program.setUniformVector('uVolume0', [this._controller.volume[0]]);
+    this._program.setUniformVector('uVolume0', [this.properties.volume[0]]);
     if (this._channel >= 2) {
         this._program.setTexture('uTexture1', this._fbo[1].texture);
         this._program.setUniformVector(
-                'uVolume1', [this._controller.volume[1]]);
+                'uVolume1', [this.properties.volume[1]]);
         if (this._channel >= 3) {
             this._program.setTexture('uTexture2', this._fbo[2].texture);
             this._program.setUniformVector(
-                    'uVolume2', [this._controller.volume[2]]);
+                    'uVolume2', [this.properties.volume[2]]);
         }
     }
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.mixer.prototype.setController = function (controller) {
-    this._controller = controller;
 };
 
 /**

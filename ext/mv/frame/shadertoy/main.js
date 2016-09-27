@@ -8,7 +8,11 @@ MajVj.frame.shadertoy = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = {
+        volume: 0.0,
+        wave: new Float32Array(2048),
+        fft: new Float32Array(1024)
+    };
     this._textures = options.textures;
     this._time = 0.0;
     this._program = null;
@@ -20,7 +24,7 @@ MajVj.frame.shadertoy = function (options) {
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.shadertoy._fragmentShader));
     this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1]);
-    var waveTableWidth = this._controller.sound.wave.length || 1;
+    var waveTableWidth = this.properties.wave.length;
     var textureHeight = 2;
     var rgbaSize = 4;
     this._waveData =
@@ -84,15 +88,14 @@ MajVj.frame.shadertoy.prototype.draw = function (delta) {
     this._screen.fillColor(0.0, 0.0, 0.0, 1.0);
     this._screen.setAlphaMode(true, this._screen.gl.ONE, this._screen.gl.ONE);
 
-    var ratio =
-        this._controller.sound.fft.length / this._controller.sound.wave.length;
+    var ratio = this.properties.fft.length / this.properties.wave.length;
     var rgbSize = 4;
-    var width = this._controller.sound.wave.length;
+    var width = this.properties.wave.length;
     var fftOffset = width * rgbSize;
     for (var x = 0; x < width; ++x) {
-      this._waveData[x * rgbSize] = this._controller.sound.wave[x];
+      this._waveData[x * rgbSize] = this.properties.wave[x];
       this._waveData[fftOffset + x * rgbSize] =
-              this._controller.sound.fft[(x * ratio)|0] / 255;
+              this.properties.fft[(x * ratio)|0] / 255;
     }
     this._waveTexture.update(this._waveData);
 
@@ -125,7 +128,7 @@ MajVj.frame.shadertoy.prototype.draw = function (delta) {
                 this._program.setTexture('iChannel' + i, this._waveTexture);
                 this._program.setUniformVector(
                         'iChannelResolution[' + i + ']',
-                        [this._controller.sound.wave.length, 2.0, 1.0]);
+                        [this.properties.wave.length, 2.0, 1.0]);
             } else if (this._textures[i] == 'previous-frame') {
                 this._program.setTexture('iChannel' + i, lastFbo.texture);
                 this._program.setUniformVector(
@@ -138,7 +141,7 @@ MajVj.frame.shadertoy.prototype.draw = function (delta) {
 
     // Set shadertone compatible uniforms.
     this._program.setUniformVector(
-        'iOvertoneVolume', [this._controller.sound.volume]);
+        'iOvertoneVolume', [this.properties.volume]);
 
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 
@@ -153,14 +156,6 @@ MajVj.frame.shadertoy.prototype.draw = function (delta) {
     this._copy.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 
     this._screen.popAlphaMode();
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.shadertoy.prototype.setController = function (controller) {
-    this._controller = controller;
 };
 
 /**

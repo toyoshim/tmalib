@@ -4,6 +4,7 @@
  * @param options options (See MajVj.prototype.create)
  */
 MajVj.scene.noop = function (options) {
+    this.properties = {};
 };
 
 /**

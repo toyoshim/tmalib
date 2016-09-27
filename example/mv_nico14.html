@@ -42,7 +42,6 @@ tma.onload = function () {
                                   { controller: fftRightController } } ] });
 
     var fx = vj.create('effect', 'nicofarre');
-    fx.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.run(function (delta) {
       snd.getFloatFrequencyData(fftL);

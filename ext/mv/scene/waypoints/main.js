@@ -5,6 +5,7 @@
  */
 MajVj.scene.waypoints = function (options) {
   this._mv = options.mv;
+  // TODO: Fix to use properties.
   this._controller = options.controller;
 
   this._tuningController = { volume: [0.0] };

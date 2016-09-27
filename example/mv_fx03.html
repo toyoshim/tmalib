@@ -11,7 +11,8 @@ tma.onload = function () {
   const width = 1920 / r;
   const height = 540 / r;
   const vj = new MajVj(width, height, false);
-  const fbo = vj.screen().createFrameBuffer(width, height);
+  const size = vj.size();
+  const fbo = vj.screen().createFrameBuffer(size.width, size.height);
   const tl0 = new TmaTimeline({
     input_scale: 0.0003,
     type: 'saturate'

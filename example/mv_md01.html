@@ -11,18 +11,8 @@ tma.onload = function () {
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
   MajVj.loadAllPlugins().then(function () {
-    var controller = {
-      sound: {
-        volume: 0.0,
-        wave: [],
-        fft: [],
-        fftDb: [],
-      },
-      midi: {
-        keymap: MajVj.misc.midi.keymap
-      }
-    }
-    var frame = vj.create('frame', 'astalight', { controller: controller });
+    var frame = vj.create('frame', 'astalight');
+    frame.properties.keymap = MajVj.misc.midi.keymap
     var sound = vj.create('misc', 'sound', { delay: 0.0 });
     //sound.fetch('data/bustling.mp3', true);
     controller.sound.wave = new Float32Array(sound.getWaveTableCount());

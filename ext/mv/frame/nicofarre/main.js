@@ -8,7 +8,7 @@ MajVj.frame.nicofarre = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = {};
 
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
@@ -216,14 +216,6 @@ MajVj.frame.nicofarre.prototype.draw = function (delta) {
         this._program.setUniformVector('uMirror', [mirror]);
         this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, offset, 4);
     }
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.nicofarre.prototype.setController = function (controller) {
-    this._controller = controller;
 };
 
 /**

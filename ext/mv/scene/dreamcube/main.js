@@ -5,7 +5,7 @@
  */
 MajVj.scene.dreamcube = function (options) {
   this._mv = options.mv;
-  this._controller = options.controller;
+  this.properties = {};
 
   var nico3d = { name: 'nicofarre3d', options: { module: 'cube' } };
   this._frame = this._mv.create('frame', 'effect', {

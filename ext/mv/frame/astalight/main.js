@@ -8,7 +8,9 @@ MajVj.frame.astalight = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = { keymap: [], volume: 0.0 };
+    for (var i = 0; i < 128; ++i)
+        this.properties.keymap[i] = 0.0;
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.astalight._vertexShader),
@@ -217,14 +219,6 @@ MajVj.frame.astalight.prototype.draw = function (delta) {
             Tma3DScreen.MODE_TRIANGLES, 0, this._vertices.items);
 };
 
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.astalight.prototype.setController = function (controller) {
-    this._controller = controller;
-};
-
 MajVj.frame.astalight.ps = function(parent) {
     // Function aliases for speed optimization.
     this._random = Math.random;
@@ -292,31 +286,31 @@ MajVj.frame.astalight.ps.prototype.update = function (delta) {
     this._gy = this._cos(radx);
     this._gz = -this._sin(radx) * this._cos(rady);
     var fall = 0;
-    if (this._parent._controller && this._parent._controller.midi) {
-        var map = this._parent._controller.midi.keymap;
-        for (i = 0; i < this._length; ++i) {
-            var key = this._abs(this._bx[i]) + 32;
-            var val = map[key] +
-                    (map[key + 1] + map[key - 1]) * 0.9 +
-                    (map[key + 2] + map[key - 2]) * 0.8 +
-                    (map[key + 3] + map[key - 3]) * 0.6 +
-                    (map[key + 4] + map[key - 4]) * 0.3;
-            this._az[i] = val / 128;
-        }
-        var onCrash = false;
-        var crashKey = 0;
-        var ons = 0;
-        for (i = 0; i < 128; ++i) {
-            if (map[i] > 110) {
-                onCrash = true;
-                crashKey = i;
-            }
-            fall += map[i];
-        }
-        if (onCrash && !this._onCrash)
-            this._crash(crashKey);
-        this._onCrash = onCrash;
+
+    var map = this._parent.properties.keymap;
+    for (i = 0; i < this._length; ++i) {
+        var key = this._abs(this._bx[i]) + 32;
+        var val = map[key] +
+                (map[key + 1] + map[key - 1]) * 0.9 +
+                (map[key + 2] + map[key - 2]) * 0.8 +
+                (map[key + 3] + map[key - 3]) * 0.6 +
+                (map[key + 4] + map[key - 4]) * 0.3;
+        this._az[i] = val / 128;
     }
+    var onCrash = false;
+    var crashKey = 0;
+    var ons = 0;
+    for (i = 0; i < 128; ++i) {
+        if (map[i] > 110) {
+            onCrash = true;
+            crashKey = i;
+        }
+        fall += map[i];
+    }
+    if (onCrash && !this._onCrash)
+        this._crash(crashKey);
+    this._onCrash = onCrash;
+
     var t1 = this._pow(0.9, delta / 30);
     var t2 = 0.01 *  delta / 10;
     for (i = 0; i < this._length; ++i) {
@@ -340,9 +334,7 @@ MajVj.frame.astalight.ps.prototype.update = function (delta) {
         }
     }
     var dst = 0;
-    var zoom = 1.0;
-    if (this._parent._controller && this._parent._controller.sound)
-        zoom = 1.0 + (this._parent._controller.sound.volume);
+    var zoom = 1.0 + this._parent.properties.volume;
     for (i = 0; i < this._length; ++i) {
         this._x[i] += this._vx[i];
         this._y[i] += this._vy[i];

@@ -6,7 +6,7 @@
 MajVj.frame.spiline = function (options) {
     this._screen = options.screen;
     this._api = options.mv.get2DInterface();
-    this._controller = options.controller;
+    this.properties = {};
     this._s = 0.0;
     this._r = 1.0;
 
@@ -58,12 +58,4 @@ MajVj.frame.spiline.prototype.draw = function (delta) {
         }
         cy += this._sy;
     }
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.spiline.prototype.setController = function (controller) {
-    this._controller = controller;
 };

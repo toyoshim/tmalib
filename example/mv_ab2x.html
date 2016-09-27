@@ -14,13 +14,12 @@ tma.onload = function () {
 		var wired = vj.create('frame', 'wired');
 		var glow = vj.create('effect', 'glow');
 		var cathode = vj.create('effect', 'cathode');
-		glow.setController({ volume: [0.1, 0.0] });
 		var fbo1 = vj.screen().createFrameBuffer(resolution, resolution);
 		var fbo2 = vj.screen().createFrameBuffer(resolution, resolution);
 		vj.run(function (delta) {
-			glow._controller.volume[1] = Math.random() * 0.2;
+			glow.properties.t = Math.random() * 0.2;
 			if (Math.random() < 0.95)
-				glow._controller.volume[1] = 0.0;
+				glow.properties.t = 0.0;
 			fbo1.bind();
 			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
 			wired.draw(delta);

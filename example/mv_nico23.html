@@ -42,7 +42,6 @@ tma.onload = function () {
     });
     var fbo = vj.screen().createFrameBuffer(width, height);
     var fx = vj.create('effect', 'nicofarre');
-    fx.setController(controller);
     vj.screen().setAlphaMode(false);
     var c = 0;
     vj.run(function (delta) {

@@ -8,10 +8,11 @@ MajVj.frame.color = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
-    this._r = options.r || 1.0;
-    this._g = options.g || 1.0;
-    this._b = options.b || 1.0;
+    this.properties = {
+        r: (options.r === undefined) ? 1.0 : options.r,
+        g: (options.g === undefined) ? 1.0 : options.g,
+        b: (options.b === undefined) ? 1.0 : options.b
+    };
 };
 
 /**
@@ -37,12 +38,6 @@ MajVj.frame.color.prototype.onresize = function (aspect) {
  * @param delta delta time from the last rendering
  */
 MajVj.frame.color.prototype.draw = function (delta) {
-    this._screen.fillColor(this._r, this._g, this._b, 1.0);
-};
-
-/**
- * Sets a controller.
- */
-MajVj.frame.color.prototype.setController = function (controller) {
-    this._controller = controller;
+    this._screen.fillColor(
+            this.properties.r, this.properties.g, this.properties.b, 1.0);
 };

@@ -9,7 +9,7 @@ MajVj.frame.effect = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = {};
 
     var create = function (type, args) {
         var frame = args;
@@ -96,17 +96,17 @@ MajVj.frame.effect.prototype.draw = function (delta) {
 };
 
 /**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.effect.prototype.setController = function (controller) {
-    this._controller = controller;
-};
-
-/**
  * Gets a frame plugin internally created
  * @return a frame plugin object
  */
 MajVj.frame.effect.prototype.getFrame = function (i) {
     return this._frames[i];
+};
+
+/**
+ * Gets a effect plugin internally created
+ * @return a effect plugin object
+ */
+MajVj.frame.effect.prototype.getEffect = function (i) {
+    return this._effects[i];
 };

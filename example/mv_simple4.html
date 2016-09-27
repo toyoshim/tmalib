@@ -10,7 +10,8 @@ tma.onload = function () {
 		var wired = vj.create('frame', 'wired');
 		var logo = vj.create('frame', 'crlogo');
 		var snow = vj.create('frame', 'snow');
-		var fbo = vj.screen().createFrameBuffer(512, 512);
+                var size = vj.size();
+		var fbo = vj.screen().createFrameBuffer(size.width, size.height);
 		vj.run(function (delta) {
 			fbo.bind();
 			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);

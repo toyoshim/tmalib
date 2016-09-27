@@ -8,7 +8,7 @@ MajVj.frame.sandbox = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = {};
     this._time = 0;
     this._program = null;
     if (options.id)
@@ -127,14 +127,6 @@ MajVj.frame.sandbox.prototype.draw = function (delta) {
     this._program.setUniformVector('resolution', [this._width, this._height]);
     // TODO: backbuffer
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.sandbox.prototype.setController = function (controller) {
-    this._controller = controller;
 };
 
 /**

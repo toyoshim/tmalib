@@ -194,29 +194,17 @@ tma.onload = function () {
   height = 400;
   var vj = new MajVj(width, height, true);
   MajVj.loadAllPlugins().then(function () {
-    var controller = {
-      sound: {
-        volume: 0.0,
-        wave: [],
-        fft: [],
-        fftDb: [],
-      },
-      midi: {
-        keymap: MajVj.misc.midi.keymap
-      }
-    };
-    var glowController = {
-      volume: [0.1, 0.0]
-    };
     var wired = vj.create('frame', 'wired');
-    var roll = vj.create('frame', 'rolline', { controller: controller });
-    var frame = vj.create('frame', 'astalight', { controller: controller });
+    var roll = vj.create('frame', 'rolline');
+    roll.properties.keymap = MajVj.misc.midi.keymap
+    var frame = vj.create('frame', 'astalight');
+    frame.properties.keymap = MajVj.misc.midi.keymap
     var shader = document.getElementById('shader').text;
     var shadertoy = vj.create('frame', 'shadertoy', {
         shader: shader,
         controller: controller,
         textures: [ 'previous-frame' ] });
-    var glow = vj.create('effect', 'glow', { controller: glowController });
+    var glow = vj.create('effect', 'glow');
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.run(function (delta) {
       fbo.bind();
@@ -225,6 +213,7 @@ tma.onload = function () {
       roll.draw(delta);
       frame.draw(delta);
       vj.screen().bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
       glow.draw(delta, fbo.texture);
       //MajVj.misc.midi.auto();
       MajVj.misc.midi.decay();

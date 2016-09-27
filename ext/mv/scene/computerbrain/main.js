@@ -5,7 +5,7 @@
  */
 MajVj.scene.computerbrain = function (options) {
   this._mv = options.mv;
-  this._controller = options.controller;
+  this.properties = {};
 
   this._stage = this._mv.create('frame', 'nicofarre', {
       led: MajVj.frame.nicofarre.LED_STAGE_AND_BACK,

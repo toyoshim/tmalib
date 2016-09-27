@@ -30,8 +30,7 @@ tma.onload = function () {
   MajVj.loadAllPlugins().then(_(function () {
     var wall = vj.create('frame', 'api3d', {
       draw: draw,
-      clear: clear,
-      controller: controller
+      clear: clear
     });
     vj.run(_(function (delta) {
       wall.draw(delta);

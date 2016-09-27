@@ -5,6 +5,7 @@
  */
 MajVj.scene.saiyaan = function (options) {
   this._mv = options.mv;
+  // TODO: Fix to use properties.
   this._controller = options.controller;
   this._fftController = { volume: [0.0] };
   this._mixerController = { volume: [0.0, 0.0, 0.0] };

@@ -8,7 +8,7 @@ MajVj.frame.wired = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = { slider: 0.0 };
     this._rotate = 0.0;
 
     this._program = this._screen.createProgram(
@@ -94,21 +94,11 @@ MajVj.frame.wired.prototype.onresize = function (aspect) {
  * @param delta delta time from the last rendering
  */
 MajVj.frame.wired.prototype.draw = function (delta) {
-    var rotate = 0.002 * delta;
-    if (this._controller && this._controller.slider)
-        rotate = rotate * (0.5 + this._controller.slider * 1.5);
+    var rotate = 0.002 * delta * (0.5 + this.properties.slider * 1.5);
     this._rotate += rotate;
     mat4.rotate(this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
     this._program.setUniformMatrix('uPMatrix', this._pMatrix);
     this._program.setAttributeArray(
             'aVertexPosition', this._lines, 0, 3, 0);
     this._program.drawArrays(Tma3DScreen.MODE_LINES, 0, this._lines.items);
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.wired.prototype.setController = function (controller) {
-    this._controller = controller;
 };

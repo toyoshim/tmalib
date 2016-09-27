@@ -7,7 +7,7 @@ MajVj.effect.cathode = function (options) {
     this._screen = options.screen;
     this._width = options.width;
     this._height = options.height;
-    this._controller = options.controller;
+    this.properties = {};
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.effect.cathode._vertexShader),
@@ -53,12 +53,4 @@ MajVj.effect.cathode.prototype.draw = function (delta, texture) {
     this._program.setTexture('uTexture', texture);
     this._program.setUniformVector('uVolume', [1.0]);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.effect.cathode.prototype.setController = function (controller) {
-    this._controller = controller;
 };

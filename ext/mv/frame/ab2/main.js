@@ -8,7 +8,7 @@ MajVj.frame.ab2 = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = {};
 
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
@@ -264,12 +264,4 @@ MajVj.frame.ab2.prototype.draw = function (delta) {
             this._state = 0;
         }
     }
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.ab2.prototype.setController = function (controller) {
-    this._controller = controller;
 };

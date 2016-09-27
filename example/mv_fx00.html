@@ -47,7 +47,8 @@ tma.onload = function () {
   var width = 1920 / r;
   var height = 540 / r;
   var vj = new MajVj(width, height, false);
-  var fbo = vj.screen().createFrameBuffer(width, height);
+  var size = vj.size();
+  var fbo = vj.screen().createFrameBuffer(size.width, size.height);
   MajVj.loadAllPlugins().then(function () {
     var shader = document.getElementById('shader').text;
     var sandbox = vj.create('frame', 'sandbox', { shader: shader });

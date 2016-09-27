@@ -9,7 +9,7 @@ MajVj.frame.signal = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = {};
     this._color = options.color || [1.0, 0.0, 0.0, 1.0];
     this._coord = options.coord || [0.0, 0.0, 0.001];
     this._program = this._screen.createProgram(
@@ -58,14 +58,6 @@ MajVj.frame.signal.prototype.draw = function (delta) {
     this._program.setAttributeArray('aCoord', this._coords, 0, 3, 0);
     this._program.setUniformVector('uColor', this._color);
     this._program.drawArrays(Tma3DScreen.MODE_POINTS, 0, 1);
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.frame.signal.prototype.setController = function (controller) {
-    this._controller = controller;
 };
 
 /**

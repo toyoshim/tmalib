@@ -79,13 +79,7 @@ MajVj.prototype.create = function (type, name, options) {
     opt.screen = this._screen;
     opt.width = opt.width || this._screen.canvas.width;  // offscreen width
     opt.height = opt.height || this._screen.canvas.height;  // offscreen height
-    // screen aspect / offscreen aspect
     opt.aspect = opt.aspect || this.aspect();
-    // TODO: Deprecate controller interface.
-    opt.controller = opt.controller || {
-      volume: [0.0, 0.0, 0.0, 0.0],
-      sound: { fftDb: [] }
-    };
     return new MajVj[type][name](opt);
 };
 

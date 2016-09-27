@@ -9,7 +9,7 @@ MajVj.frame.filter = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = {};
     this._color = options.color || [0.0, 0.0, 0.0, 1.0];
     this._zoom = (typeof options.zoom != 'undefined') ? options.zoom : 1.0;
     this._fade = (typeof options.fade != 'undefined') ? options.fade : 1.0;
@@ -96,13 +96,6 @@ MajVj.frame.filter.prototype.draw = function (delta) {
         this._colorProgram.setUniformVector('uColor', this._color);
         this._colorProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
     }
-};
-
-/**
- * Sets a controller.
- */
-MajVj.frame.filter.prototype.setController = function (controller) {
-    this._controller = controller;
 };
 
 /**

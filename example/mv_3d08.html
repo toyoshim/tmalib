@@ -62,8 +62,7 @@ tma.onload = function () {
   var vj = new MajVj(window.innerWidth, window.innerHeight, true);
   MajVj.loadAllPlugins().then(_(function () {
     var wall = vj.create('frame', 'api3d', {
-      draw: line.draw.bind(line),
-      controller: controller
+      draw: line.draw.bind(line)
     });
     vj.run(_(function (delta) {
       wall.draw(delta);

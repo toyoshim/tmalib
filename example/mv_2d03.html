@@ -10,7 +10,6 @@ tma.onload = function () {
   MajVj.loadAllPlugins().then(function () {
     var frame = vj.create('frame', 'spiline');
     var effect = vj.create('effect', 'glow');
-    effect.setController({ volume: [0.1, 0.0] });
     var fbo = vj.screen().createFrameBuffer(512, 512);
     vj.run(function (delta) {
       fbo.bind();

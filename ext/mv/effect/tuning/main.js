@@ -8,7 +8,7 @@ MajVj.effect.tuning = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this._controller = options.controller;
+    this.properties = { volume: 0.0 };
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.effect.tuning._vertexShader),
@@ -50,19 +50,9 @@ MajVj.effect.tuning.prototype.onresize = function (aspect) {
  * @param texture texture data
  */
 MajVj.effect.tuning.prototype.draw = function (delta, texture) {
-    var t = 0.0;
-    if (this._controller && this._controller.volume)
-        t = this._controller.volume[0];
+    var t = this.properties.volume;
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setTexture('uTexture', texture);
     this._program.setUniformVector('uT', [t]);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
-};
-
-/**
- * Sets a controller.
- * @param controller a controller object
- */
-MajVj.effect.tuning.prototype.setController = function (controller) {
-    this._controller = controller;
 };

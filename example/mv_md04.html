@@ -201,38 +201,24 @@ tma.onload = function () {
     MajVj.loadImageFrom('data/bs256.jpg')]).then(function (values) {
     var image_moon = values[1];
     var image_bs = values[2];
-    var controller = {
-      sound: {
-        volume: 0.0,
-        wave: [],
-        fft: [],
-        fftDb: [],
-      },
-      midi: {
-        keymap: MajVj.misc.midi.keymap
-      }
-    };
-    var glowController = {
-      volume: [0.1, 0.0]
-    };
     var wired = vj.create('frame', 'wired');
-    var roll = vj.create('frame', 'rolline', { controller: controller });
-    var moon = vj.create('frame', 'astalight', { controller: controller,
-                                                 image: image_moon,
+    var roll = vj.create('frame', 'rolline');
+    roll.properties.keymap = MajVj.misc.midi.keymap
+    var moon = vj.create('frame', 'astalight', { image: image_moon,
                                                  brightness: 0.2,
                                                  zoom: 2 });
-    var bs = vj.create('frame', 'astalight', { controller: controller,
-                                                  image: image_bs,
-                                                  brightness: 2.0,
-                                                  zoom: 2 });
+    moon.properties.keymap = MajVj.misc.midi.keymap
+    var bs = vj.create('frame', 'astalight', { image: image_bs,
+                                               brightness: 2.0,
+                                               zoom: 2 });
+    bs.properties.keymap = MajVj.misc.midi.keymap
     var rate = 1.0;
     var rate_target = 1.0;
     var shader = document.getElementById('shader').text;
     var shadertoy = vj.create('frame', 'shadertoy', {
         shader: shader,
-        controller: controller,
         textures: [ 'previous-frame' ] });
-    var glow = vj.create('effect', 'glow', { controller: glowController });
+    var glow = vj.create('effect', 'glow');
     var fbo = vj.screen().createFrameBuffer(width, height);
     var update_rate = function() {
       var messages = MajVj.misc.midi.messages;
@@ -258,6 +244,7 @@ tma.onload = function () {
       bs._alpha = 1.0 - rate;
       bs.draw(delta);
       vj.screen().bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
       glow.draw(delta, fbo.texture);
       //MajVj.misc.midi.auto();
       MajVj.misc.midi.decay();

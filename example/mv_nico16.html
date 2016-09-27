@@ -13,7 +13,7 @@ tma.onload = function () {
   var nano2 = { volume: [0.0, 0.0] };
   MajVj.loadAllPlugins().then(_(function () {
     var rgb = { name: 'rgb', options: { distance: 0.002 } };
-    var glow = { name: 'glow', options: { controller: nano2 } };
+    var glow = { name: 'glow' };
     var effect = { name: 'effect', options: {
         frames: [ 'wired', 'crlogo' ],
         effects: [ rgb, glow ] } };
@@ -21,7 +21,6 @@ tma.onload = function () {
         led: MajVj.frame.nicofarre.LED_LEFT_STAGE_RIGHT,
         frames: [ effect ] });
     var emu = vj.create('effect', 'nicofarre');
-    emu.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.run(function (delta) {
       nano2.volume[0] = controller.nano2[0];

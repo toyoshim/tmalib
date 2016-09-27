@@ -25,7 +25,6 @@ tma.onload = function () {
   MajVj.loadAllPlugins().then(_(function () {
     var wall = vj.create('frame', 'nicofarre3d', { draw: draw });
     var fx = vj.create('effect', 'nicofarre', { front: false });
-    fx.setController(controller);
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.screen().setAlphaMode(false);
     vj.run(_(function (delta) {

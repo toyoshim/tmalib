@@ -21,8 +21,7 @@ tma.onload = function () {
   var vj = new MajVj(window.innerWidth, window.innerHeight, true);
   MajVj.loadAllPlugins().then(_(function () {
     var wall = vj.create('frame', 'api3d', {
-      draw: draw,
-      controller: controller
+      draw: draw
     });
     vj.run(_(function (delta) {
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
