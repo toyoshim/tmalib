@@ -111,11 +111,11 @@ void main() {
   gl_FragColor /= 2.;
 }
 </script>
-<script src="../tma.js"></script>
+<script src="../../tma.js"></script>
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
-  Promise.all([MajVj.loadImageFrom('data/jupiter.jpg'),
+  Promise.all([MajVj.loadImageFrom('../data/jupiter.jpg'),
                MajVj.loadAllPlugins()]).then((values) => {
     var vj = new MajVj(window.innerWidth, window.innerHeight, true);
     var size = vj.size();
