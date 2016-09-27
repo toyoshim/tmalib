@@ -175,6 +175,7 @@ tma._boot = function () {
     screen,
     tma.load(tma.base + 'src/TmaParticle.js'),
     tma.load(tma.base + 'src/TmaSequencer.js'),
+    tma.load(tma.base + 'src/TmaTimeline.js'),
     tma.load(tma.base + 'src/TmaMotionBvh.js'),
     tma.load(tma.base + 'src/TmaModelPly.js'),
     tma.load(tma.base + 'src/TmaModelPs2Ico.js')
@@ -801,19 +802,17 @@ exports.Tma2DScreen = Tma2DScreen;
  * @param height screen height
  */
 function Tma3DScreen (width, height) {
-    this.width = width;
-    this.height = height;
     this.canvas = document.createElement('canvas');
-    this.canvas.width = width;
-    this.canvas.height = height;
     this.canvas.style.backgroundColor = '#000000';
+    this.resize(width, height);
+    this.gl = this.canvas.getContext('webgl', { preserveDrawingBuffer: true });
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     this.canvas.onmousemove = this._onmousemove.bind(this);
     this.canvas.onmouseout = this._onmouseout.bind(this);
     this.canvas.onmousedown = this._onmousedown.bind(this);
     this.canvas.onmouseup = this._onmouseup.bind(this);
     this.canvas2d = document.createElement('canvas');
     this.context = this.canvas2d.getContext('2d');
-    this.gl = this.canvas.getContext('webgl', { preserveDrawingBuffer: true });
     if (!this.gl) {
         tma.log('WebGL: webgl is not supported. Try experimental-webgl...');
         this.gl = this.canvas.getContext('experimental-webgl');
@@ -828,7 +827,6 @@ function Tma3DScreen (width, height) {
     if (this.gl.getExtension('OES_texture_float') == null) {
         tma.log('WebGL: float texture is not supported.');
     }
-    this.gl.viewport(0, 0, width, height);
     this.setAlphaMode(false);
     this.setCullingMode(false, true);
     this._currentAlphaMode = {};
@@ -902,6 +900,23 @@ Tma3DScreen.prototype.attachTo = function (element) {
  */
 Tma3DScreen.prototype.detachFrom = function (element) {
     element.removeChild(this.canvas);
+};
+
+/**
+ * Resizes canvas and viewport.
+ * @param width width
+ * @param height height
+ */
+Tma3DScreen.prototype.resize = function (width, height) {
+    this.width = width;
+    this.height = height;
+    var dpr = window.devicePixelRatio || 1;
+    this.canvas.width = width * dpr;
+    this.canvas.height = height * dpr;
+    this.canvas.style.width = width + 'px';
+    this.canvas.style.height = height + 'px';
+    if (this.gl)
+        this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 };
 
 /**
@@ -1256,7 +1271,7 @@ Tma3DScreen.prototype.bind = function () {
     var last = this._lastBoundFrameBuffer;
     this._lastBoundFrameBuffer = this;
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
-    this.gl.viewport(0, 0, this.width, this.height);
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     return last;
 };
 
@@ -1996,109 +2011,1002 @@ exports.TmaParticle = TmaParticle;
  */
 
 /**
- * TmaSequencer prototype.
+ * TmaMotionBvh prototype
  *
- * This prototype provides a sequencer that schedule tasks.
+ * This prototype provide utility functions to handle BVH files.
  * @author Takashi Toyoshima <toyoshim@gmail.com>
  */
-function TmaSequencer () {
-    this._elapsed = 0.0;
-    this._queue = [];
-    this._active = [];
-    this._finished = [];
+function TmaMotionBvh() {
+    this.frameLength = 0;  // contains total frame number
+    this.frameTime = 0;  // contains frame tick time
+    this._frameData = [];  // contains frame data
+    this._root = null;  // contains skeleton structure
 }
 
 /**
- * Starts tasks.
- * @param time start time in msec
+ * Private constant variables.
  */
-TmaSequencer.prototype.start = function (time) {
-    this.stop();
-    this._elapsed = 0;
+TmaMotionBvh._CODE_A = 'A'.charCodeAt(0);
+TmaMotionBvh._CODE_Z = 'Z'.charCodeAt(0);
+TmaMotionBvh._CODE_a = 'a'.charCodeAt(0);
+TmaMotionBvh._CODE_z = 'z'.charCodeAt(0);
+TmaMotionBvh._CODE_0 = '0'.charCodeAt(0);
+TmaMotionBvh._CODE_9 = '9'.charCodeAt(0);
+TmaMotionBvh._CODE_DOT = '.'.charCodeAt(0);
+TmaMotionBvh._CODE_MINUS = '-'.charCodeAt(0);
+
+TmaMotionBvh._CASE_CHANNELS = 'C'.charCodeAt(0);
+TmaMotionBvh._CASE_ENDSITE = 'E'.charCodeAt(0);
+TmaMotionBvh._CASE_FRAME = 'F'.charCodeAt(0);
+TmaMotionBvh._CASE_HIERARCHY = 'H'.charCodeAt(0);
+TmaMotionBvh._CASE_JOINT = 'J'.charCodeAt(0);
+TmaMotionBvh._CASE_MOTION = 'M'.charCodeAt(0);
+TmaMotionBvh._CASE_OFFSET = 'O'.charCodeAt(0);
+TmaMotionBvh._CASE_ROOT = 'R'.charCodeAt(0);
+TmaMotionBvh._CASE_X = 'X'.charCodeAt(0);
+TmaMotionBvh._CASE_Y = 'Y'.charCodeAt(0);
+TmaMotionBvh._CASE_Z = 'Z'.charCodeAt(0);
+TmaMotionBvh._CASE_POSITION = 'p'.charCodeAt(0);
+TmaMotionBvh._CASE_ROTATION = 'r'.charCodeAt(0);
+TmaMotionBvh._CASE_BEGIN = '{'.charCodeAt(0);
+TmaMotionBvh._CASE_END = '}'.charCodeAt(0);
+TmaMotionBvh._CASE_SP = ' '.charCodeAt(0);
+TmaMotionBvh._CASE_CR = '\r'.charCodeAt(0);
+TmaMotionBvh._CASE_LF = '\n'.charCodeAt(0);
+
+TmaMotionBvh._KEY_CHANNELS = 'CHANNELS';
+TmaMotionBvh._KEY_ENDSITE = 'End Site';
+TmaMotionBvh._KEY_HIERARCHY = 'HIERARCHY';
+TmaMotionBvh._KEY_JOINT = 'JOINT';
+TmaMotionBvh._KEY_MOTION = 'MOTION';
+TmaMotionBvh._KEY_OFFSET = 'OFFSET';
+TmaMotionBvh._KEY_ROOT = 'ROOT';
+TmaMotionBvh._KEY_POSITION = 'position';
+TmaMotionBvh._KEY_ROTATION = 'rotation';
+TmaMotionBvh._KEY_FRAMES = 'Frames: ';
+TmaMotionBvh._KEY_FRAME_TIME = 'Frame Time: ';
+
+TmaMotionBvh._ID_UNKNOWN = -2;
+TmaMotionBvh._ID_EOF = -1;
+TmaMotionBvh._ID_CHANNELS = 1;
+TmaMotionBvh._ID_ENDSITE = 2;
+TmaMotionBvh._ID_HIERARCHY = 3;
+TmaMotionBvh._ID_JOINT = 4;
+TmaMotionBvh._ID_MOTION = 5;
+TmaMotionBvh._ID_OFFSET = 6;
+TmaMotionBvh._ID_ROOT = 7;
+TmaMotionBvh._ID_XPOSITION = 8;
+TmaMotionBvh._ID_YPOSITION = 9;
+TmaMotionBvh._ID_ZPOSITION = 10;
+TmaMotionBvh._ID_XROTATION = 11;
+TmaMotionBvh._ID_YROTATION = 12;
+TmaMotionBvh._ID_ZROTATION = 13;
+TmaMotionBvh._ID_BEGIN = 14;
+TmaMotionBvh._ID_END = 15;
+TmaMotionBvh._ID_NAME = 16;
+TmaMotionBvh._ID_NUMBER = 17;
+TmaMotionBvh._ID_FRAMES = 18;
+TmaMotionBvh._ID_FRAME_TIME = 19;
+
+/**
+ * Private function to check if |code| is a number.
+ * @param code an ascii code to be checked
+ * @return true if specified |code| is a number
+ */
+TmaMotionBvh._isNumber = function (code) {
+    if ((TmaMotionBvh._CODE_0 <= code) && (code <= TmaMotionBvh._CODE_9))
+        return true;
+    return false;
 };
 
 /**
- * Stops tasks.
+ * Private function to check if |code| is an alphabet.
+ * @param code an ascii code to be checked
+ * @return true if specified |code| is an alphabet
  */
-TmaSequencer.prototype.stop = function () {
-    for (var i = 0; i < this._active.length; ++i)
-        this._active[i].task.stop();
-    this._queue = this._finished.concat(this._active, this._queue);
-    this._active = [];
-    this._finished = [];
+TmaMotionBvh._isAlphabet = function (code) {
+    if ((TmaMotionBvh._CODE_A <= code) && (code <= TmaMotionBvh._CODE_Z))
+        return true;
+    if ((TmaMotionBvh._CODE_a <= code) && (code <= TmaMotionBvh._CODE_z))
+        return true;
+    return false;
 };
 
 /**
- * Runs tasks.
- * @param delta delta time in msec from the last call
+ * Private function to check data specified by |context| start with |key|.
+ * @param context an object containing;
+ *      data: Uint8Array contains input data
+ *      offset: point to start parsing
+ * @param key an string with which start
+ * @return true if |context| start with |key|
  */
-TmaSequencer.prototype.run = function (delta) {
-    this._elapsed += delta;
+TmaMotionBvh._checkKey = function (context, key) {
+    var length = key.length;
+    if (context.offset + length > context.byteLength)
+        return false;
+    for (var i = 0; i < length; i++) {
+        if (context.data[context.offset + i] != key.charCodeAt(i))
+            return false;
+    }
+    context.offset += length;
+    return true;
+};
 
-    var active = [];
-    for (var i = 0; i < this._active.length; ++i) {
-        var result = this._active[i].task.run(delta, this._elapsed);
-        if (result == 0) {
-            active.push(this._active[i]);
-        } else {
-            this._active[i].task.stop();
-            this._finished.push(this._active[i]);
+/**
+ * Private function to parse root, joint, or end site structure.
+ * @param context an object containing;
+ *      data: Uint8Array contains input data
+ *      offset: point to start parsing
+ * @param joint object to which stores result containing;
+ *      site: true if this joint contains an end site structure
+ *      offset: an object contains an offset vector like;
+ *          x: X offset
+ *          y: Y offset
+ *          z: Z offset
+ *      joint: an array contains child joints
+ *      channels: an object representing degree of freedom like;
+ *          Xposition: true if this joint has X position channel
+ *          Yposition: true if this joint has Y position channel
+ *          Zposition: true if this joint has Z position channel
+ *          Xrotation: true if this joint has X rotation channel
+ *          Yrotation: true if this joint has Y rotation channel
+ *          Zrotation: true if this joint has Z rotation channel
+ *      totalChannels: number of channels in this and child joints.
+ * @param site true if parsing target is end site structure
+ * @return true if parser finishes successfully
+ */
+TmaMotionBvh._parseJoint = function (context, joint, site) {
+    var result = TmaMotionBvh._parse(context);
+    if (TmaMotionBvh._ID_BEGIN != result.id) {
+        tma.error('BVH: JOINT/End Site doesn\'t start with \'{\'');
+        return false;
+    }
+    joint.site = site;
+    joint.joint = [];
+    joint.totalChannels = 0;
+    for (;;) {
+        result = TmaMotionBvh._parse(context);
+        switch (result.id) {
+            case TmaMotionBvh._ID_CHANNELS:
+                if (site) {
+                    tma.error('BVH: End Site can not have a ' +
+                        'CHANNELS');
+                    return false;
+                }
+                result = TmaMotionBvh._parse(context);
+                if (TmaMotionBvh._ID_NUMBER != result.id) {
+                    tma.error('BVH: CHANNELS requires a number');
+                    return false;
+                }
+                var idMax = result.value;
+                joint.channels = {
+                    Xposition: false,
+                    Yposition: false,
+                    Zposition: false,
+                    Xrotation: false,
+                    Yrotation: false,
+                    Zrotation: false
+                };
+                for (var id = 0; id < idMax; id++) {
+                        result = TmaMotionBvh._parse(context);
+                    switch (result.id) {
+                        case TmaMotionBvh._ID_XPOSITION:
+                            joint.channels.Xposition = true;
+                            break;
+                        case TmaMotionBvh._ID_YPOSITION:
+                            joint.channels.Yposition = true;
+                            break;
+                        case TmaMotionBvh._ID_ZPOSITION:
+                            joint.channels.Zposition = true;
+                            break;
+                        case TmaMotionBvh._ID_XROTATION:
+                            joint.channels.Xrotation = true;
+                            break;
+                        case TmaMotionBvh._ID_YROTATION:
+                            joint.channels.Yrotation = true;
+                            break;
+                        case TmaMotionBvh._ID_ZROTATION:
+                            joint.channels.Zrotation = true;
+                            break;
+                        default:
+                            tma.error('BVH: CHANNELS has unknown ' +
+                                'channel keyword');
+                            return false;
+                    }
+                }
+                joint.totalChannels += idMax;
+                break;
+            case TmaMotionBvh._ID_END:
+                return true;
+            case TmaMotionBvh._ID_ENDSITE:
+                var endSite = { name: 'End Site' };
+                tma.log('BVH: End Site');
+                joint.joint.push(endSite);
+                if (!TmaMotionBvh._parseJoint(context, endSite, true))
+                    return false;
+                break;
+            case TmaMotionBvh._ID_JOINT:
+                if (site) {
+                    tma.error('BVH: End Site can not have a JOINT');
+                    return false;
+                }
+                result = TmaMotionBvh._parse(context);
+                if (TmaMotionBvh._ID_NAME != result.id) {
+                    tma.error('BVH: JOINT doesn\'t have a name');
+                    return false;
+                }
+                var childJoint = { name: result.value };
+                tma.log('BVH: JOINT ' + result.value);
+                joint.joint.push(childJoint);
+                if (!TmaMotionBvh._parseJoint(context, childJoint, false))
+                    return false;
+                joint.totalChannels += childJoint.totalChannels;
+                break;
+            case TmaMotionBvh._ID_OFFSET:
+                result = TmaMotionBvh._parse(context);
+                if (TmaMotionBvh._ID_NUMBER == result.id) {
+                    var x = result.value;
+                    result = TmaMotionBvh._parse(context);
+                    if (TmaMotionBvh._ID_NUMBER == result.id) {
+                        var y = result.value;
+                        result = TmaMotionBvh._parse(context);
+                        if (TmaMotionBvh._ID_NUMBER == result.id) {
+                            var z = result.value;
+                            joint.offset = { x: x, y: y, z: z };
+                            break;
+                        }
+                    }
+                }
+                tma.error('BVH: OFFSET requires three numbers');
+                return false;
+            default:
+                tma.error('BVH: internal error');
+                return false;
         }
     }
-    this._active = active;
+    return true;
+};
 
-    while (this._queue.length > 0 && this._queue[0].when < this._elapsed) {
-        var item = this._queue.shift();
-        item.task.start();
-        var result = item.task.run(this._elapsed - item.when, this._elapsed);
-        if (result == 0) {
-            active.push(item);
-        } else {
-            item.task.stop();
-            this._finished.push(item);
+/**
+ * Private function to parse data in BVH format.
+ * @param context an object containing;
+ *      data: Uint8Array contains input data
+ *      offset: point to start parsing
+ * @return true if parser finishes successfully
+ */
+TmaMotionBvh._parse = function (context) {
+    var length = context.data.byteLength;
+    for (var unknown = { id: TmaMotionBvh._ID_UNKNOWN };
+         context.offset < length; context.offset++) {
+        var first = context.data[context.offset];
+        var ids = [];
+        switch (first) {
+            case TmaMotionBvh._CASE_CHANNELS:
+                if (!TmaMotionBvh._checkKey(
+                    context, TmaMotionBvh._KEY_CHANNELS))
+                    break;
+                return { id: TmaMotionBvh._ID_CHANNELS };
+            case TmaMotionBvh._CASE_ENDSITE:
+                if (!TmaMotionBvh._checkKey(
+                    context, TmaMotionBvh._KEY_ENDSITE))
+                    break;
+                return { id: TmaMotionBvh._ID_ENDSITE };
+            case TmaMotionBvh._CASE_FRAME:
+                if (TmaMotionBvh._checkKey(context, TmaMotionBvh._KEY_FRAMES))
+                    return { id: TmaMotionBvh._ID_FRAMES };
+                if (TmaMotionBvh._checkKey(
+                    context, TmaMotionBvh._KEY_FRAME_TIME))
+                    return { id: TmaMotionBvh._ID_FRAME_TIME };
+                break;
+            case TmaMotionBvh._CASE_HIERARCHY:
+                if (!TmaMotionBvh._checkKey(
+                    context, TmaMotionBvh._KEY_HIERARCHY))
+                    break;
+                return { id: TmaMotionBvh._ID_HIERARCHY };
+            case TmaMotionBvh._CASE_JOINT:
+                if (!TmaMotionBvh._checkKey(context, TmaMotionBvh._KEY_JOINT))
+                    break;
+                return { id: TmaMotionBvh._ID_JOINT };
+            case TmaMotionBvh._CASE_MOTION:
+                if (!TmaMotionBvh._checkKey(context, TmaMotionBvh._KEY_MOTION))
+                    break;
+                return { id: TmaMotionBvh._ID_MOTION };
+            case TmaMotionBvh._CASE_OFFSET:
+                if (!TmaMotionBvh._checkKey(context, TmaMotionBvh._KEY_OFFSET))
+                    break;
+                return { id: TmaMotionBvh._ID_OFFSET };
+            case TmaMotionBvh._CASE_ROOT:
+                if (!TmaMotionBvh._checkKey(context, TmaMotionBvh._KEY_ROOT))
+                    break;
+                return { id: TmaMotionBvh._ID_ROOT };
+            case TmaMotionBvh._CASE_X:
+                ids = [ TmaMotionBvh._ID_XPOSITION,
+                    TmaMotionBvh._ID_XROTATION ];
+                break;
+            case TmaMotionBvh._CASE_Y:
+                ids = [ TmaMotionBvh._ID_YPOSITION,
+                    TmaMotionBvh._ID_YROTATION ];
+                break;
+            case TmaMotionBvh._CASE_Z:
+                ids = [ TmaMotionBvh._ID_ZPOSITION,
+                    TmaMotionBvh._ID_ZROTATION ];
+                break;
+            case TmaMotionBvh._CASE_BEGIN:
+                context.offset++;
+                return { id: TmaMotionBvh._ID_BEGIN };
+            case TmaMotionBvh._CASE_END:
+                context.offset++;
+                return { id: TmaMotionBvh._ID_END };
+            case TmaMotionBvh._CASE_SP:
+            case TmaMotionBvh._CASE_CR:
+            case TmaMotionBvh._CASE_LF:
+                continue;
+            default:
+                break;
         }
-    }
-};
-
-/**
- * Register a task.
- * @param when time to start a task in msec
- * @param task a task to run
- */
-TmaSequencer.prototype.register = function (when, task) {
-    var entry = { when: when, task: task };
-    for (var i = 0; i < this._queue.length; ++i) {
-        if (this._queue[i].when <= when)
-            continue;
-        if (i == 0) {
-            this._queue = this._unshift(entry);
-        } else {
-            this._queue = this._queue.slice(0, i).concat(
-                    [entry], this._queue.slice(i, this._queue.length));
+        if ((0 != ids.length) && ((context.offset + 1) < length)) {
+            var second = context.data[++context.offset];
+            if (TmaMotionBvh._CASE_POSITION == second) {
+                if (TmaMotionBvh._checkKey(
+                    context, TmaMotionBvh._KEY_POSITION))
+                    return { id: ids[0] };
+            } else if (TmaMotionBvh._CASE_ROTATION == second) {
+                if (TmaMotionBvh._checkKey(
+                    context, TmaMotionBvh._KEY_ROTATION))
+                    return { id: ids[1] };
+            }
+            context.offset--;
         }
-        return;
+        var code;
+        if (TmaMotionBvh._isAlphabet(context.data[context.offset])) {
+            for (var name = []; context.offset < context.data.byteLength;
+                 context.offset++) {
+                code = context.data[context.offset];
+                if (!TmaMotionBvh._isAlphabet(code) &&
+                    !TmaMotionBvh._isNumber(code))
+                    break;
+                name.push(String.fromCharCode(code));
+            }
+            return { id: TmaMotionBvh._ID_NAME, value: name.join('') };
+        }
+        var number = [];
+        if (TmaMotionBvh._CODE_MINUS == context.data[context.offset]) {
+            number.push('-');
+            context.offset++;
+        }
+        for (var dot = false; context.offset < context.data.byteLength;
+             context.offset++) {
+            code = context.data[context.offset];
+            if (TmaMotionBvh._CODE_DOT == code) {
+                if (dot) {
+                    tma.warn('BVH: dot apears twice for a number');
+                    return unknown;
+                }
+                dot = true;
+            } else if (!TmaMotionBvh._isNumber(code)) {
+                break;
+            }
+            number.push(String.fromCharCode(code));
+        }
+        if (0 == number.length)
+            return unknown;
+        return { id: TmaMotionBvh._ID_NUMBER, value: Number(number.join('')) };
     }
-    this._queue.push(entry);
+    return { id: TmaMotionBvh._ID_EOF };
 };
 
 /**
- * Gets elapsed time.
- * @return elapsed time in msec
+ * Loads a motion data in BVH format.
+ * @param data ArrayBuffer
+ * @return true if specified |data| is in valid BVH format
  */
-TmaSequencer.prototype.elapsed = function () {
-    return this._elapsed;
+TmaMotionBvh.prototype.load = function (data) {
+    var context = {
+        data: new Uint8Array(data),
+        offset: 0
+    };
+    var result = TmaMotionBvh._parse(context);
+    if (TmaMotionBvh._ID_HIERARCHY != result.id) {
+        tma.error('BVH: HIERARCHY not found');
+        return false;
+    }
+    result = TmaMotionBvh._parse(context);
+    if (TmaMotionBvh._ID_ROOT != result.id) {
+        tma.error('BVH: ROOT not found');
+        return false;
+    }
+    result = TmaMotionBvh._parse(context);
+    if (TmaMotionBvh._ID_NAME != result.id) {
+        tma.error('BVH: ROOT doesn\'t have a name');
+        return false;
+    }
+    tma.log('BVH: ROOT ' + result.value);
+    var root = { name: result.value };
+    if (!TmaMotionBvh._parseJoint(context, root, false))
+        return false;
+    result = TmaMotionBvh._parse(context);
+    if (TmaMotionBvh._ID_MOTION != result.id) {
+        tma.error('BVH: MOTION not found');
+        return false;
+    }
+    result = TmaMotionBvh._parse(context);
+    if (TmaMotionBvh._ID_FRAMES != result.id) {
+        tma.error('BVH: Frames not found');
+        return false;
+    }
+    result = TmaMotionBvh._parse(context);
+    if (TmaMotionBvh._ID_NUMBER != result.id) {
+        tma.error('BVH: Frames doesn\'t have a number');
+        return false;
+    }
+    tma.log('BVH: Frames ' + result.value);
+    this.frameLength = result.value;
+    result = TmaMotionBvh._parse(context);
+    if (TmaMotionBvh._ID_FRAME_TIME != result.id) {
+        tma.error('BVH: Frame Time not found');
+        return false;
+    }
+    result = TmaMotionBvh._parse(context);
+    if (TmaMotionBvh._ID_NUMBER != result.id) {
+        tma.error('BVH: Frame Time doesn\'t have a number');
+        return false;
+    }
+    tma.log('BVH: Frame Time ' + result.value);
+    this.frameTime = result.value;
+    tma.log('BVH: Total Channels ' + root.totalChannels);
+
+    this._frameData = [];
+    for (var frame = 0; frame < this.frameLength; frame++) {
+        var data = [];
+        for (var ch = 0; ch < root.totalChannels; ch++) {
+            result = TmaMotionBvh._parse(context);
+            if (TmaMotionBvh._ID_NUMBER != result.id) {
+                tma.error('BVH: data broken at frame ' + frame);
+                return false;
+            }
+            data.push(result.value);
+        }
+        this._frameData.push(data);
+    }
+    tma.log('BVH: done');
+    result = TmaMotionBvh._parse(context);
+    if (TmaMotionBvh._ID_EOF != result.id)
+        tma.warn('BVH: unused data exists');
+
+    this._root = root;
+    return true;
 };
 
 /**
- * Checks if an active or queued task still exist.
- * @return true if exists
+ * Gets a motion vector for frame |offset|.
+ * @param offset frame index
+ * @return a vector containing all channels data for the frame
  */
-TmaSequencer.prototype.active = function () {
-    return this._active.length != 0 || this._queue.length != 0;
+TmaMotionBvh.prototype.getFrameAt = function (offset) {
+    return this._frameData[offset];
 };
 
+// node.js compatible export.
+exports.TmaMotionBvh = TmaMotionBvh;
 /**
- * TmaSequencer.Task prototype.
+ * T'MediaArt library for JavaScript.
+ */
+
+/**
+ * TmaModelPly prototype
  *
- * This prototype provides a simple task that runs in a sequencer.
- * @param durat
+ * This prototype provides utility functions to handle ply files.
+ * @author Takashi Toyoshima <toyoshim@gmail.com>
+ */
+function TmaModelPly() {
+    this._vertices = [];
+    this._normals = [];
+    this._coord = [];
+    this._indices = [];
+}
+
+/**
+ * Loads a model data in ply format.
+ * @param data ArrayBuffer
+ * @return true if specified |data| is in valid ply format
+ */
+TmaModelPly.prototype.load = function (data) {
+    var reader = new (function(input) {
+        if (typeof input == 'string') {
+            this._data = input;
+            this._cr = '\r';
+            this._lf = '\n';
+            this._sp = ' ';
+            this._conv = function (c) { return c; };
+        } else {
+            this._data = new Uint8Array(input);
+            this._cr = 0x0d;
+            this._lf = 0x0a;
+            this._sp = 0x20;
+            this._conv = function (c) { return String.fromCharCode(c); };
+        }
+        this._offset = 0;
+        this.readNextLine = function() {
+            var array = [];
+            var i = this._offset;
+            for (; i < this._data.length; ++i) {
+                if (this._data[i] == this._cr || this._data[i] == this._lf)
+                    break;
+                if (array[array.length - 1] != ' ' ||
+                        this._data[i] != this._sp) {
+                    array.push(this._conv(this._data[i]));
+                }
+            }
+            if (array.length == 0 && i == this._data.length)
+                return null;
+            if (this._data[i] == this._cr)
+                if (i + 1 < this._data.length && this._data[i + 1] == this._lf)
+                    ++i;
+            if (i != this._data.length)
+                i++;
+            this._offset = i;
+            while (array.length > 0 && array[array.length - 1] == ' ')
+                array.pop();
+            return array.join('');
+        };
+        this.next = function() {
+            var line = this.readNextLine();
+            if (!line)
+                return null;
+            return line.split(' ');
+        };
+    })(data);
+    var magic;
+    do {
+        magic = reader.readNextLine();
+    } while (magic !== null && magic.length == 0);
+    if (magic === null || magic != 'ply') {
+        tma.error('ply: can not find magic word \'ply\'');
+        return false;
+    }
+    var format = false;
+    var eoh = false;
+    var structure = {};
+    var element = null;
+    while (!eoh) {
+        var line = reader.next();
+        switch (line[0]) {
+            case 'comment':
+                line.shift();
+                tma.info('ply: header comment: ' + line.join(' '));
+                break;
+            case 'element':
+                if (line.length != 3) {
+                    tma.error('ply: format error: ' + line.join(' '));
+                    return false;
+                }
+                structure[line[1]] = element = {};
+                element.count = parseInt(line[2]);
+                element.keys = 0;
+                element.key = {};
+                element.data = [];
+                break;
+            case 'end_header':
+                eoh = true;
+                break;
+            case 'format':
+                if (line.length != 3 || line[1] != 'ascii' ||
+                        line[2] != '1.0') {
+                    tma.error('ply: unknown ' + line.join(' '));
+                    return false;
+                }
+                format = true;
+                break;
+            case 'property':
+                if (!element) {
+                    tma.error('ply: property should follow element: ' +
+                            line.join(' '));
+                    return false;
+                }
+                if (line.length != 3 && line[1] != 'list') {
+                    tma.error('ply: format error: ' + line.join(' '));
+                    return false;
+                }
+                if (line[1] == 'list') {
+                    element.key[line[line.length - 1]] = {
+                        index: element.keys++,
+                        type: line[1]
+                    };
+                } else if (line[1] == 'float' || line[1] == 'float32' ||
+                        line[1] == 'int' || line[1] == 'uchar') {
+                    element.key[line[2]] = {
+                        index: element.keys++,
+                        type: line[1]
+                    };
+                } else {
+                    tma.error('ply: type ' + line[1] + ' is not supported');
+                }
+                break;
+            default:
+                tma.error('ply: unknown header: ' + line.join(' '));
+                return false;
+        }
+    }
+    if (!format) {
+        tma.error('ply: format is not specified');
+        return false;
+    }
+    if (!structure['vertex'] || !structure['vertex']['key']['x'] ||
+            !structure['vertex']['key']['y'] ||
+            !structure['vertex']['key']['z']) {
+        tma.error('ply: vertex element with x, y, and z is not found');
+        return false;
+    }
+    for (var vertex = 0; vertex < structure.vertex.count; vertex++) {
+        var vertexData = reader.next();
+        if (vertexData.length != structure.vertex.keys) {
+            tma.error('ply: vertex element doesn\'t contain enough properties');
+            return false;
+        }
+        var vertices = [];
+        for (i = 0; i < vertexData.length; ++i)
+            vertices.push(parseFloat(vertexData[i]));
+        structure.vertex.data.push(vertices);
+    }
+    if (!structure['face']) {
+        tma.error('ply: face element is not found');
+        return false;
+    }
+    for (var face = 0; face < structure.face.count; face++) {
+        var faceData = reader.next();
+        if (faceData.length != (parseInt(faceData[0]) + 1)) {
+            tma.error('ply: face element doesn\'t contain enough properties');
+            return false;
+        }
+        var faces = [];
+        for (i = 0; i < faceData.length; ++i)
+            faces.push(parseInt(faceData[i]));
+        structure.face.data.push(faces);
+    }
+    for (i = 0; i < structure.vertex.count; ++i) {
+        this._vertices.push(
+                structure.vertex.data[i][structure.vertex.key.x.index]);
+        this._vertices.push(
+                structure.vertex.data[i][structure.vertex.key.y.index]);
+        this._vertices.push(
+                structure.vertex.data[i][structure.vertex.key.z.index]);
+    }
+    for (i = 0; i < structure.face.count; ++i) {
+        if (structure.face.data[i].length == 4) {
+            // triangles.
+            this._indices.push(structure.face.data[i][1]);
+            this._indices.push(structure.face.data[i][2]);
+            this._indices.push(structure.face.data[i][3]);
+        } else {
+            // quads
+            this._indices.push(structure.face.data[i][1]);
+            this._indices.push(structure.face.data[i][2]);
+            this._indices.push(structure.face.data[i][3]);
+            this._indices.push(structure.face.data[i][3]);
+            this._indices.push(structure.face.data[i][4]);
+            this._indices.push(structure.face.data[i][1]);
+        }
+    }
+    return true;
+};
+
+/**
+ * Modifies all vertices by the specified |scale|.
+ * @param scale scale factor
+ */
+TmaModelPly.prototype.scale = function (scale) {
+    for (var i = 0; i < this._vertices.length; ++i)
+        this._vertices[i] *= scale;
+};
+
+/**
+ * Gets model's vertices array.
+ * @return model's vertices in Array
+ */
+TmaModelPly.prototype.getVertices = function () {
+    return this._vertices;
+};
+
+/**
+ * Gets texture coord. Address is normalized from 0.0 to 1.0.
+ * @return texture coord in Array
+ */
+TmaModelPly.prototype.getCoords = function () {
+    return this._coord;
+};
+
+/**
+ * Gets model's vertex indices.
+ * @return model's vertex indices in Array
+ */
+TmaModelPly.prototype.getIndices = function () {
+    return this._indices;
+};
+
+// node.js compatible export.
+exports.TmaModelPly = TmaModelPly;
+/**
+ * T'MediaArt library for JavaScript.
+ */
+
+/**
+ * TmaModelPs2Ico prototype
+ *
+ * This prototype provide utility functions to handle PlayStation 2 ico files.
+ * @author Takashi Toyoshima <toyoshim@gmail.com>
+ */
+function TmaModelPs2Ico() {
+    this.shapes = 0;
+    this.frames = 0;
+    this._vertices = null;
+    this._coords = null;
+    this._indices = null;
+    this._verticesBuffer = null;
+    this._coordsBuffer = null;
+    this._indicesBuffer = null;
+    this._texture = null;
+    this._weights = null;
+    this._mode = Tma3DScreen.MODE_TRIANGLES;
+}
+
+/**
+ * Private constant variables.
+ */
+TmaModelPs2Ico._OFFSET_VERSION = 0;
+TmaModelPs2Ico._OFFSET_NBSP = 4;
+TmaModelPs2Ico._OFFSET_ATTRIB = 8;
+TmaModelPs2Ico._OFFSET_BFACE = 12;
+TmaModelPs2Ico._OFFSET_NBVTX = 16;
+TmaModelPs2Ico._OFFSET_VTX = 20;
+
+TmaModelPs2Ico._ATTRIB_IIP = 1;
+TmaModelPs2Ico._ATTRIB_ANTI = 2;
+TmaModelPs2Ico._ATTRIB_TEX = 4;
+TmaModelPs2Ico._ATTRIB_RLE = 8;
+
+/**
+ * Loads a model data in PlayStation 2 ICO format.
+ * @param screen Tma3DScreen
+ * @param data ArrayBuffer
+ * @return true if specified |data| is in valid ICO format
+ */
+TmaModelPs2Ico.prototype.load = function (screen, data) {
+    var view = new DataView(data);
+    var version = view.getUint32(TmaModelPs2Ico._OFFSET_VERSION, true);
+    if (version != 0x00010000) {
+        tma.error('PS2ICO: Unknown version format');
+        return false;
+    }
+    tma.info('PS2ICO: version 1.00');
+    var nbsp = view.getUint32(TmaModelPs2Ico._OFFSET_NBSP, true);
+    this.shapes = nbsp;
+    tma.info('PS2ICO: shapes ' + nbsp);
+    var attrib = view.getUint32(TmaModelPs2Ico._OFFSET_ATTRIB, true);
+    tma.info('PS2ICO: attributes ' + attrib.toString(16));
+    if (attrib & TmaModelPs2Ico._ATTRIB_RLE) {
+        tma.error('PS2ICO: run-length encoding texture is not supported');
+        return false;
+    }
+    var bface = view.getFloat32(TmaModelPs2Ico._OFFSET_BFACE, true);
+    tma.info('PS2ICO: back face clip ' + bface);
+    var nbvtx = view.getUint32(TmaModelPs2Ico._OFFSET_NBVTX, true);
+    tma.info('PS2ICO: vertices ' + nbvtx);
+
+    // Model vertices
+    var offset = TmaModelPs2Ico._OFFSET_VTX;
+    this._vertices = new Array(nbsp);
+    for (var shape = 0; shape < nbsp; ++shape)
+        this._vertices[shape] = new Array(nbvtx * 3);
+    this._indices = new Array(nbvtx);
+    for (var index = 0; index < nbvtx; ++index)
+        this._indices[index] = index;
+    this._coords = new Array(nbvtx * 2);
+    for (var i = 0; i < nbvtx; ++i) {
+        for (shape = 0; shape < nbsp; ++shape) {
+            var vx = view.getInt16(offset + 0, true) / 1024;
+            var vy = -view.getInt16(offset + 2, true) / 1024;
+            var vz = -view.getInt16(offset + 4, true) / 1024;
+            this._vertices[shape][i * 3 + 0] = vx;
+            this._vertices[shape][i * 3 + 1] = vy;
+            this._vertices[shape][i * 3 + 2] = vz;
+            offset += 8;
+        }
+
+        var nx = view.getInt16(offset + 0, true) / 4096;
+        var ny = view.getInt16(offset + 2, true) / 4096;
+        var nz = view.getInt16(offset + 4, true) / 4096;
+        offset += 8;
+
+        var sx = view.getInt16(offset + 0, true) / 4096;
+        var sy = view.getInt16(offset + 2, true) / 4096;
+        this._coords[i * 2 + 0] = sx;
+        this._coords[i * 2 + 1] = 1 - sy;
+        offset += 4;
+
+        var color = view.getUint32(offset, false);  // RGBA
+        offset += 4;
+    }
+
+    // Animation section
+    tma.info('PS2ICO: animation data start at 0x' + offset.toString(16));
+    var nbseq = view.getUint32(offset, true);
+    tma.info('PS2ICO: sequences ' + nbseq);
+    if (nbseq != 1) {
+        tma.error('PS2ICO: nbseq must be 1');
+        return false;
+    }
+    offset += 4;
+
+    var nbframe = view.getUint32(offset + 0, true);
+    var playSpeed = view.getFloat32(offset + 4, true);
+    var playOffset = view.getUint32(offset + 8, true);
+    var nbksp = view.getUint32(offset + 12, true);
+    tma.info('PS2ICO: frames ' + nbframe);
+    tma.info('PS2ICO: speed ' + playSpeed);
+    tma.info('PS2ICO: offset ' + playOffset);
+    tma.info('PS2ICO: nbksp ' + nbksp);
+    this.frames = nbframe;
+    this._weights = new Array(nbframe);
+    for (i = 0; i < nbframe; ++i)
+        this._weights[i] = new Array(nbksp);
+    offset += 16;
+    for (i = 0; i < nbksp; ++i) {
+        var kspid = view.getUint32(offset + 0, true);
+        var nbkf = view.getUint32(offset + 4, true);
+        offset += 8;
+        tma.info('PS2ICO: animation ' + kspid);
+        var previousFrame = 0;
+        var previousWeight = 0;
+        for (var key = 0; key < nbkf; ++key) {
+            var frame = view.getFloat32(offset + 0, true);
+            var weight = view.getFloat32(offset + 4, true);
+            var distance = frame - previousFrame;
+            if (distance == 0) {
+                previousFrame = frame;
+                previousWeight = weight;
+            } else {
+                var diff = weight - previousWeight;
+                var step = diff / distance;
+                for (var currentFrame = previousFrame; currentFrame < frame;
+                        ++currentFrame) {
+                    this._weights[currentFrame][i] = previousWeight;
+//                    tma.info('PS2ICO: > ... ' + currentFrame + ':' +
+//                            previousWeight);
+                    previousWeight += step;
+                }
+                previousFrame = currentFrame;
+                previousWeight = weight;
+            }
+            tma.info('PS2ICO: > ' + frame + ',' + weight);
+            offset += 8;
+        }
+        for (; previousFrame < 60; ++previousFrame)
+            this._weights[previousFrame][i] = previousWeight;
+    }
+
+    // Texture section
+    if (data.byteLength - offset != 32768) {
+        tma.error('PS2ICO: texture data size is wrong')
+        return false;
+    }
+    var texture = new Array(128 * 128 * 4);
+    for (i = 0; i < texture.length; i += 4) {
+        var psmct16 = view.getUint16(offset, true);
+        offset += 2;
+        texture[i + 0] = ((psmct16 >>  0) & 0x1f) << 3;
+        texture[i + 1] = ((psmct16 >>  5) & 0x1f) << 3;
+        texture[i + 2] = ((psmct16 >> 10) & 0x1f) << 3;
+        texture[i + 3] = 0xff;
+    }
+    this._texture = screen.createTexture(
+            screen.createImage(128, 128, texture),
+            true,
+            Tma3DScreen.FILTER_LINEAR);
+    return true;
+};
+
+/**
+ * Modifies all vertices by the specified |scale|.
+ * @param scale scale factor
+ */
+TmaModelPs2Ico.prototype.scale = function (scale) {
+    for (var shape = 0; shape < this.shapes; ++shape) {
+        var vertices = this._vertices[shape];
+        for (var i = 0; i < vertices.length; ++i)
+            vertices[i] *= scale;
+    }
+};
+
+/**
+ * Gets number of vertices.
+ * @return number of vertices.
+ */
+TmaModelPs2Ico.prototype.items = function () {
+    return this._indices.length;
+};
+
+/**
+ * Gets model's vertices array of a shape.
+ * @param shape shape number
+ * @return model's vertices in Array
+ */
+TmaModelPs2Ico.prototype.getVertices = function (shape) {
+    return this._vertices[shape || 0];
+};
+
+/**
+ * Gets texture coord. Address is normalized from 0.0 to 1.0.
+ * @return texture coord in Array.
+ */
+TmaModelPs2Ico.prototype.getCoords = function () {
+    return this._coords;
+};
+
+/**
+ * Gets model's vertex indices.
+ * @return model's vertex indices in Array
+ */
+TmaModelPs2Ico.prototype.getIndices = function () {
+    return this._indices;
+};
+
+/**
+ * Gets an array buffer bound to the vertices. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object
+ */
+TmaModelPs2Ico.prototype.getVerticesBuffer = function (screen) {
+    if (!this._verticesBuffer)
+        this._verticesBuffer = screen.createBuffer(this.getVertices());
+    return this._verticesBuffer;
+};
+
+/**
+ * Gets an array buffer bound to the coords. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object for texture coords
+ */
+TmaModelPs2Ico.prototype.getCoordsBuffer = function (screen) {
+    if (!this._coordsBuffer)
+        this._coordsBuffer = screen.createBuffer(this.getCoords());
+    return this._coordsBuffer;
+};
+
+/**
+ * Gets an element buffer bound to the indices. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an element buffer object
+ */
+TmaModelPs2Ico.prototype.getIndicesBuffer = function (screen) {
+    if (!this._indicesBuffer)
+        this._indicesBuffer = screen.createElementBuffer(this.getIndices());
+    return this._indicesBuffer;
+};
+
+/**
+ * Gets texture data. Texture image is always 128 x 128 in RGBA.
+ * @return texture data in Array
+ */
+TmaModelPs2Ico.prototype.getTexture = function () {
+    return this._texture;
+};
+
+/**
+ * Gets a recommended drawing mode.
+ * @return a drawing mode, e.g. Tma3DScreen.MODE_TRIANGLES
+ */
+TmaModelPs2Ico.prototype.getDrawMode = function () {
+    return this._mode;
+};
+
+/**
+ * Gets shape weights data for a frame.
+ * @param frame frame number from 0 to |this.frames| - 1
+ * @return weights in Array
+ */
+TmaModelPs2Ico.prototype.getWeights = function (frame) {
+    return this._weights[frame];
+};
+
+// node.js compatible export.
+exports.TmaModelPs2Ico = TmaModelPs2Ico;
