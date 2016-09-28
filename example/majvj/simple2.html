@@ -1,14 +1,14 @@
 <html>
-<body style="margin: 0; cursor: none;">
+<body style="margin: 0">
 <script src="../../tma.js"></script>
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
-	var vj = new MajVj(512, 512);
+	var vj = new MajVj();
 	MajVj.loadAllPlugins().then(function () {
 		var effect = vj.create('effect', 'glow');
 		var wired = vj.create('frame', 'wired');
-                var size = vj.size();
+		var size = vj.size();
 		var fbo = vj.screen().createFrameBuffer(size.width, size.height);
 		vj.run(function (delta) {
 			fbo.bind();

@@ -1,10 +1,10 @@
 <html>
-<body style="margin: 0; cursor: none;">
+<body style="margin: 0">
 <script src="../../tma.js"></script>
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
-	var vj = new MajVj(512, 512);
+	var vj = new MajVj();
 	window.onresize = vj.onresize;
 	MajVj.loadPlugin('frame', 'wired').then(function () {
 		var wired = vj.create('frame', 'wired');

@@ -8,14 +8,14 @@
   *
   * This prototype provides a framework for VJ applications.
   * @author Takashi Toyoshima <toyoshim@gmail.com>
-  * @param width offscreen width
-  * @param height offscreen height
-  * @param fullscreen flag to decide if MajVj runs as a fullscreen app
+  * @param width offscreen width (optional)
+  * @param height offscreen height (optional)
+  * @param fullscreen flag to resize to match the window size (optional)
   * @param parent parent DOM node (optional)
   */
 var MajVj = function (width, height, fullscreen, parent) {
-    this._width = width;
-    this._height = height;
+    this._width = width || 1;
+    this._height = height || 1;
     this._fullscreen = (fullscreen === undefined) ? true : fullscreen;
     this._aspect = width / height;
     this._timestamp = undefined;
