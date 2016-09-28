@@ -214,6 +214,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('effect', 'cathode'),
         MajVj.loadPlugin('effect', 'flashpanel'),
         MajVj.loadPlugin('effect', 'glow'),
+        MajVj.loadPlugin('effect', 'led'),
         MajVj.loadPlugin('effect', 'nicofarre'),
         MajVj.loadPlugin('effect', 'rgb'),
         MajVj.loadPlugin('effect', 'rollpanel'),

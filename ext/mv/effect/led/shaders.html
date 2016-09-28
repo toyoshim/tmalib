@@ -1,0 +1,33 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+attribute vec2 aCoord;
+varying vec2 vCoord;
+
+void main() {
+    vec2 position = aCoord;
+    gl_Position = vec4(position, 0., 1.);
+    vCoord = aCoord;
+}
+</script>
+
+<script id='fragment' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture;
+varying vec2 vCoord;
+
+const float PI = 3.141592653589793238462643383;
+
+void main() {
+    vec2 dots = vec2(64., 48.);  // TODO: Make this properties.
+    vec2 textureCoord = (vCoord + vec2(1.)) * dots / 2.;
+    vec2 roundTextureCoord = floor(textureCoord + vec2(0.5)) / dots;
+    vec2 l = pow(sin(vCoord * vec2(PI) * dots), vec2(12., 12.));
+    vec4 c = texture2D(uTexture, roundTextureCoord) * (l.x * l.y) * 4.;
+    gl_FragColor = vec4(c.r, c.g, c.b, 0.3);
+}
+</script>
+
+</head>
+</html>
