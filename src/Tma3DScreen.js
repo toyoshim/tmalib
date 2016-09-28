@@ -290,14 +290,14 @@ Tma3DScreen.prototype.createElementBuffer = function (array) {
 
 /**
  * Create an frame buffer for offscreen rendering.
- * @width offscreen width
- * @height offscreen height
+ * @width offscreen width (optional)
+ * @height offscreen height (optional)
  * @return created frame buffer object
  */
 Tma3DScreen.prototype.createFrameBuffer = function (width, height) {
     var buffer = this.gl.createFramebuffer();
-    buffer.width = width;
-    buffer.height = height;
+    buffer.width = width || this.canvas.width;
+    buffer.height = height || this.canvas.height;
     buffer._owner = this;
     buffer.texture = null;
     buffer.renderbuffer = null;

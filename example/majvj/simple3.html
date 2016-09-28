@@ -9,8 +9,7 @@ tma.onload = function () {
 		var effect = vj.create('effect', 'glow');
 		var wired = vj.create('frame', 'wired');
 		var snow = vj.create('frame', 'snow');
-		var size = vj.size();
-		var fbo = vj.screen().createFrameBuffer(size.width, size.height);
+		var fbo = vj.screen().createFrameBuffer();
 		vj.run(function (delta) {
 			fbo.bind();
 			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
@@ -22,11 +21,11 @@ tma.onload = function () {
 			vj.screen().flush();
 		});
 		window.onresize = function () {
-			vj.onresize();
-			var ratio = vj.aspect();
+			var ratio = vj.onresize();
 			effect.onresize(ratio);
 			wired.onresize(ratio);
 			snow.onresize(ratio);
+			fbo = vj.screen().createFrameBuffer();
 		};
 	}, function (e) { console.log('plugin load error: ' + e); });
 };
