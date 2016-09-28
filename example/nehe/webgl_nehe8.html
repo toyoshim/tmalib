@@ -1,6 +1,6 @@
 <html>
 <head>
-    <script src="../tma.js"></script>
+    <script src="../../tma.js"></script>
     <script id="shader-vs" type="x-shader/x-vertex">
         attribute vec3 aVertexPosition;
         attribute vec3 aVertexNormal;
@@ -38,8 +38,9 @@
     <script>
         tma.extlibs = [ 'ext/gl-matrix.js' ];
         tma.onload = function () {
-            // NeHe tutorial #7.
+            // NeHe tutorial #8.
             var screen = new TmaScreen(500, 500, TmaScreen.MODE_3D);
+            screen.setAlphaMode(true, screen.gl.DST_ALPHA, screen.gl.ONE);
             screen.attachTo(document.getElementById('canvas'));
 
             // Initializes program with shaders.
@@ -52,7 +53,7 @@
                         image, true, Tma3DScreen.FILTER_LINEAR);
                 program.setTexture('uSampler', texture);
             };
-            image.src = 'data/texture.png';
+            image.src = '../data/waypoints.png';
 
             // Initializes buffers.
             var cubeVertices = screen.createBuffer([
