@@ -1,0 +1,66 @@
+<html>
+<head><title>Shadertoy test</title></head>
+<body style="margin: 0">
+<script id="shader" type="x-shader/x-fragment">
+const float y = 0.75;
+const float lv = 0.1;
+const float center = 0.2;
+
+float smoothbump(float center, float width, float x) {
+  float w2 = width / 2.;
+  float cp = center+w2;
+  float cm = center-w2;
+  float c = smoothstep(cm, center, x) * (1.0-smoothstep(center, cp, x));
+  return c;
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
+  vec2 uv = fragCoord.xy / iResolution.xy;
+  vec2 step = vec2(1.) / iResolution.xy;
+  float wave_s = texture2D(iChannel0,vec2(uv.x / 2., y)).x * lv;
+  float wave_e = texture2D(iChannel0,vec2((uv.x + step.x) / 2., y)).x * lv;
+  float wave = smoothbump(center,
+                          (wave_s - wave_e),
+                          (wave_s + wave_e) / 2. + uv.y - 0.5);
+  vec3 wc = vec3(wave);
+
+  float zf = -0.1;
+  vec2 uv2 = (1.0 + zf) * uv - (zf / 2.0, zf / 2.0);
+  vec3 pc = 0.97 * texture2D(iChannel1, uv2 + vec2(0., 0.03)).rgb;
+
+  fragColor = vec4(vec3(wc + pc), 1.0);
+}
+</script>
+<script src="../../tma.js"></script>
+<script src="shadertoy_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var st = new ShadertoyCommon();
+  Promise.all([MajVj.loadPlugin('effect', 'led'),
+               st.init(true)]).then(() => {
+    var size = st.mv.size();
+    var shadertoy = st.mv.create('frame', 'shadertoy', {
+        shader: document.getElementById('shader').text,
+        textures: [ 'audio', 'previous-frame' ]
+    });
+    var effect = st.mv.create('effect', 'led');
+    var fbo = st.mv.screen().createFrameBuffer();
+    st.mv.run(function (delta) {
+      st.run(shadertoy);
+      fbo.bind();
+      shadertoy.draw(delta);
+      st.mv.screen().bind();
+      st.mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      effect.draw(delta, fbo.texture);
+      st.mv.screen().flush();
+    });
+    window.onresize = function () {
+      shadertoy.onresize(st.mv.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>
