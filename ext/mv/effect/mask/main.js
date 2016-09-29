@@ -6,7 +6,8 @@
 MajVj.effect.mask = function (options) {
     this._screen = options.screen;
     this.properties = {
-        resolution: [ options.width / 8, options.height / 8 ]
+        resolution: [ options.width / 8, options.height / 8 ],
+        texture: null
     };
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
@@ -19,13 +20,15 @@ MajVj.effect.mask = function (options) {
         patch = {
             rgb: MajVj.effect.mask._patchRgb,
             led: MajVj.effect.mask._patchLed,
-            panel: MajVj.effect.mask._patchPanel
+            panel: MajVj.effect.mask._patchPanel,
+            custom: options.image
         }[options.patch];
     }
     if (!patch)
         patch = MajVj.effect.mask._patchRgb;
     this._patch = this._screen.createTexture(
-            patch, true, Tma3DScreen.FILTER_LINEAR);
+            patch, true, Tma3DScreen.FILTER_NEAREST);
+    this.properties.texture = this._patch;
 };
 
 // Shader programs.
