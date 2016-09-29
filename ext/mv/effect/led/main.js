@@ -8,7 +8,10 @@ MajVj.effect.led = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this.properties = {};
+    this.properties = {
+        resolution: [ this._width / 8, this._height / 8 ],
+        rotation: { count: 0, speed: 0 }
+    };
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.effect.led._vertexShader),
@@ -56,6 +59,13 @@ MajVj.effect.led.prototype.draw = function (delta, texture) {
                               this._screen.gl.ONE_MINUS_SRC_ALPHA);
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setTexture('uTexture', texture);
+    var time = [Date.now() / 1000];
+    this._program.setUniformVector('uTime', time);
+    this._program.setUniformVector('uResolution', this.properties.resolution);
+    this._program.setUniformVector('uRotation', [
+        this.properties.rotation.count,
+        this.properties.rotation.speed
+    ]);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
     this._screen.popAlphaMode();
 };
