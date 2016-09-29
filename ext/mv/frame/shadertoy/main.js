@@ -11,7 +11,7 @@ MajVj.frame.shadertoy = function (options) {
     this.properties = {
         volume: 0.0,
         wave: new Float32Array(2048),
-        fft: new Float32Array(1024)
+        fft: new Uint8Array(1024)
     };
     this._textures = options.textures;
     this._time = 0.0;
@@ -34,7 +34,8 @@ MajVj.frame.shadertoy = function (options) {
     this._mouse = { x: 0.0, y: 0.0, cx: 0.0, cy: 0.0 };
     this._fbo = [
             this._screen.createFrameBuffer(this._width, this._height),
-            this._screen.createFrameBuffer(this._width, this._height)];
+            this._screen.createFrameBuffer(this._width, this._height)
+    ];
 };
 
 // Shader programs.
@@ -72,6 +73,12 @@ MajVj.frame.shadertoy.load = function () {
  */
 MajVj.frame.shadertoy.prototype.onresize = function (aspect) {
     this._aspect = aspect;
+    this._width = this._screen.canvas.width;
+    this._height = this._screen.canvas.height;
+    this._fbo = [
+            this._screen.createFrameBuffer(this._width, this._height),
+            this._screen.createFrameBuffer(this._width, this._height)
+    ];
 };
 
 /**

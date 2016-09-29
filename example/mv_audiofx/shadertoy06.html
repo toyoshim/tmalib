@@ -1,6 +1,6 @@
 <html>
 <head><title>Shadertoy test</title></head>
-<body style="margin: 0; cursor: none">
+<body style="margin: 0">
 <script id="shader" type="x-shader/x-fragment">
 // based on https://www.shadertoy.com/view/ldlXRS
 //Noise animation - Electric
@@ -68,50 +68,25 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
         fragColor = vec4(col,1.);
 }
 </script>
-<script src="../tma.js"></script>
-<script src="mv_common.js"></script>
+<script src="../../tma.js"></script>
+<script src="shadertoy_common.js"></script>
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
-  var r = 2;
-  var width = 1920 / r;
-  var height = 1080 / r;
-  var vj = new MajVj(width, height, true);
-  MajVj.loadAllPlugins().then(function () {
-    var sound = vj.create('misc', 'sound', { delay: 0.0 });
-    sound.fetch('data/bustling.mp3', true);
-    var controller = {
-      sound: {
-        volume: 0.0,
-        wave: new Float32Array(sound.getWaveTableCount()),
-        fft: new Uint8Array(sound.getFftCount()),
-        fftDb: new Float32Array(sound.getFftCount()),
-      }
-    }
-    var shader = document.getElementById('shader').text;
-    var shadertoy = vj.create('frame', 'shadertoy', {
-        shader: shader,
-        controller: controller,
-        textures: [ 'audio', 'previous-frame' ] });
-    vj.run(function (delta) {
-      sound.getFloatWaveTable(controller.sound.wave);
-      var rms = 0.0;
-      for (var i = 0; i < controller.sound.wave.length; ++i) {
-        var data = controller.sound.wave[i];
-        rms += data * data;
-      }
-      rms = Math.sqrt(rms / controller.sound.wave.length);
-      controller.sound.volume = rms;
-      sound.getByteFrequencyData(controller.sound.fft);
-      sound.getFloatFrequencyData(controller.sound.fftDb);
-
-      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+  var st = new ShadertoyCommon();
+  st.init(true).then(() => {
+    var shadertoy = st.mv.create('frame', 'shadertoy', {
+        shader: document.getElementById('shader').text,
+        textures: [ 'audio' ]
+    });
+    st.mv.run(function (delta) {
+      st.run(shadertoy);
       shadertoy.draw(delta);
     });
     window.onresize = function () {
-      vj.onresize();
+      shadertoy.onresize(st.mv.onresize());
     };
-  }, function (e) { console.log('plugin load error: ' + e); });
+  });
 };
 </script>
 </body>

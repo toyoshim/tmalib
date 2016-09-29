@@ -1,0 +1,62 @@
+<html>
+<head><title>Shadertoy test</title></head>
+<body style="margin: 0">
+<script id="shader" type="x-shader/x-fragment">
+// This shader is based on shadertone simple.glsl.
+// See https://github.com/overtone/shadertone/LICENSE (the MIT license).
+uniform float iOvertoneVolume;
+void mainImage2(out vec4 fragColor, in vec2 fragCoord)
+{
+  vec2 uv = (fragCoord.xy / iResolution.xy);
+  // find the center and use distance from the center to vary the
+  // green component
+  vec2 uv2 = uv - 0.5;
+  float r = sqrt(uv2.x*uv2.x + uv2.y*uv2.y);
+  fragColor = vec4(uv.x,
+                      20.0*iOvertoneVolume*(1.0-r),
+                      0.5*sin(3.0*iGlobalTime)+0.5,
+                      1.0);
+}
+
+// This shader is based on shadertone sine_dance.glsl.
+void mainImage1(out vec4 fragColor, in vec2 fragCoord)
+{
+    vec2 uv = 2.0*(fragCoord.xy/iResolution.xy) - 1.0;
+    // equvalent to the video's spec.y, I think
+    float spec_y = 0.01 + 5.0*iOvertoneVolume;
+    float col = 0.0;
+    uv.x += sin(iGlobalTime * 6.0 + uv.y*1.5)*spec_y;
+    col += abs(0.066/uv.x) * spec_y;
+    fragColor = vec4(col,col,col,1.0);
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
+    vec4 color1;
+    vec4 color2;
+    mainImage1(color1, fragCoord);
+    mainImage2(color2, fragCoord);
+    fragColor = color1 + color2;
+}
+</script>
+<script src="../../tma.js"></script>
+<script src="shadertoy_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var st = new ShadertoyCommon();
+  st.init(true).then(() => {
+    var shader = document.getElementById('shader').text;
+    var shadertoy = st.mv.create('frame', 'shadertoy', { shader: shader });
+    st.mv.run(function (delta) {
+      st.run(shadertoy);
+      shadertoy.draw(delta);
+    });
+    window.onresize = function () {
+      shadertoy.onresize(st.mv.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>
