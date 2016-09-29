@@ -70,11 +70,12 @@ MajVj.frame.shadertoy.load = function () {
 /**
  * Handles screen resize.
  * @param aspect screen aspect ratio
+ * @param size offscreen size { width, height }
  */
-MajVj.frame.shadertoy.prototype.onresize = function (aspect) {
+MajVj.frame.shadertoy.prototype.onresize = function (aspect, size) {
     this._aspect = aspect;
-    this._width = this._screen.canvas.width;
-    this._height = this._screen.canvas.height;
+    this._width = size ? size.width : this._screen.canvas.width;
+    this._height = size ? size.height : this._screen.canvas.height;
     this._fbo = [
             this._screen.createFrameBuffer(this._width, this._height),
             this._screen.createFrameBuffer(this._width, this._height)

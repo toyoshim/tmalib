@@ -38,15 +38,20 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
   var st = new ShadertoyCommon();
-  Promise.all([MajVj.loadPlugin('effect', 'led'),
+  Promise.all([MajVj.loadPlugin('effect', 'crt'),
                st.init(true)]).then(() => {
     var size = st.mv.size();
+    size.width = (size.width / 8) | 0;
+    size.height = (size.height / 8) | 0;
     var shadertoy = st.mv.create('frame', 'shadertoy', {
         shader: document.getElementById('shader').text,
-        textures: [ 'audio', 'previous-frame' ]
+        textures: [ 'audio', 'previous-frame' ],
+        width: size.width,
+        height: size.height
     });
-    var effect = st.mv.create('effect', 'led');
-    var fbo = st.mv.screen().createFrameBuffer();
+    var effect = st.mv.create('effect', 'crt');
+    effect.properties.resolution = [size.width, size.height];
+    var fbo = st.mv.screen().createFrameBuffer(size.width, size.height);
     st.mv.run(function (delta) {
       st.run(shadertoy);
       fbo.bind();
@@ -57,7 +62,14 @@ tma.onload = function () {
       st.mv.screen().flush();
     });
     window.onresize = function () {
-      shadertoy.onresize(st.mv.onresize());
+      var ratio = st.mv.onresize();
+      size = st.mv.size();
+      size.width = (size.width / 8) | 0;
+      size.height = (size.height / 8) | 0;
+      shadertoy.onresize(ratio, size);
+      effect.onresize(ratio);
+      effect.properties.resolution = [size.width, size.height];
+      fbo = st.mv.screen().createFrameBuffer(size.width, size.height);
     };
   });
 };
