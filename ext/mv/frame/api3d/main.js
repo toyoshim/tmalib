@@ -65,6 +65,7 @@ MajVj.frame.api3d = function (options) {
     var opt = options.options || {};
     opt.screen = this._screen;
     opt.api = this._api;
+    opt.properties = this.properties;
     this._module = options.module ? new options.module(opt) : {
         draw: options.draw || function (api) {},
         clear: options.clear || function (api) {}

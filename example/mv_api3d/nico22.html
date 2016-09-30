@@ -1,0 +1,34 @@
+<html>
+<head><title>Based on Nicofarre test</title></head>
+<body style="margin: 0; cursor: none">
+<script src="../../tma.js"></script>
+<script src="vr_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  MajVj.loadAllPlugins().then(function () {
+    var vj = new MajVj();
+    var frame1 = vj.create('frame', 'api3d', {
+      module: MajVj.frame.nicofarre3d.modules.beams
+    });
+    var frame2 = vj.create('frame', 'api3d', {
+      module: MajVj.frame.nicofarre3d.modules.train
+    });
+    vj.run(function (delta) {
+      vr_run(frame1);
+      vr_run(frame2);
+      frame1.draw(delta);
+      vj.screen().setAlphaMode(true, vj.screen().gl.ONE, vj.screen().gl.ONE);
+      frame2.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      var ratio = vj.onresize();
+      frame1.onresize(ratio);
+      frame2.onresize(ratio);
+    };
+  });
+};
+</script>
+</body>
+</html>

@@ -1,8 +1,8 @@
 <html>
-<head><title>Nicofarre test</title></head>
+<head><title>Based on Nicofarre test</title></head>
 <body style="margin: 0; cursor: none">
-<script src="../tma.js"></script>
-<script src="mv_common.js"></script>
+<script src="../../tma.js"></script>
+<script src="vr_common.js"></script>
 <script>
 function draw (api) {
   var p = function () { return (Math.random() - 0.5) * 100000; };
@@ -18,20 +18,21 @@ function draw (api) {
 
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
-  var vj = new MajVj(window.innerWidth, window.innerHeight, true);
-  MajVj.loadAllPlugins().then(_(function () {
-    var wall = vj.create('frame', 'api3d', {
+  var vj = new MajVj();
+  MajVj.loadAllPlugins().then(function () {
+    var frame = vj.create('frame', 'api3d', {
       draw: draw
     });
-    vj.run(_(function (delta) {
+    vj.run(function (delta) {
+      vr_run(frame);
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
-      wall.draw(delta);
+      frame.draw(delta);
       vj.screen().flush();
-    }));
+    });
     window.onresize = function () {
-      wall.onresize(vj.onresize());
+      frame.onresize(vj.onresize());
     };
-  }), function (e) { console.log('plugin load error: ' + e); });
+  });
 };
 </script>
 </body>
