@@ -158,6 +158,7 @@ MajVj.prototype.fps = function () {
 
 /**
  * Gets MajVj2D API interface.
+ * TODO: move to mv/frame/api2d to be aligned with api3d.
  * @param options options
  * @return a MajVj2D API interface (misc.api2d object in JavaScript)
  */
