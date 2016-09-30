@@ -1,0 +1,29 @@
+<html>
+<head>
+
+<script id='v_line2d' type='x-shader/x-vertex'>
+attribute vec4 aCoord;
+varying vec4 vCoord;
+uniform vec2 uZoom;
+
+void main() {
+  gl_Position = vec4(vec2(aCoord.xy * uZoom), 0.0, 1.0);
+  vCoord = aCoord;
+}
+</script>
+
+<script id='f_line2d' type='x-shader/x-fragment'>
+precision mediump float;
+varying vec4 vCoord;
+uniform vec4 uColor;
+uniform float uWidth;
+
+void main() {
+  float l = pow(1. - length(vec2(vCoord.xy) - vec2(vCoord.zw)) / uWidth, 8.);
+  gl_FragColor = uColor * vec4(l, l, l, 1.0);
+}
+</script>
+
+
+</head>
+</html>
