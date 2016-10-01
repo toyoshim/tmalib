@@ -1,0 +1,85 @@
+<html>
+<head><title>Laser line test</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+
+var particles = [];
+
+function generate () {
+  var c = [Math.random() * 2 - 1, Math.random() * 2 - 1];
+  var size = Math.random() * 0.3;
+  var w = size * Math.random() * 3;
+  particles.push({
+    position: [c[0], c[1] - size],
+    size: size,
+    width: w,
+    theta: 0,
+    l: 1,
+    rotate: (Math.random() * 2 - 1) * 0.1
+  });
+  particles.push({
+    position: [c[0], c[1] + size],
+    size: size,
+    width: w,
+    theta: 0,
+    l: 1,
+    rotate: (Math.random() * 2 - 1) * 0.1
+  });
+  particles.push({
+    position: [c[0] - size, c[1]],
+    size: size,
+    width: w,
+    theta: Math.PI / 2,
+    l: 1,
+    rotate: (Math.random() * 2 - 1) * 0.1
+  });
+  particles.push({
+    position: [c[0] + size, c[1]],
+    size: size,
+    width: w,
+    theta: Math.PI / 2,
+    l: 1,
+    rotate: (Math.random() * 2 - 1) * 0.1
+  });
+}
+
+function draw (api) {
+  if (Math.random() < 0.03)
+    generate();
+  
+  var next = [];
+  for (var p of particles) {
+    var v = [Math.cos(p.theta) * p.size, Math.sin(p.theta) * p.size];
+    var s = [p.position[0] + v[0], p.position[1] + v[1]];
+    var e = [p.position[0] - v[0], p.position[1] - v[1]];
+//    api.color[3] = p.l;
+    api.line2d(s, e, p.width);
+    p.l *= 0.99;
+    if (p.l < 0.95)
+      p.theta += p.rotate;
+    if (p.l >= 0.01)
+      next.push(p);
+  }
+  particles = next;
+}
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj();
+  MajVj.loadPlugin('frame', 'laser').then(function () {
+    var frame = vj.create('frame', 'laser', { draw: draw });
+    vj.screen().setAlphaMode(true, vj.screen().gl.SRC_ALPHA, vj.screen().gl.ONE);
+    vj.run(function (delta) {
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      frame.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      frame.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>

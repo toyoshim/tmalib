@@ -4,10 +4,11 @@
 <script id='v_line2d' type='x-shader/x-vertex'>
 attribute vec4 aCoord;
 varying vec4 vCoord;
-uniform vec2 uZoom;
+uniform mat3 uMatrix;
 
 void main() {
-  gl_Position = vec4(vec2(aCoord.xy * uZoom), 0.0, 1.0);
+  vec3 position = uMatrix * vec3(aCoord.xy, 1.0);
+  gl_Position = vec4(position.xy, vec2(1.));
   vCoord = aCoord;
 }
 </script>
@@ -19,8 +20,9 @@ uniform vec4 uColor;
 uniform float uWidth;
 
 void main() {
-  float l = pow(1. - length(vec2(vCoord.xy) - vec2(vCoord.zw)) / uWidth, 8.);
-  gl_FragColor = uColor * vec4(l, l, l, 1.0);
+  float l = exp(3.5 - 7. * distance(vCoord.xy, vCoord.zw) / uWidth);
+  vec3 baseColor = uColor.rgb + vec3(0.05);
+  gl_FragColor = vec4(baseColor * l, 1.);
 }
 </script>
 

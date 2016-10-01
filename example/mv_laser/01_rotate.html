@@ -1,0 +1,29 @@
+<html>
+<head><title>Laser line test</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+var t = 0;
+function draw (api) {
+  t += 0.01;
+  api.line2d([0, 0], [Math.cos(t), Math.sin(t)], 0.2);
+}
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj();
+  MajVj.loadPlugin('frame', 'laser').then(function () {
+    var frame = vj.create('frame', 'laser', { draw: draw });
+    vj.run(function (delta) {
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      frame.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      frame.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>

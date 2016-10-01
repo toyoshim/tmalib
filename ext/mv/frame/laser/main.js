@@ -7,7 +7,9 @@ MajVj.frame.laser = function (options) {
     this._screen = options.screen;
     this._width = options.width;
     this._height = options.height;
+    this._zoom = [1.0, 1.0];
     this._draw = options.draw || function (api) {};
+    this._hpi = Math.PI / 2;
 
     this.properties = {};
     this.onresize(options.aspect);
@@ -18,14 +20,29 @@ MajVj.frame.laser = function (options) {
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.laser._fLine2dShader));
 
-    // 0 1                      2 3
-    // +-+----------------------+-+
-    // + -s                     -e|
-    // +-+----------------------+-+
-    // 4 5                      6 7
-    this._coords = this._screen.createBuffer(new Float32Array(32));
-    this._indices = this._screen.createElementBuffer([0, 4, 1, 5, 2, 6, 3, 7]);
-    this._indices.items = 8;
+    this._coords = this._screen.createBuffer([
+        // X     Y     U     V
+        -1.0, -1.0,  0.0,  0.0,  // 0
+        -1.0,  1.0,  0.0,  0.0,  // 1
+         0.0, -1.0,  0.0,  0.0,  // 2
+         0.0,  1.0,  0.0,  0.0,  // 3
+        -1.0, -1.0, -1.0,  0.0,  // 4
+        -1.0,  1.0, -1.0,  0.0,  // 5
+         1.0, -1.0,  1.0,  0.0,  // 6
+         1.0,  1.0,  1.0,  0.0,  // 7
+         0.0, -1.0,  0.0,  0.0,  // 8
+         0.0,  1.0,  0.0,  0.0,  // 9
+         1.0, -1.0,  0.0,  0.0,  // 10
+         1.0,  1.0,  0.0,  0.0,  // 11
+    ]);
+    this._coords.dimension = 4;
+    this._indices = this._screen.createElementBuffer([
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+    ]);
+    this._leftSquareIndicesOffset = 0;
+    this._centerSquareIndicesOffset = 8;
+    this._rightSquareIndicesOffset = 16;
+    this._squareIndicesLength = 4;
 
     this._api = {
         line2d: this._line2d.bind(this),
@@ -63,6 +80,12 @@ MajVj.frame.laser.load = function () {
  */
 MajVj.frame.laser.prototype.onresize = function (aspect) {
     this._aspect = aspect;
+    this._zoom = [1.0, 1.0];
+    // Ajust to keep 1:1 aspect and to overfill the screen.
+    if (this._aspect > 1.0)
+        this._zoom[1] = this._aspect;
+    else
+        this._zoom[0] = 1 / this._aspect;
 };
 
 /**
@@ -70,13 +93,6 @@ MajVj.frame.laser.prototype.onresize = function (aspect) {
  * @param delta delta time from the last rendering
  */
 MajVj.frame.laser.prototype.draw = function (delta) {
-    var zoom = [1.0, 1.0];
-    if (this._aspect > 1.0)
-        zoom[1] = this._aspect;
-    else
-        zoom[0] = 1 / this._aspect;
-    this._line2dProgram.setUniformVector('uZoom', zoom);
-
     this._draw(this._api);
 };
 
@@ -87,34 +103,49 @@ MajVj.frame.laser.prototype.draw = function (delta) {
  * @param width line width
  */
 MajVj.frame.laser.prototype._line2d = function (src, dst, width) {
-    var coords = this._coords.buffer();
-    var sx = src[0];
-    var sy = src[1];
-    var ex = dst[0];
-    var ey = dst[1];
-    var len = Math.sqrt(Math.pow(ex - sx, 2) + Math.pow(ey - ex, 2));
-    var vx = width * (ex - sx) / len / 2;
-    var vy = width * (ey - sy) / len / 2;
-    coords[ 0] = sx - vx + vy; coords[ 1] = sy - vx - vy;
-    coords[ 2] = sx; coords[ 3] = sy;
-    coords[ 4] = sx + vy; coords[ 5] = sy - vx;
-    coords[ 6] = sx; coords[ 7] = sy;
-    coords[ 8] = ex + vy; coords[ 9] = ey - vx;
-    coords[10] = ex; coords[11] = ey;
-    coords[12] = ex + vx + vy; coords[13] = ey - vx + vy;
-    coords[14] = ex; coords[15] = ey;
-    coords[16] = sx - vx - vy; coords[17] = sy + vx - vy;
-    coords[18] = sx; coords[19] = sy;
-    coords[20] = sx - vy; coords[21] = sy + vx;
-    coords[22] = sx; coords[23] = sy;
-    coords[24] = ex - vy; coords[25] = ey + vx;
-    coords[26] = ex; coords[27] = ey;
-    coords[28] = ex + vx - vy; coords[29] = ey + vx + vy;
-    coords[30] = ex; coords[31] = ey;
-    this._coords.update();
-    this._line2dProgram.setAttributeArray('aCoord', this._coords, 0, 4, 0);
+    var vector = vec2.create();
+    vec2.subtract(vector, src, dst);
+    var distance = vec2.length(vector);
+    var position = vec2.create();
+    vec2.lerp(position, src, dst, 0.5);
+
+    var matrix = mat2d.identity(mat2d.create());
+    mat2d.scale(matrix, matrix, this._zoom);
+    mat2d.translate(matrix, matrix, position);
+    mat2d.rotate(matrix, matrix, Math.atan2(vector[1], vector[0]));
+    mat2d.scale(matrix, matrix, [distance / 2, width / 2]);
+    var matrix3 = mat3.fromMat2d(mat3.create(), matrix);
+
+    this._line2dProgram.setAttributeArray(
+        'aCoord', this._coords, 0, this._coords.dimension, 0);
+    this._line2dProgram.setUniformMatrix('uMatrix', matrix3);
     this._line2dProgram.setUniformVector('uColor', this._api.color);
     this._line2dProgram.setUniformVector('uWidth', [width]);
     this._line2dProgram.drawElements(Tma3DScreen.MODE_TRIANGLE_STRIP,
-                                     this._indices, 0, this._indices.items);
+                                     this._indices,
+                                     this._centerSquareIndicesOffset,
+                                     this._squareIndicesLength);
+    mat2d.identity(matrix);
+    mat2d.scale(matrix, matrix, this._zoom);
+    mat2d.translate(matrix, matrix, dst);
+    mat2d.rotate(matrix, matrix, Math.atan2(vector[1], vector[0]));
+    mat2d.scale(matrix, matrix, [width / 2, width / 2]);
+    mat3.fromMat2d(matrix3, matrix);
+    this._line2dProgram.setUniformMatrix('uMatrix', matrix3);
+    this._line2dProgram.drawElements(Tma3DScreen.MODE_TRIANGLE_STRIP,
+                                     this._indices,
+                                     this._leftSquareIndicesOffset,
+                                     this._squareIndicesLength);
+
+    mat2d.identity(matrix);
+    mat2d.scale(matrix, matrix, this._zoom);
+    mat2d.translate(matrix, matrix, src);
+    mat2d.rotate(matrix, matrix, Math.atan2(vector[1], vector[0]));
+    mat2d.scale(matrix, matrix, [width / 2, width / 2]);
+    mat3.fromMat2d(matrix3, matrix);
+    this._line2dProgram.setUniformMatrix('uMatrix', matrix3);
+    this._line2dProgram.drawElements(Tma3DScreen.MODE_TRIANGLE_STRIP,
+                                     this._indices,
+                                     this._rightSquareIndicesOffset,
+                                     this._squareIndicesLength);
 };
