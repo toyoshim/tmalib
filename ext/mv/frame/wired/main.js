@@ -84,9 +84,9 @@ MajVj.frame.wired.load = function () {
  */
 MajVj.frame.wired.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, aspect, 0.1, 1000.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -250.0 ]);
-    mat4.rotate(this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.perspective(this._pMatrix, 45, aspect, 0.1, 1000.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -250.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
 };
 
 /**
@@ -96,7 +96,7 @@ MajVj.frame.wired.prototype.onresize = function (aspect) {
 MajVj.frame.wired.prototype.draw = function (delta) {
     var rotate = 0.002 * delta * (0.5 + this.properties.slider * 1.5);
     this._rotate += rotate;
-    mat4.rotate(this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
     this._program.setUniformMatrix('uPMatrix', this._pMatrix);
     this._program.setAttributeArray(
             'aVertexPosition', this._lines, 0, 3, 0);

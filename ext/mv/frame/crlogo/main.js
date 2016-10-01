@@ -15,7 +15,7 @@ MajVj.frame.crlogo = function (options) {
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.crlogo._fragmentShader));
     this._pMatrix = mat4.create();
-    this._mvMatrix = mat4.create();
+    this._mvMatrix = mat4.identity(mat4.create());
     this._rotate = 0.0;
 
     var logo = MajVj.frame.crlogo._logos[0];
@@ -26,7 +26,6 @@ MajVj.frame.crlogo = function (options) {
     this._ps = new MajVj.frame.crlogo.ps(this, 0);
 
     this.onresize(this._aspect);
-    mat4.identity(this._mvMatrix);
 };
 
 /**
@@ -216,9 +215,9 @@ MajVj.frame.crlogo.load = function () {
  * @param aspect screen aspect ratio
  */
 MajVj.frame.crlogo.prototype.onresize = function (aspect) {
-    mat4.perspective(45, aspect, 0.1, 1000.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -250.0 ]);
-    mat4.rotate(this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.perspective(this._pMatrix, 45, aspect, 0.1, 1000.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -250.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
 };
 
 /**
@@ -229,7 +228,7 @@ MajVj.frame.crlogo.prototype.draw = function (delta) {
     this._program.setUniformMatrix('uMVMatrix', this._mvMatrix);
     var rotate = 0.002 * delta * (0.5 + this.properties.slider * 1.5);
     this._rotate += rotate;
-    mat4.rotate(this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
 
     this._program.setUniformMatrix('uPMatrix', this._pMatrix);
     this._program.setAttributeArray(

@@ -19,7 +19,7 @@ MajVj.frame.morphere = function (options) {
             MajVj.frame.morphere.resolution,
             TmaModelPrimitives.SPHERE_METHOD_EVEN);
     this._sphere.scale(10);
-    this._pMatrix = mat4.identity();
+    this._pMatrix = mat4.identity(mat4.create());
     this._color = [0.1, 0.1, 0.4];
     this._vertices = this._sphere.getVertices().length;
     this._b = new Array(this._vertices);
@@ -65,8 +65,8 @@ MajVj.frame.morphere.load = function () {
  */
 MajVj.frame.morphere.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, aspect, 0.1, 100.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -70.0 ]);
+    mat4.perspective(this._pMatrix, Math.PI / 4, aspect, 0.1, 100.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -70.0 ]);
 };
 
 /**
@@ -87,7 +87,7 @@ MajVj.frame.morphere.prototype.draw = function (delta) {
     this._screen.pushAlphaMode();
     this._screen.setAlphaMode(false);
     var matrix = mat4.create();
-    mat4.scale(this._pMatrix, [size, size, size], matrix);
+    mat4.scale(matrix, this._pMatrix, [size, size, size]);
     this._program.setAttributeArray('aVertexPosition', buffer, 0, 3, 0);
     this._program.setUniformMatrix('uPMatrix', matrix);
     this._program.setUniformVector('uColor', this._color);

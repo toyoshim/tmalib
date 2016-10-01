@@ -20,11 +20,10 @@ MajVj.frame.at = function (options) {
     this._vertices = this._screen.createBuffer(this._sphere.getVertices());
     this._indices = this._screen.createElementBuffer(this._sphere.getIndices());
     this._program.setAttributeArray('aVertexPosition', this._vertices, 0, 3, 0);
-    this._pMatrix = mat4.create();
+    this._pMatrix = mat4.identity(mat4.create());
     this._mvMatrix = mat4.create();
     this._rotate = [0, 0, 0];
     this._translate = [0, 0, 0];
-    mat4.identity(this._mvMatrix);
 
     var crlogo = (function() {
         var data = [
@@ -184,8 +183,8 @@ MajVj.frame.at.load = function () {
  */
 MajVj.frame.at.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, aspect, 0.1, 100.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -70.0 ]);
+    mat4.perspective(this._pMatrix, Math.PI / 4, aspect, 0.1, 100.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -70.0 ]);
 };
 
 /**
@@ -196,21 +195,20 @@ MajVj.frame.at.prototype.draw = function (delta) {
     this._program.setAttributeArray('aVertexPosition', this._vertices, 0, 3, 0);
     this._program.setUniformMatrix('uPMatrix', this._pMatrix);
     var nMatrix = mat3.create();
-    var oMatrix = mat4.create(this._mvMatrix);
-    mat4.translate(oMatrix, this._translate);
-    mat4.rotate(oMatrix, this._rotate[0], [1, 0, 0]);
-    mat4.rotate(oMatrix, this._rotate[1], [0, 1, 0]);
-    mat4.rotate(oMatrix, this._rotate[2], [0, 0, 1]);
+    var oMatrix = mat4.clone(this._mvMatrix);
+    mat4.translate(oMatrix, oMatrix, this._translate);
+    mat4.rotate(oMatrix, oMatrix, this._rotate[0], [1, 0, 0]);
+    mat4.rotate(oMatrix, oMatrix, this._rotate[1], [0, 1, 0]);
+    mat4.rotate(oMatrix, oMatrix, this._rotate[2], [0, 0, 1]);
     this._screen.pushAlphaMode();
     this._screen.setAlphaMode(false);
     for (var i = 0; i < this._logo.length; ++i) {
         this._logo[i].update(delta);
-        var mvMatrix = mat4.create(oMatrix);
-        mat4.translate(mvMatrix, this._logo[i].p);
+        var mvMatrix = mat4.clone(oMatrix);
+        mat4.translate(mvMatrix, mvMatrix, this._logo[i].p);
         this._program.setUniformMatrix('uMVMatrix', mvMatrix);
         var nMatrix = mat3.create();
-        mat4.toInverseMat3(mvMatrix, nMatrix);
-        mat3.transpose(nMatrix);
+        mat3.normalFromMat4(nMatrix, mvMatrix);
         this._program.setUniformMatrix('uNMatrix', nMatrix);
         this._program.setUniformVector('uColor', this._logo[i].c);
         this._program.drawElements(Tma3DScreen.MODE_TRIANGLES,

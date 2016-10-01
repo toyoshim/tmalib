@@ -175,6 +175,12 @@ tma._boot = function () {
     Promise.all(tma.extlibs.map(function (src) {
       return tma.load(tma.base + src);
     })).then(function () {
+      if (tma.global && module.exports.constructor.name !== 'Window') {
+        for (var key in module.exports) {
+          if (module.exports[key])
+            window[key] = module.exports[key];
+        }
+      }
       if (tma.onload)
         tma.onload();
     }, tma.ebc);

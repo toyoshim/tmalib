@@ -39,25 +39,24 @@
             var program = screen.createProgram('shader-vs', 'shader-fs');
 
             // Initializes matrices.
-            var pMatrix = mat4.create();
-            var mvMatrix = mat4.create();
-            mat4.perspective(
-                    45, screen.width / screen.height, 0.1, 100.0, pMatrix);
-            mat4.identity(mvMatrix);
+            var pMatrix = mat4.perspective(
+                mat4.create(), Math.PI / 4, screen.width / screen.height, 0.1,
+                100.0);
+            var mvMatrix = mat4.identity(mat4.create());
             program.setUniformMatrix('uPMatrix', pMatrix);
 
             // Initializes screen.
             screen.fillColor(0.0, 0.0, 0.0, 1.0);
 
             // Draws triangle.
-            mat4.translate(mvMatrix, [-1.5, 0.0, -7.0]);
+            mat4.translate(mvMatrix, mvMatrix, [-1.5, 0.0, -7.0]);
             program.setAttributeArray(
                     'aVertexPosition', triangleArrayBuffer, 0, 3, 0);
             program.setUniformMatrix('uMVMatrix', mvMatrix);
             program.drawArrays(Tma3DScreen.MODE_TRIANGLES, 0, 3);
 
             // Draws square.
-            mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
+            mat4.translate(mvMatrix, mvMatrix, [3.0, 0.0, 0.0]);
             program.setAttributeArray(
                     'aVertexPosition', squareArrayBuffer, 0, 3, 0);
             program.setUniformMatrix('uMVMatrix', mvMatrix);

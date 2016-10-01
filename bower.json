@@ -21,7 +21,7 @@
     "tma.js"
   ],
   "devDependencies": {
-    "gl-matrix": "~1.3.7",
+    "gl-matrix": "~2.3.2",
     "polymer": "Polymer/polymer#~0.4.2"
   }
 }

@@ -95,23 +95,30 @@ MajVj.frame.nicofarre3d = function (options) {
     this._fboBack = this._screen.createFrameBuffer(840 * scale, height);
 
     var theta0 = Math.atan(1480 / 840) * 180 / Math.PI;
-    var theta1 = 180 - theta0 * 2;
-    var theta2 = 180 - theta1;
+    var theta1 = (180 - theta0 * 2) * Math.PI / 180;
+    var theta2 = (180 - theta1) * Math.PI / 180;
     var scale1 = [840 / 280, 840 / 280, 1];
     var scale2 = [1480 / 280, 1480 / 280, 1];
+    this._iMatrix = mat4.identity(mat4.create());
     this._pMatrixRight = mat4.scale(
-            mat4.perspective(theta2, 1480 / 280, 420, 100000), scale2);
+            mat4.perspective(mat4.create(), theta2, 1480 / 280, 420, 100000),
+            scale2);
     this._pMatrixStage = mat4.scale(
-            mat4.perspective(theta1, 840 / 280, 740, 100000), scale1);
+            mat4.perspective(mat4.create(), theta1, 840 / 280, 740, 100000),
+            scale1);
     this._pMatrixLeft = mat4.scale(
-            mat4.perspective(theta2, 1480 / 280, 420, 100000), scale2);
+            mat4.perspective(mat4.create(), theta2, 1480 / 280, 420, 100000),
+            scale2);
     this._pMatrixBack = mat4.scale(
-            mat4.perspective(theta1, 840 / 280, 740, 100000), scale1);
-    this._mvMatrixRight = mat4.rotateY(mat4.identity(), Math.PI / 2);
-    this._mvMatrixStage = mat4.identity();
-    this._mvMatrixLeft = mat4.rotateY(mat4.identity(), -Math.PI / 2);
-    this._mvMatrixBack = mat4.rotateY(mat4.identity(), -Math.PI);
-    this._iMatrix = mat4.identity();
+            mat4.perspective(mat4.create(), theta1, 840 / 280, 740, 100000),
+            scale1);
+    this._mvMatrixRight =
+            mat4.rotateY(mat4.create(), this._iMatrix, Math.PI / 2);
+    this._mvMatrixStage = mat4.clone(this._iMatrix);
+    this._mvMatrixLeft =
+            mat4.rotateY(mat4.create(), his._iMatrix, -Math.PI / 2);
+    this._mvMatrixBack =
+            mat4.rotateY(mat4.create(), his._iMatrix, -Math.PI);
     this._matrix = mat4.create();
 
     this._buffer2 = this._screen.createBuffer(new Array(2 * 3));
@@ -354,23 +361,23 @@ MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
         program.setUniformVector('uColor', this._api.color);
     }
 
-    mat4.translate(this._iMatrix, p, this._matrix);
+    mat4.translate(this._matrix, this._iMatrix, p);
     if (r) {
         if (typeof r[0] === 'number') {
             // TODO: Remove this useless mod. Exist just for compat.
-            mat4.rotateX(this._matrix, r[0]);
-            mat4.rotateY(this._matrix, r[1]);
-            mat4.rotateZ(this._matrix, r[2]);
+            mat4.rotateX(this._matrix, this._matrix, r[0]);
+            mat4.rotateY(this._matrix, this._matrix, r[1]);
+            mat4.rotateZ(this._matrix, this._matrix, r[2]);
         } else {
             for (var i = r.length - 1; i >= 0; --i) {
                 var rotate = r[i];
-                mat4.rotateX(this._matrix, rotate[0]);
-                mat4.rotateY(this._matrix, rotate[1]);
-                mat4.rotateZ(this._matrix, rotate[2]);
+                mat4.rotateX(this._matrix, this._matrix, rotate[0]);
+                mat4.rotateY(this._matrix, this._matrix, rotate[1]);
+                mat4.rotateZ(this._matrix, this._matrix, rotate[2]);
             }
         }
     }
-    mat4.scale(this._matrix, [w, h, d]);
+    mat4.scale(this._matrix, this._matrix, [w, h, d]);
     program.setUniformMatrix('uMatrix', this._matrix);
 
     this._fboRight.bind();

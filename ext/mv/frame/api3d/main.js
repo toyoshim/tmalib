@@ -50,10 +50,10 @@ MajVj.frame.api3d = function (options) {
       properties: this.properties
     };
 
-    this._pMatrix = mat4.identity();
-    this._mvMatrixL = mat4.identity();
-    this._mvMatrixR = mat4.identity();
-    this._iMatrix = mat4.identity();
+    this._pMatrix = mat4.identity(mat4.create());
+    this._mvMatrixL = mat4.identity(mat4.create());
+    this._mvMatrixR = mat4.identity(mat4.create());
+    this._iMatrix = mat4.identity(mat4.create());
     this._matrix = mat4.create();
 
     this._buffer2 = this._screen.createBuffer(new Array(2 * 3));
@@ -129,20 +129,19 @@ MajVj.frame.api3d.prototype.draw = function (delta) {
     var rx = (90 + orientation[2]) / 360 * Math.PI * 2;
     var ry = -orientation[0] / 360 * Math.PI * 2;
     var rz = orientation[1] / 360 * Math.PI * 2;
-    var mat = mat4.identity();
-    mat = mat4.rotateZ(mat, rz);
-    mat = mat4.rotateY(mat, ry);
-    mat = mat4.rotateX(mat, rx);
-    this._mvMatrixL = mat;
+    mat4.identity(this._mvMatrixL);
+    mat4.rotateZ(this._mvMatrixL, this._mvMatrixL, rz);
+    mat4.rotateY(this._mvMatrixL, this._mvMatrixL, ry);
+    mat4.rotateX(this._mvMatrixL, this._mvMatrixL, rx);
 
     this._api.vr = this.properties.vr;
 
     if (this._api.vr) {
         aspect /= 2;
-        mat4.translate(this._mvMatrixL, [-100, 0, 0], this._mvMatrixR);
-        mat4.translate(this._mvMatrixL, [100, 0, 0], this._mvMatrixL);
+        mat4.translate(this._mvMatrixR, this._mvMatrixL, [-100, 0, 0]);
+        mat4.translate(this._mvMatrixL, this._mvMatrixL, [100, 0, 0]);
     }
-    this._pMatrix = mat4.perspective(60, aspect, 0.1, 10000.0, mat4.create());
+    mat4.perspective(this._pMatrix, Math.PI / 3, aspect, 0.1, 10000.0);
     this._viewport(this._api.vr ? 1 : 0);
 
     this._api.delta = delta;
@@ -275,16 +274,16 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
         program.setUniformVector('uColor', this._api.color);
     }
 
-    mat4.translate(this._iMatrix, p, this._matrix);
+    mat4.translate(this._matrix, this._iMatrix, p);
     if (r) {
         for (var i = r.length - 1; i >= 0; --i) {
             var rotate = r[i];
-            mat4.rotateX(this._matrix, rotate[0]);
-            mat4.rotateY(this._matrix, rotate[1]);
-            mat4.rotateZ(this._matrix, rotate[2]);
+            mat4.rotateX(this._matrix, this._matrix, rotate[0]);
+            mat4.rotateY(this._matrix, this._matrix, rotate[1]);
+            mat4.rotateZ(this._matrix, this._matrix, rotate[2]);
         }
     }
-    mat4.scale(this._matrix, [w, h, d]);
+    mat4.scale(this._matrix, this._matrix, [w, h, d]);
     program.setUniformMatrix('uMatrix', this._matrix);
 
     program.setUniformMatrix('uPMatrix', this._pMatrix);

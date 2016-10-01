@@ -25,7 +25,7 @@ MajVj.frame.rolline = function (options) {
     for (i = 0; i < colors.length; ++i) colors[i] = 0.0;
     this._colors = this._screen.createBuffer(colors);
 
-    this._pMatrix = mat4.identity();
+    this._pMatrix = mat4.identity(mat4.create());
     this.onresize(this._aspect);
 };
 
@@ -56,8 +56,8 @@ MajVj.frame.rolline.load = function () {
  */
 MajVj.frame.rolline.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, this._aspect, 0.1, 1000.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -3.0 ]);
+    mat4.perspective(this._pMatrix, Math.PI / 4, this._aspect, 0.1, 1000.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -3.0 ]);
 };
 
 /**

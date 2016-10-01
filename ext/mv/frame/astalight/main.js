@@ -193,9 +193,9 @@ MajVj.frame.astalight.load = function () {
  * @param aspect screen aspect ratio
  */
 MajVj.frame.astalight.prototype.onresize = function (aspect) {
-    mat4.perspective(45, aspect, 0.1, 1000.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -200.0 ]);
-    mat4.rotate(this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.perspective(this._pMatrix, Math.PI / 4, aspect, 0.1, 1000.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -200.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
 };
 
 /**
@@ -207,7 +207,7 @@ MajVj.frame.astalight.prototype.draw = function (delta) {
     this._program.setUniformMatrix('uMVMatrix', this._mvMatrix);
     var rotate = 0.002 * delta;
     this._rotate += rotate;
-    mat4.rotate(this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
     this._program.setUniformMatrix('uPMatrix', this._pMatrix);
     this._program.setUniformVector('uAlpha', [this._alpha]);
     this._program.setTexture('uTexture', this._texture);

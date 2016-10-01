@@ -22,7 +22,7 @@ install-bower:
 
 install-deps:
 	./node_modules/bower/bin/bower install
-	cp ./bower_components/gl-matrix/gl-matrix-min.js ./ext/gl-matrix.js
+	cp ./bower_components/gl-matrix/dist/gl-matrix-min.js ./ext/gl-matrix.js
 
 install-uglify:
 	npm install uglify

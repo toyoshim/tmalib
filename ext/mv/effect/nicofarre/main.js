@@ -22,10 +22,9 @@ MajVj.effect.nicofarre = function (options) {
                     MajVj.effect.nicofarre._fragmentShaderForCeiling));
     this._pMatrix = mat4.create();
     this.onresize(this._aspect);
-    this._mvMatrix = mat4.create();
-    mat4.identity(this._mvMatrix);
+    this._mvMatrix = mat4.identity(mat4.create());
     var position = options.position || [0, 0, -500];
-    mat4.translate(this._mvMatrix, position);
+    mat4.translate(this._mvMatrix, this._mvMatrix, position);
     this._coords = this._screen.createBuffer([
             // A (right): 1480x280, x=420
             420, -140, -740,
@@ -144,7 +143,7 @@ MajVj.effect.nicofarre.load = function () {
  */
 MajVj.effect.nicofarre.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, aspect, 0.1, 10000.0, this._pMatrix);
+    mat4.perspective(this._pMatrix, Math.PI / 4, aspect, 0.1, 10000.0);
 };
 
 /**
@@ -153,9 +152,9 @@ MajVj.effect.nicofarre.prototype.onresize = function (aspect) {
  * @param texture texture data
  */
 MajVj.effect.nicofarre.prototype.draw = function (delta, texture) {
-    var mvMatrix = mat4.create(this._mvMatrix);
-    mat4.translate(mvMatrix, [0, 0, 1000 * this.properties.volume[0]]);
-    mat4.rotate(mvMatrix, Math.PI * this.properties.volume[1], [0, 1, 0]);
+    var mvMatrix = mat4.clone(this._mvMatrix);
+    mat4.translate(mvMatrix, mvMatrix, [0, 0, 1000 * this.properties.volume[0]]);
+    mat4.rotate(mvMatrix, mvMatrix, Math.PI * this.properties.volume[1], [0, 1, 0]);
     this._screen.pushAlphaMode();
     this._screen.setAlphaMode(false);
     this._screen.pushCullingMode();

@@ -32,7 +32,7 @@ MajVj.effect.rollpanel = function (options) {
     this._coords =
             this._screen.createBuffer(Array.prototype.concat.apply([], coords));
     this._matrix = mat4.create();
-    mat4.perspective(this._matrix, 90, 1, 0.1, 2.0);
+    mat4.perspective(this._matrix, Math.PI / 2, 1, 0.1, 2.0);
     mat4.translate(this._matrix, this._matrix, [0.0, 0.0, -1.0]);
     mat4.scale(this._matrix, this._matrix, [2, 2, 2]);
     this._scaleTimeline = new TmaTimeline({

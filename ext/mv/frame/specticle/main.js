@@ -16,7 +16,7 @@ MajVj.frame.specticle = function (options) {
                     MajVj.frame.specticle._vertexShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.specticle._fragmentShader));
-    this._matrix = mat4.identity();
+    this._matrix = mat4.identity(mat4.create());
     this.onresize(this._aspect);
     this._t = 0.0;
     this._n = 500;
@@ -63,7 +63,7 @@ MajVj.frame.specticle.load = function () {
  */
 MajVj.frame.specticle.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, aspect, 0.1, 100.0, this._matrix);
+    mat4.perspective(this._matrix, Math.PI / 4, aspect, 0.1, 100.0);
 };
 
 /**
