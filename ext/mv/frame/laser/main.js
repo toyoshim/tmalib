@@ -7,9 +7,9 @@ MajVj.frame.laser = function (options) {
     this._screen = options.screen;
     this._width = options.width;
     this._height = options.height;
-    this._zoom = [1.0, 1.0];
+    this._zoom = [1.0, 1.0, 1.0];
+    this._zoomMatrix = mat3.create();
     this._draw = options.draw || function (api) {};
-    this._hpi = Math.PI / 2;
 
     this.properties = {};
     this.onresize(options.aspect);
@@ -80,12 +80,14 @@ MajVj.frame.laser.load = function () {
  */
 MajVj.frame.laser.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    this._zoom = [1.0, 1.0];
+    this._zoom = [1.0, 1.0, 1.0];
     // Ajust to keep 1:1 aspect and to overfill the screen.
     if (this._aspect > 1.0)
         this._zoom[1] = this._aspect;
     else
         this._zoom[0] = 1 / this._aspect;
+    mat3.identity(this._zoomMatrix);
+    mat3.scale(this._zoomMatrix, this._zoomMatrix, this._zoom);
 };
 
 /**
@@ -109,24 +111,23 @@ MajVj.frame.laser.prototype._line2d = function (src, dst, width) {
     var position = vec2.create();
     vec2.lerp(position, src, dst, 0.5);
 
+    this._line2dProgram.setAttributeArray(
+        'aCoord', this._coords, 0, this._coords.dimension, 0);
+    this._line2dProgram.setUniformMatrix('uZoomMatrix', this._zoomMatrix);
+    this._line2dProgram.setUniformVector('uColor', this._api.color);
+    this._line2dProgram.setUniformVector('uWidth', [width]);
+
     var matrix = mat2d.identity(mat2d.create());
-    mat2d.scale(matrix, matrix, this._zoom);
     mat2d.translate(matrix, matrix, position);
     mat2d.rotate(matrix, matrix, Math.atan2(vector[1], vector[0]));
     mat2d.scale(matrix, matrix, [distance / 2, width / 2]);
     var matrix3 = mat3.fromMat2d(mat3.create(), matrix);
-
-    this._line2dProgram.setAttributeArray(
-        'aCoord', this._coords, 0, this._coords.dimension, 0);
     this._line2dProgram.setUniformMatrix('uMatrix', matrix3);
-    this._line2dProgram.setUniformVector('uColor', this._api.color);
-    this._line2dProgram.setUniformVector('uWidth', [width]);
     this._line2dProgram.drawElements(Tma3DScreen.MODE_TRIANGLE_STRIP,
                                      this._indices,
                                      this._centerSquareIndicesOffset,
                                      this._squareIndicesLength);
     mat2d.identity(matrix);
-    mat2d.scale(matrix, matrix, this._zoom);
     mat2d.translate(matrix, matrix, dst);
     mat2d.rotate(matrix, matrix, Math.atan2(vector[1], vector[0]));
     mat2d.scale(matrix, matrix, [width / 2, width / 2]);
@@ -138,7 +139,6 @@ MajVj.frame.laser.prototype._line2d = function (src, dst, width) {
                                      this._squareIndicesLength);
 
     mat2d.identity(matrix);
-    mat2d.scale(matrix, matrix, this._zoom);
     mat2d.translate(matrix, matrix, src);
     mat2d.rotate(matrix, matrix, Math.atan2(vector[1], vector[0]));
     mat2d.scale(matrix, matrix, [width / 2, width / 2]);

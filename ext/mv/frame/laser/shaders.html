@@ -5,9 +5,10 @@
 attribute vec4 aCoord;
 varying vec4 vCoord;
 uniform mat3 uMatrix;
+uniform mat3 uZoomMatrix;
 
 void main() {
-  vec3 position = uMatrix * vec3(aCoord.xy, 1.0);
+  vec3 position = uZoomMatrix * uMatrix * vec3(aCoord.xy, 1.0);
   gl_Position = vec4(position.xy, vec2(1.));
   vCoord = aCoord;
 }
@@ -22,7 +23,7 @@ uniform float uWidth;
 void main() {
   float l = exp(3.5 - 7. * distance(vCoord.xy, vCoord.zw) / uWidth);
   vec3 baseColor = uColor.rgb + vec3(0.05);
-  gl_FragColor = vec4(baseColor * l, 1.);
+  gl_FragColor = vec4(baseColor * l, uColor.a);
 }
 </script>
 

@@ -10,12 +10,14 @@ function generate () {
   var c = [Math.random() * 2 - 1, Math.random() * 2 - 1];
   var size = Math.random() * 0.3;
   var w = size * Math.random() * 3;
+  var color = [Math.random(), Math.random(), Math.random()];
   particles.push({
     position: [c[0], c[1] - size],
     size: size,
     width: w,
     theta: 0,
     l: 1,
+    color: color,
     rotate: (Math.random() * 2 - 1) * 0.1
   });
   particles.push({
@@ -24,6 +26,7 @@ function generate () {
     width: w,
     theta: 0,
     l: 1,
+    color: color,
     rotate: (Math.random() * 2 - 1) * 0.1
   });
   particles.push({
@@ -32,6 +35,7 @@ function generate () {
     width: w,
     theta: Math.PI / 2,
     l: 1,
+    color: color,
     rotate: (Math.random() * 2 - 1) * 0.1
   });
   particles.push({
@@ -40,6 +44,7 @@ function generate () {
     width: w,
     theta: Math.PI / 2,
     l: 1,
+    color: color,
     rotate: (Math.random() * 2 - 1) * 0.1
   });
 }
@@ -47,16 +52,17 @@ function generate () {
 function draw (api) {
   if (Math.random() < 0.03)
     generate();
-  
+
+  api.color = [1, 0, 0, 1];  
   var next = [];
   for (var p of particles) {
     var v = [Math.cos(p.theta) * p.size, Math.sin(p.theta) * p.size];
     var s = [p.position[0] + v[0], p.position[1] + v[1]];
     var e = [p.position[0] - v[0], p.position[1] - v[1]];
-//    api.color[3] = p.l;
+    api.color = [p.color[0], p.color[1], p.color[2], p.l];
     api.line2d(s, e, p.width);
     p.l *= 0.99;
-    if (p.l < 0.95)
+    if (p.l < 0.90)
       p.theta += p.rotate;
     if (p.l >= 0.01)
       next.push(p);
@@ -69,9 +75,9 @@ tma.onload = function () {
   var vj = new MajVj();
   MajVj.loadPlugin('frame', 'laser').then(function () {
     var frame = vj.create('frame', 'laser', { draw: draw });
-    vj.screen().setAlphaMode(true, vj.screen().gl.SRC_ALPHA, vj.screen().gl.ONE);
     vj.run(function (delta) {
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      vj.screen().setAlphaMode(true, vj.screen().gl.SRC_ALPHA, vj.screen().gl.ONE);
       frame.draw(delta);
       vj.screen().flush();
     });
