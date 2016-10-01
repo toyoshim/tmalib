@@ -12,7 +12,9 @@ MajVj.effect.rollpanel = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this.properties = {};
+    this.properties = {
+        restart: false
+    };
     this._panels = options.panels || 3;
     this._delay = options.delay || 0.25;
     this._delay *= 2 * Math.PI;
@@ -78,6 +80,11 @@ MajVj.effect.rollpanel.prototype.onresize = function (aspect) {
  * @param texture texture data
  */
 MajVj.effect.rollpanel.prototype.draw = function (delta, texture) {
+    if (this.properties.restart) {
+        this.properties.restart = false;
+        this._scaleTimeline.reset();
+        this._oneshotTimeline.reset();
+    }
     this._scaleTimeline.update(delta);
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setUniformMatrix('uMatrix', this._matrix);
@@ -92,11 +99,4 @@ MajVj.effect.rollpanel.prototype.draw = function (delta, texture) {
         this._program.setUniformMatrix('uMvMatrix', matrix);
         this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 4 * i, 4);
     }
-};
-
-/**
- * Restart timeline.
- */
-MajVj.effect.rollpanel.prototype.restart = function (controller) {
-    this._time = 0;
 };

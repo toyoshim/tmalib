@@ -1,7 +1,7 @@
 <html>
 <head><title>One-shot FX test</title></head>
-<body style="margin: 0; cursor: none">
-<script src="../tma.js"></script>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
 <script>
 /* global tma */
 /* global MajVj */
@@ -11,20 +11,22 @@ tma.onload = function () {
   const width = 1920 / r;
   const height = 540 / r;
   const vj = new MajVj(width, height, false);
-  const size = vj.size();
-  const fbo = vj.screen().createFrameBuffer(size.width, size.height);
-  const tl = new TmaTimeline({
-    input_scale: 0.001,
-    output_scale: 1000.0,
-    type: 'sin'
-  });
+  const fbo = vj.screen().createFrameBuffer(width, height);
   MajVj.loadAllPlugins().then(function () {
-    const sandbox = vj.create('frame', 'sandbox', { id: '1674.0' });
-    const fx = vj.create('effect', 'flashpanel');
+    const sandbox = vj.create('frame', 'wired');
+    const fx = vj.create('effect', 'rollpanel', {
+        panels: 21,
+        delay: 0.01,
+        speed: 8,
+        oneshot: true
+    });
+    window.addEventListener('keydown', e => {
+      fx.properties.restart = true;
+    });
     vj.run(function (delta) {
       fbo.bind();
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
-      sandbox.draw(tl.update(delta));
+      sandbox.draw(delta);
       vj.screen().bind();
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
       fx.draw(delta, fbo.texture);

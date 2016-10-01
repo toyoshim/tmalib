@@ -1,0 +1,45 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	var vj = new MajVj();
+	var fbo = vj.screen().createFrameBuffer();
+	window.onresize = vj.onresize;
+	var name = 'ab2';
+	Promise.all([MajVj.loadPlugin('frame', name),
+				 MajVj.loadPlugin('effect', 'mask')]).then(function () {
+		var frame = vj.create('frame', name);
+		var n = 2;
+		var image = vj.screen().createImage(n, n);
+		var effect = vj.create('effect', 'mask', { patch: 'custom', image: image });
+		effect.properties.resolution = [1, 1];
+		setInterval(() => {
+			for (var y = 0; y < n; ++y) {
+				for (var x = 0; x < n; ++x) {
+					if (Math.random() < 0.5)
+						continue;
+					var r = (Math.random() < 0.5) ? 255 : 0;
+					var g = (Math.random() < 0.5) ? 255 : 0;
+					var b = (Math.random() < 0.5) ? 255 : 0;
+					image.setPixel(x, y, r, g, b, 255);
+				}
+			}
+			effect.properties.texture.update(image);
+		}, 300);
+		fx = effect;  // for debug.
+		vj.run(function (delta) {
+			fbo.bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			frame.draw(delta);
+			vj.screen().bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			effect.draw(delta, fbo.texture);
+			vj.screen().flush();
+		});
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

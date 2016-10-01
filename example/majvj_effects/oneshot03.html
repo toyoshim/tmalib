@@ -1,0 +1,43 @@
+<html>
+<head><title>One-shot FX test</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+/* global tma */
+/* global MajVj */
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  const r = 4;
+  const width = 1920 / r;
+  const height = 540 / r;
+  const vj = new MajVj(width, height, false);
+  const size = vj.size();
+  const fbo = vj.screen().createFrameBuffer(size.width, size.height);
+  const tl0 = new TmaTimeline({
+    input_scale: 0.0003,
+    type: 'saturate'
+  });
+  const tl1 = new TmaTimeline({
+    type: 'sin'
+  });
+  const tl2 = new TmaTimeline({
+    output_scale: 3000.0,
+    type: 'power'
+  });
+  MajVj.loadAllPlugins().then(function () {
+    const sandbox = vj.create('frame', 'sandbox', { id: '1674.0' });
+    const fx = vj.create('effect', 'flashpanel');
+    vj.run(function (delta) {
+      fbo.bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      sandbox.draw(delta - tl2.update(tl1.update(tl0.update(delta))));
+      vj.screen().bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      fx.draw(delta, fbo.texture);
+    });
+  }, function (e) { console.log('plugin load error: ' + e); });
+};
+
+</script>
+</body>
+</html>

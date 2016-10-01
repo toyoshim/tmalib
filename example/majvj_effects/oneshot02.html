@@ -1,7 +1,7 @@
 <html>
 <head><title>One-shot FX test</title></head>
-<body style="margin: 0; cursor: none">
-<script src="../tma.js"></script>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
 <script>
 /* global tma */
 /* global MajVj */
@@ -13,16 +13,10 @@ tma.onload = function () {
   const vj = new MajVj(width, height, false);
   const size = vj.size();
   const fbo = vj.screen().createFrameBuffer(size.width, size.height);
-  const tl0 = new TmaTimeline({
-    input_scale: 0.0003,
-    type: 'saturate'
-  });
-  const tl1 = new TmaTimeline({
+  const tl = new TmaTimeline({
+    input_scale: 0.001,
+    output_scale: 1000.0,
     type: 'sin'
-  });
-  const tl2 = new TmaTimeline({
-    output_scale: 3000.0,
-    type: 'power'
   });
   MajVj.loadAllPlugins().then(function () {
     const sandbox = vj.create('frame', 'sandbox', { id: '1674.0' });
@@ -30,7 +24,7 @@ tma.onload = function () {
     vj.run(function (delta) {
       fbo.bind();
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
-      sandbox.draw(delta - tl2.update(tl1.update(tl0.update(delta))));
+      sandbox.draw(tl.update(delta));
       vj.screen().bind();
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
       fx.draw(delta, fbo.texture);
