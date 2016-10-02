@@ -7,6 +7,7 @@ MajVj.frame.laser = function (options) {
     this._screen = options.screen;
     this._width = options.width;
     this._height = options.height;
+    this._mv = options.mv;
     this._zoom = [1.0, 1.0, 1.0];
     this._zoomMatrix = mat3.create();
     this._draw = options.draw || function (api) {};
@@ -46,7 +47,10 @@ MajVj.frame.laser = function (options) {
 
     this._api = {
         line2d: this._line2d.bind(this),
+        toScreenX: this._toScreenX.bind(this),
+        toScreenY: this._toScreenY.bind(this),
         color: [ 0.0, 0.0, 1.0, 1.0 ],
+        screen: this._screen,
         properties: this.properties
     };
 };
@@ -81,6 +85,9 @@ MajVj.frame.laser.load = function () {
 MajVj.frame.laser.prototype.onresize = function (aspect) {
     this._aspect = aspect;
     this._zoom = [1.0, 1.0, 1.0];
+    var size = this._mv.size();
+    this._width = size.width;
+    this._height = size.height;
     // Ajust to keep 1:1 aspect and to overfill the screen.
     if (this._aspect > 1.0)
         this._zoom[1] = this._aspect;
@@ -148,4 +155,22 @@ MajVj.frame.laser.prototype._line2d = function (src, dst, width) {
                                      this._indices,
                                      this._rightSquareIndicesOffset,
                                      this._squareIndicesLength);
+};
+
+/**
+ * Convers an API X position in [-1, 1] to a screen X position in [0, width].
+ * @param x an API X position in [-1, 1]
+ * @return a screen X position in [0, width]
+ */
+MajVj.frame.laser.prototype._toScreenX = function (x) {
+    return (this._width + x * this._width * this._zoom[0]) / 2;
+};
+
+/**
+ * Convers an API Y position in [-1, 1] to a screen Y position in [0, width].
+ * @param x an API Y position in [-1, 1]
+ * @return a screen Y position in [0, width]
+ */
+MajVj.frame.laser.prototype._toScreenY = function (y) {
+    return (this._height + y * this._height * this._zoom[1]) / 2;
 };
