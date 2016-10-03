@@ -1,0 +1,37 @@
+<html>
+<head><title>CRT Zoom</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj();
+  MajVj.loadAllPlugins().then(function () {
+    var frame = vj.create('frame', 'ab2');
+    var frame2 = vj.create('frame', 'ab2');
+    var effect = vj.create('effect', 'crt');
+    var fbo = vj.screen().createFrameBuffer();
+    window.x = frame;
+    vj.run(function (delta) {
+      fbo.bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      frame.draw(delta);
+      vj.screen().bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      var size = vj.size();
+      effect.properties.resolution = [ size.width / 4, size.height / 4];
+      effect.properties.zoom = 4;
+      effect.draw(delta, fbo.texture);
+      frame2.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      frame.onresize(vj.onresize());
+      fbo = vj.screen().createFrameBuffer();
+    };
+  });
+};
+</script>
+</body>
+</html>
