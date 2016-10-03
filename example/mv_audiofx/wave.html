@@ -1,0 +1,36 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script src="shadertoy_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	var name = 'sandbox';
+	var st = new ShadertoyCommon();
+	Promise.all([st.init(true),
+				 MajVj.loadPlugin('frame', name),
+				 MajVj.loadPlugin('effect', 'crt')]).then(function (values) {
+		var frame = st.mv.create('frame', name, { id: '18918.0' });
+		var size = st.mv.size();
+		var effect = st.mv.create('effect', 'crt', { patch: 'led', ex: true });
+		var fbo = st.mv.screen().createFrameBuffer();
+		fx = effect;  // for debug.
+		var prop = { properties: st.prop() };
+		st.mv.run(function (delta) {
+			st.run(prop);
+			effect.properties.zoom = 1;
+			effect.properties.wave_zoom = 0.1;
+			effect.properties.wave = prop.properties.wave;
+			fbo.bind();
+			st.mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			frame.draw(delta);
+			st.mv.screen().bind();
+			st.mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			effect.draw(delta, fbo.texture);
+			st.mv.screen().flush();
+		});
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
