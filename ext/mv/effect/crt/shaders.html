@@ -4,11 +4,12 @@
 <script id='vertex' type='x-shader/x-vertex'>
 precision mediump float;
 attribute vec2 aCoord;
+uniform vec2 uZoom;
 varying vec2 vCoord;
 
 void main() {
     gl_Position = vec4(aCoord, 0., 1.);
-    vCoord = aCoord;
+    vCoord = aCoord * uZoom;
 }
 </script>
 

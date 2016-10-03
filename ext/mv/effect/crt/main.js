@@ -5,8 +5,10 @@
  */
 MajVj.effect.crt = function (options) {
     this._screen = options.screen;
+    this._aspect = options.aspect;
     this.properties = {
-        resolution: [ options.width / 8, options.height / 8 ]
+        resolution: [ options.width / 8, options.height / 8 ],
+        zoom: 1.0
     };
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
@@ -62,6 +64,7 @@ MajVj.effect.crt.load = function () {
  * @param aspect screen aspect ratio
  */
 MajVj.effect.crt.prototype.onresize = function (aspect) {
+    this._aspect = aspect;
 };
 
 /**
@@ -73,6 +76,8 @@ MajVj.effect.crt.prototype.draw = function (delta, texture) {
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setTexture('uTexture', texture);
     this._program.setTexture('uPatch', this._patch);
+    var zoom = 1 / this.properties.zoom;
+    this._program.setUniformVector('uZoom', [zoom, zoom]);
     this._program.setUniformVector('uResolution', this.properties.resolution);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };

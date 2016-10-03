@@ -18,6 +18,14 @@ ShadertoyCommon.prototype.init = function (sound) {
     });
 };
 
+ShadertoyCommon.prototype.prop = function () {
+    return {
+        volume: 0.0,
+        wave: new Float32Array(2048),
+        fft: new Uint8Array(1024)
+    };
+};
+
 ShadertoyCommon.prototype.run = function (shadertoy) {
     if (!this.sound)
         return;
