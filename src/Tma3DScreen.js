@@ -89,6 +89,7 @@ Tma3DScreen.MODE_POINTS = 0;
 Tma3DScreen.MODE_LINES = 1;
 Tma3DScreen.MODE_LINE_LOOP = 2;
 Tma3DScreen.MODE_LINE_STRIP = 3;
+Tma3DScreen.MODE_LINE_TRIANGLES = "line_triangles";  // pseudo mode
 Tma3DScreen.MODE_TRIANGLES = 4;
 Tma3DScreen.MODE_TRIANGLE_STRIP = 5;
 Tma3DScreen.MODE_TRIANGLE_FAN = 6;

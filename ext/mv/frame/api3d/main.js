@@ -9,6 +9,8 @@ MajVj.frame.api3d = function (options) {
     this._height = options.height;
     this.properties = {
         vr: false,
+        parallax_overlap: 0.0,
+        parallax_distance: 100,
         orientation: [ 0.0, 0.0, -90.0 ]
     };
     this.onresize(options.aspect);
@@ -137,9 +139,10 @@ MajVj.frame.api3d.prototype.draw = function (delta) {
     this._api.vr = this.properties.vr;
 
     if (this._api.vr) {
-        aspect /= 2;
-        mat4.translate(this._mvMatrixR, this._mvMatrixL, [-100, 0, 0]);
-        mat4.translate(this._mvMatrixL, this._mvMatrixL, [100, 0, 0]);
+        aspect *= (1 + this.properties.parallax_overlap) / 2;
+        var distance = this.properties.parallax_distance;
+        mat4.translate(this._mvMatrixR, this._mvMatrixL, [-distance, 0, 0]);
+        mat4.translate(this._mvMatrixL, this._mvMatrixL, [distance, 0, 0]);
     }
     mat4.perspective(this._pMatrix, Math.PI / 3, aspect, 0.1, 10000.0);
     this._viewport(this._api.vr ? 1 : 0);
@@ -157,8 +160,9 @@ MajVj.frame.api3d.prototype.draw = function (delta) {
  */
 MajVj.frame.api3d.prototype._viewport = function (view) {
     var c = this._screen.canvas.width / 2;
-    var x = view == 2 ? c : 0;
-    var w = view == 0 ? this._screen.canvas.width : c;
+    var d = c * this.properties.parallax_overlap;
+    var x = view == 2 ? (c - d) : 0;
+    var w = view == 0 ? this._screen.canvas.width : (c + d);
     this._screen.gl.viewport(x, 0, w, this._screen.canvas.height);
 };
 
@@ -288,11 +292,29 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
 
     program.setUniformMatrix('uPMatrix', this._pMatrix);
     program.setUniformMatrix('uMVMatrix', this._mvMatrixL);
-    program.drawElements(mode, o.getIndicesBuffer(this._screen), 0, o.items());
+    if (mode != Tma3DScreen.MODE_LINE_TRIANGLES) {
+        program.drawElements(
+                mode, o.getIndicesBuffer(this._screen), 0, o.items());
+    } else {
+        for (var i = 0; i < o.items(); i += 3) {
+            program.drawElements(
+                    Tma3DScreen.MODE_LINE_LOOP,
+                    o.getIndicesBuffer(this._screen), i * 2, 3);
+        }
+    }
     if (this._api.vr) {
         this._viewport(2);
         program.setUniformMatrix('uMVMatrix', this._mvMatrixR);
-        program.drawElements(mode, o.getIndicesBuffer(this._screen), 0, o.items());
+        if (mode != Tma3DScreen.MODE_LINE_TRIANGLES) {
+            program.drawElements(
+                    mode, o.getIndicesBuffer(this._screen), 0, o.items());
+        } else {
+            for (var i = 0; i < o.items(); i += 3) {
+                program.drawElements(
+                        Tma3DScreen.MODE_LINE_LOOP,
+                        o.getIndicesBuffer(this._screen), i * 2, 3);
+            }
+        }
         this._viewport(1);
     }
 };

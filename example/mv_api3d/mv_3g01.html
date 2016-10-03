@@ -1,0 +1,59 @@
+<html>
+<head><title>Overlapped Parallax</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+
+function Draw () {
+  this._sphere = TmaModelPrimitives.createSphere(
+      4, TmaModelPrimitives.SPHERE_METHOD_EVEN);
+  this._sphere.setDrawMode(Tma3DScreen.MODE_LINE_TRIANGLES);
+  this._r = 0;
+}
+
+Draw.prototype.init = function (frame) {
+  frame.properties.vr = true;
+  frame.properties.parallax_overlap = 1;
+  frame.properties.parallax_distance = 3;
+};
+
+Draw.prototype.draw = function (api) {
+  var rotate = [0, this._r, 0];
+  this._r += 0.01;
+  api.color = [0.4, 0.4, 1.0, 1.0];
+  api.drawPrimitive(this._sphere, 200, 200, 200, [0, 0, -400], [rotate]);
+};
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj();
+  MajVj.loadAllPlugins().then(function () {
+    var draw = new Draw();
+    var frame = vj.create('frame', 'api3d', {
+      draw: draw.draw.bind(draw)
+    });
+    var rgb = vj.create('effect', 'rgb');
+    var fbo = vj.screen().createFrameBuffer();
+    window.x = frame;
+    draw.init(frame);
+    vj.run(function (delta) {
+      fbo.bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      frame.draw(delta);
+      vj.screen().bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      rgb.properties.volume = Math.random() * 0.03;
+      if (Math.random() < 0.85)
+        rgb.properties.volume = 0.0;
+      rgb.draw(delta, fbo.texture);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      frame.onresize(vj.onresize());
+      fbo = vj.screen().createFrameBuffer();
+    };
+  });
+};
+</script>
+</body>
+</html>
