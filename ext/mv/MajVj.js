@@ -212,6 +212,7 @@ MajVj.createPath = function (type, name, path) {
  */
 MajVj.loadAllPlugins = function () {
     return Promise.all([
+        MajVj.loadPlugin('effect', 'acrylic'),
         MajVj.loadPlugin('effect', 'cathode'),
         MajVj.loadPlugin('effect', 'crt'),
         MajVj.loadPlugin('effect', 'flashpanel'),
