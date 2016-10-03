@@ -1,0 +1,49 @@
+<html>
+<head><title>CRT board</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj();
+  MajVj.loadAllPlugins().then(function () {
+    var r = 0;
+    var api3d = vj.create('frame', 'api3d', { draw: draw });
+    var ab2 = vj.create(
+        'frame', 'ab2', { width: 640, height: 480, aspect: 640 / 480 });
+    var effect = vj.create('effect', 'acrylic');
+    var fbo1 = vj.screen().createFrameBuffer(640, 480);
+    var fbo2 = vj.screen().createFrameBuffer(640, 480);
+    var fbo3 = vj.screen().createFrameBuffer(640, 480);
+    function draw(api) {
+      r += 0.01;
+      api.color = [1.0, 1.0, 1.0, 1.0];
+      api.drawBox(640, 480, [-450, 0, -1500], [[0,  r, 0]], fbo2.texture);
+      api.drawBox(640, 480, [ 450, 0, -1500], [[0, -r, 0]], fbo3.texture);
+    }
+    vj.run(function (delta) {
+      fbo1.bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      ab2.draw(delta);
+      fbo2.bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      effect.properties.color = [0.4, 0.4, 0.8, 1.0];
+      effect.draw(delta, fbo1.texture);
+      fbo3.bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      effect.properties.color = [0.8, 0.4, 0.4, 1.0];
+      effect.draw(delta, fbo1.texture);
+      vj.screen().bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      api3d.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      api3d.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>
