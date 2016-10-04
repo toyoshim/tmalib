@@ -248,6 +248,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'wired'),
         MajVj.loadPlugin('misc', 'api2d'),
         MajVj.loadPlugin('misc', 'midi'),
+        MajVj.loadPlugin('misc', 'perlin'),
         MajVj.loadPlugin('misc', 'sound')
     ]);
 };

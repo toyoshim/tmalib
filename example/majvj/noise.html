@@ -1,0 +1,18 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	MajVj.loadPlugin('misc', 'perlin').then(function () {
+		var noise = new MajVj.misc.perlin;
+		var pre = document.createElement('pre');
+		pre.textContent = 'NOISE: ' + noise.noise(0.5, 0.7, 0.3);
+		for (var i = 0; i < 256; ++i)
+			console.log(noise.noise(0, 0, i / 256));
+		document.body.appendChild(pre);
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

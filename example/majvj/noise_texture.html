@@ -1,0 +1,27 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	MajVj.loadPlugin('misc', 'perlin').then(function () {
+		var noise = new MajVj.misc.perlin;
+		var screen = new TmaScreen(256, 256);
+		screen.attachTo(TmaScreen.BODY);
+		var z = 0;
+		setInterval(() => {
+			screen.lock();
+			for (var y = 0; y < 256; ++y) {
+				for (var x = 0; x < 256; ++x) {
+					var n = 128 + (noise.noise(x / 32, y / 32, z) * 128)|0;
+					screen.setPixel(x, y, n, n, n, 255);
+				}
+			}
+			z += 0.01;
+			screen.unlock();
+		}, 10);
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
