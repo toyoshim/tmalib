@@ -11,7 +11,8 @@ MajVj.frame.api3d = function (options) {
         vr: false,
         parallax_overlap: 0.0,
         parallax_distance: 100,
-        orientation: [ 0.0, 0.0, -90.0 ]
+        orientation: [ 0.0, 0.0, -90.0 ],
+        position: [ 0.0, 0.0, 0.0 ]
     };
     this.onresize(options.aspect);
 
@@ -278,7 +279,12 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
         program.setUniformVector('uColor', this._api.color);
     }
 
-    mat4.translate(this._matrix, this._iMatrix, p);
+    var rp = [
+        p[0] - this.properties.position[0],
+        p[1] - this.properties.position[1],
+        p[2] - this.properties.position[2]
+    ];
+    mat4.translate(this._matrix, this._iMatrix, rp);
     if (r) {
         for (var i = r.length - 1; i >= 0; --i) {
             var rotate = r[i];

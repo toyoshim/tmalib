@@ -1,5 +1,6 @@
 (function () {
   var vr = false;
+  var position = [ 0.0, 0.0, 0.0 ];
   var orientation = [ 0.0, 0.0, -90.0 ];
   var ready = false;
 
@@ -26,6 +27,18 @@
 
   document.body.addEventListener('keydown', function (e) {
     switch (e.which) {
+      case 65:  // a
+        position[0] -= 1.0;
+        break;
+      case 68:  // d
+        position[1] += 1.0;
+        break;
+      case 69:  // e
+        position[2] -= 1.0;
+        break;
+      case 70:  // f
+        position[0] += 1.0;
+        break;
       case 72:  // h
         orientation[0] -= 1.0;
         break;
@@ -41,8 +54,17 @@
       case 76:  // l
         orientation[0] += 1.0;
         break;
+      case 83:  // s
+        position[1] -= 1.0;
+        break;
       case 85:  // u
         orientation[1] += 1.0;
+        break;
+      case 87:  // w
+        position[2] -= 1.0;
+        break;
+      case 88:  // x
+        position[2] += 1.0;
         break;
       default:
         console.log(e.which);
@@ -64,5 +86,6 @@
     }
     frame.properties.vr = vr;
     frame.properties.orientation = orientation;
+    frame.properties.position = position;
   };
 })();
