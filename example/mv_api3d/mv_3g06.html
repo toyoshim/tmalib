@@ -1,0 +1,70 @@
+<html>
+<head><title>Cube Matrix</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script src="vr_common.js"></script>
+<script>
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj();
+  MajVj.loadAllPlugins().then(function () {
+    var api3d = vj.create('frame', 'api3d', { draw: draw });
+    var glow = vj.create('effect', 'glow');
+    var fbo = vj.screen().createFrameBuffer();
+    var t1 = 0;
+    var t2 = 0;
+    var tv1 = 1.1;
+    var tv2 = 9.11;
+    var r = 10;
+    var u = 20;
+    function draw(api) {
+      api.color = [0.3, 0.3, 1.0, 1.0];
+      for (var i = 0; i < 32; ++i) {
+        var s = [
+            r * Math.sin(t1) * Math.cos(t2),
+            r * Math.sin(t1) * Math.sin(t2),
+            r * Math.cos(t1),
+        ];
+        t1 += tv1;
+        t2 += tv2;
+        var e = [
+            r * Math.sin(t1) * Math.cos(t2),
+            r * Math.sin(t1) * Math.sin(t2),
+            r * Math.cos(t1),
+        ];
+        for (var x = -3; x < 3; ++x) {
+          for (var y = -3; y < 3; ++y) {
+            for (var z = -3; z < 3; ++z) {
+              api.drawLine(
+                [ s[0] + x * u, s[1] + y * u, s[2] + z * u],
+                [ e[0] + x * u, e[1] + y * u, e[2] + z * u]);
+            }
+          }
+        }
+      }
+    }
+    vj.run(function (delta) {
+      vr_run(api3d);
+      fbo.bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      api3d.properties.vr = true;
+      api3d.properties.parallax_overlap = 1.0;
+      api3d.properties.parallax_distance = 3.0;
+      api3d.properties.orientation[0] += 0.3;
+      api3d.properties.orientation[1] += -0.4;
+      api3d.properties.orientation[2] += 0.5;
+      api3d.draw(delta);
+      vj.screen().bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      glow.draw(delta, fbo.texture);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      api3d.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>
