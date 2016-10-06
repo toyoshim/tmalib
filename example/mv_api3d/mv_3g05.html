@@ -1,0 +1,60 @@
+<html>
+<head><title>Parlin Particle</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script src="vr_common.js"></script>
+<script>
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj();
+  MajVj.loadAllPlugins().then(function () {
+    var api3d = vj.create('frame', 'api3d', { draw: draw });
+    var noise = vj.create('misc', 'perlin');
+    var particles = [];
+    var point = TmaModelPrimitives.createPoints([0, 0, 0]);
+    var t = 0;
+    function draw(api) {
+      t += 0.001;
+      if (particles.length < 2000) {
+        particles.push({
+          p: [1000 * Math.random() - 500,
+              -1000,
+              1000 * Math.random() - 1000],
+          s: Math.random() * 0.1,
+          c: [Math.random(), Math.random(), Math.random(), 1]
+        });
+      }
+      var alive = [];
+      var c = point.getColorsBuffer(api.screen);
+      var color = c.buffer();
+      for (var i = 0; i < particles.length; ++i) {
+        var p = particles[i];
+        color[0] = p.c[0];
+        color[1] = p.c[1];
+        color[2] = p.c[2];
+        color[3] = p.c[3];
+        c.update();
+        api.drawPrimitive(point, p.s, p.s, p.s, p.p);
+        p.p[0] += noise.noise(p.p[1] / 256, p.p[2] / 1024, t) * 5;
+        p.p[1] += noise.noise(p.p[2] / 256, p.p[0] / 1024, t) + 1;
+        p.p[2] += noise.noise(p.p[0] / 256, p.p[1] / 1024, t) * 5;
+        if (p.p[1] < 1000)
+          alive.push(p);
+      }
+      particles = alive;
+    }
+    vj.run(function (delta) {
+      vr_run(api3d);
+      vj.screen().fillColor(0, 0, 0, 1);
+      api3d.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      api3d.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>
