@@ -22,7 +22,8 @@ ShadertoyCommon.prototype.prop = function () {
     return {
         volume: 0.0,
         wave: new Float32Array(2048),
-        fft: new Uint8Array(1024)
+        fft: new Uint8Array(1024),
+        fftDb: new Float32Array(1024)
     };
 };
 
@@ -31,6 +32,7 @@ ShadertoyCommon.prototype.run = function (shadertoy) {
         return;
     this.sound.getFloatWaveTable(shadertoy.properties.wave);
     this.sound.getByteFrequencyData(shadertoy.properties.fft);
+    this.sound.getFloatFrequencyData(shadertoy.properties.fftDb);
     var rms = 0.0;
     var wave = shadertoy.properties.wave;
     for (var i = 0; i < wave.length; ++i) {
