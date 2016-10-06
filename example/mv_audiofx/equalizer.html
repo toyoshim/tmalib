@@ -1,0 +1,29 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script src="shadertoy_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	var name = 'equalizer';
+	var st = new ShadertoyCommon();
+	Promise.all([st.init(true),
+				 MajVj.loadPlugin('frame', name),
+				 MajVj.loadPlugin('frame', 'laser')]).then(() => {
+		var frame = st.mv.create('frame', name);
+		var prop = { properties: st.prop() };
+		window.onresize = e => {
+			frame.onresize(st.mv.onresize());
+		};
+		st.mv.run(function (delta) {
+			st.run(prop);
+			st.mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			frame.properties.fft = prop.properties.fft;
+			frame.draw(delta);
+			st.mv.screen().flush();
+		});
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

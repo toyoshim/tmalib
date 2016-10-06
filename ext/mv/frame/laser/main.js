@@ -51,6 +51,7 @@ MajVj.frame.laser = function (options) {
         toScreenY: this._toScreenY.bind(this),
         color: [ 0.0, 0.0, 1.0, 1.0 ],
         screen: this._screen,
+        delta: 0,
         properties: this.properties
     };
 };
@@ -102,6 +103,7 @@ MajVj.frame.laser.prototype.onresize = function (aspect) {
  * @param delta delta time from the last rendering
  */
 MajVj.frame.laser.prototype.draw = function (delta) {
+    this._api.delta = delta;
     this._draw(this._api);
 };
 

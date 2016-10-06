@@ -230,6 +230,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'color'),
         MajVj.loadPlugin('frame', 'crlogo'),
         MajVj.loadPlugin('frame', 'effect'),
+        MajVj.loadPlugin('frame', 'equalizer'),
         MajVj.loadPlugin('frame', 'filter'),
         MajVj.loadPlugin('frame', 'laser'),
         MajVj.loadPlugin('frame', 'mixer'),
