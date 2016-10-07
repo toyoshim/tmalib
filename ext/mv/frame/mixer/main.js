@@ -5,11 +5,11 @@
  */
 MajVj.frame.mixer = function (options) {
     this._screen = options.screen;
-    this._width = options.width;
-    this._height = options.height;
-    this._aspect = options.aspect;
+    this._mv = options.mv;
     this.properties = { volume: [0.0, 0.0, 0.0] };
     this._channel = options.channel || 1;
+    this._fbo = [];
+    this._resize(options.width, options.height);
     var fragmentShader =
             (this._channel == 1) ?  MajVj.frame.mixer._fragment1Shader :
             (this._channel == 2) ?  MajVj.frame.mixer._fragment2Shader :
@@ -20,12 +20,6 @@ MajVj.frame.mixer = function (options) {
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     fragmentShader));
     this._coords = this._screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
-
-    this._fbo = [];
-    for (var ch = 0; ch < this._channel; ++ch) {
-        this._fbo[ch] = this._screen.createFrameBuffer(
-                this._width, this._height);
-    }
 };
 
 // Shader programs.
@@ -59,6 +53,8 @@ MajVj.frame.mixer.load = function () {
  * @param aspect screen aspect ratio
  */
 MajVj.frame.mixer.prototype.onresize = function (aspect) {
+    var size = this._mv.size();
+    this._resize(size.width, size.height);
 };
 
 /**
@@ -92,3 +88,12 @@ MajVj.frame.mixer.prototype.bind = function (channel) {
     return this._fbo[channel].bind();
 };
 
+/**
+ * Adjust frame buffer object size.
+ * @param width offscreen width
+ * @param height offscreen height
+ */
+MajVj.frame.mixer.prototype._resize = function (width, height) {
+    for (var ch = 0; ch < this._channel; ++ch)
+        this._fbo[ch] = this._screen.createFrameBuffer(width, height);
+};
