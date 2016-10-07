@@ -1,6 +1,6 @@
 <html>
 <head>
-    <script src="../tma.js"></script>
+    <script src="../../tma.js"></script>
     <script id="shader-vs" type="x-shader/x-vertex">
         attribute vec3 aVertexPosition;
         uniform mat4 uMVMatrix;
@@ -22,9 +22,7 @@
     <script>
         tma.extlibs = [ 'ext/gl-matrix.js' ];
         tma.onload = function () {
-            var screen = new TmaScreen(TmaScreen.FULL_WIDTH,
-                                       TmaScreen.FULL_HEIGHT,
-                                       TmaScreen.MODE_3D);
+            var screen = new TmaScreen(320, 320, TmaScreen.MODE_3D);
             screen.attachTo(TmaScreen.BODY);
 
             // Initializes buffers.
@@ -47,8 +45,9 @@
             var pMatrix = mat4.create();
             var mvMatrix = mat4.create();
             mat4.perspective(
-                    45, screen.width / screen.height, 0.1, 1000.0, pMatrix);
-            mat4.translate(pMatrix, [ 0.0, 0.0, -250.0 ]);
+                    pMatrix, Math.PI / 4, screen.width / screen.height,
+                    0.1, 1000.0);
+            mat4.translate(pMatrix, pMatrix, [ 0.0, 0.0, -250.0 ]);
             mat4.identity(mvMatrix);
 
             // Initializes screen.
@@ -58,13 +57,13 @@
             program.setAttributeArray(
                     'aVertexPosition', circleVertices, 0, 3, 0);
             setInterval(function () {
-                mat4.rotate(pMatrix, 0.05, [ 0.1, 0.15, 0.0 ]);
+                mat4.rotate(pMatrix, pMatrix, 0.05, [ 0.1, 0.15, 0.0 ]);
                 program.setUniformMatrix('uPMatrix', pMatrix);
                 screen.fillColor(0.0, 0.0, 0.0, 1.0);
                 for (var y = -100; y <= 100; y += 20) {
                     for (var x = -100; x <= 100; x += 20) {
-                        var mat = mat4.create(mvMatrix);
-                        mat4.translate(mat, [x, y, 0.0]);
+                        var mat = mat4.create();
+                        mat4.translate(mat, mvMatrix, [x, y, 0.0]);
                         program.setUniformMatrix('uMVMatrix', mat);
                         program.setUniformVector('uColor',
                                 [ (x + 100) / 200, (y + 100) / 200, 1.0, 1.0 ]);
