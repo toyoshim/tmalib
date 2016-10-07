@@ -7,7 +7,7 @@ tma.extlibs = [ 'ext/mv/MajVj.js' ];
 tma.onload = function () {
   MajVj.loadAllPlugins().then(function () {
     var vj = new MajVj();
-    var mixer = vj.create('frame', 'mixer', { channel: 3 });
+    var mixer = vj.create('misc', 'mixer', { channel: 3 });
     var ch1 = vj.create('frame', 'sandbox', { id: '18922.0' });
     var ch2 = vj.create('frame', 'sandbox', { id: '18918.0' });
     var ch3 = vj.create('frame', 'sandbox', { id: '18568.0' });  // 18451.0
