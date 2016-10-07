@@ -664,7 +664,7 @@ MajVj.frame.nicofarre.prototype.getFrame = function (i) {
     return this._frames[i];
 };
 /**
- * T'MediaArt library for Javascript
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - color -
  * @param options options (See MajVj.prototype.create)
  */
@@ -1044,7 +1044,7 @@ MajVj.frame.ab2.prototype.draw = function (delta) {
     }
 };
 /**
- * T'MediaArt library for Javascript
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - specticle -
  * @param options options (See MajVj.prototype.create)
  */
@@ -2424,7 +2424,7 @@ MajVj.frame.spiline.prototype.draw = function (delta) {
     }
 };
 /**
- * T'MediaArt library for Javascript
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - sandbox -
  * @param options options (See MajVj.prototype.create)
  */
@@ -2742,7 +2742,7 @@ MajVj.frame.shadertoy.prototype.setShader = function (shader) {
 };
 
 /**
- * T'MediaArt library for Javascript
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - movie -
  * @param options options (See MajVj.prototype.create)
  */
@@ -3862,7 +3862,7 @@ MajVj.frame.nico_test.prototype.draw = function (delta) {
     this._screen.popAlphaMode();
 };
 /**
- * T'MediaArt library for Javascript
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - filter -
  * @param options options (See MajVj.prototype.create)
  */

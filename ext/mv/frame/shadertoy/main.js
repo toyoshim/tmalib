@@ -1,5 +1,5 @@
 /**
- * T'MediaArt library for Javascript
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - shadertoy -
  * @param options options (See MajVj.prototype.create)
  */
