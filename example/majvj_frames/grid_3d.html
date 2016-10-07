@@ -1,0 +1,42 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	var vj = new MajVj();
+	Promise.all([
+			MajVj.loadPlugin('frame', 'api3d'),
+			MajVj.loadPlugin('frame', 'grid'),
+			MajVj.loadPlugin('effect', 'glow'),
+			MajVj.loadPlugin('misc', 'api2d')]).then(function () {
+		var frame = vj.create('frame', 'grid', {
+			z: true,
+			n: 16,
+			color: [0.1, 1.0, 0.2, 1.0]
+		});
+		frame.properties.vr = true;
+		frame.properties.parallax_overlap = 1.0;
+		frame.properties.parallax_distance = 0.005;
+		var glow = vj.create('effect', 'glow');
+		var fbo = vj.screen().createFrameBuffer();
+		window.onresize = e => {
+			frame.onresize(vj.onresize());
+			fbo = vj.screen().createFrameBuffer();
+		}
+		var r = 0;
+		vj.run(function (delta) {
+			r += 0.1;
+			fbo.bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			frame.properties.orientation = [r * 3, r * 4, r * 5]
+			frame.draw(delta);
+			vj.screen().bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			glow.draw(delta, fbo.texture);
+		});
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
