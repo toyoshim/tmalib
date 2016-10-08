@@ -11,7 +11,8 @@ MajVj.frame.shadertoy = function (options) {
     this.properties = {
         volume: 0.0,
         wave: new Float32Array(2048),
-        fft: new Uint8Array(1024)
+        fft: new Uint8Array(1024),
+        fftDb: new Float32Array(1024)
     };
     this._textures = options.textures;
     this._time = 0.0;
