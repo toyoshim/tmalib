@@ -9,13 +9,15 @@ tma.onload = function () {
   var vj = new MajVj();
   MajVj.loadAllPlugins().then(function () {
     var api3d = vj.create('frame', 'api3d', { draw: draw });
+    api3d.properties.vr = true;
+    api3d.properties.parallax_overlap = 1.0;
+    api3d.properties.parallax_distance = 1.0;
     var noise = vj.create('misc', 'perlin');
     var camera = vj.create('misc', 'camera', { mode: 'ease-in-out' });
     var t = 0;
     function draw(api) {
-      api.color = [0.01, 0.01, 0.1, 0.01];
-      var m = 4;
-      var h = m / 2;
+      var m = 7;
+      var h = (m - 1) / 2;
       var s = 200;
       var r = 20;
       t += 0.1;
@@ -25,6 +27,10 @@ tma.onload = function () {
             var u = noise.noise(x / 4 + (4 + z / 4), y / 4, t);
             var v = noise.noise(y / 4 + (4 + x / 4), z / 4, t);
             var w = noise.noise(z / 4 + (4 + y / 4), x / 4, t);
+            if (x == 3 && y == 3 && z == 3)
+              api.color = [1.0, 0.01, 0.01, 0.01];
+            else
+              api.color = [0.01, 0.01, 0.1, 0.01];
             api.drawCube(
                 r, r, r,
                 [s * (x - h) + u, s * (y - h) + v, s * (z - h) + w]);
@@ -33,13 +39,19 @@ tma.onload = function () {
       }
     }
     setInterval(() => {
-      var n = 200;
-      camera.moveTo(
-          200, [Math.random() * n, Math.random() * n, Math.random() * n]);
-    }, 1000);
+      var n = 800;
+      var p = [
+          Math.random() * n - n / 2,
+          Math.random() * n - n / 2,
+          Math.random() * n - n / 2
+      ];
+      camera.moveTo(150, p);
+      camera.lookTo(300, [ -p[0], -p[1], -p[2] ]);
+    }, 500);
     vj.run(function (delta) {
       camera.update(delta);
       api3d.properties.position = camera.position();
+      api3d.properties.orientation = camera.orientation();
       vj.screen().setAlphaMode(false);
       vj.screen().fillColor(0, 0, 0, 1);
       vj.screen().setAlphaMode(
