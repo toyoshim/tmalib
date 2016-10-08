@@ -1,0 +1,18 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	MajVj.loadPlugin('misc', 'camera').then(function () {
+		var mv = new MajVj(320, 320, false);
+		camera = mv.create('misc', 'camera');
+		mv.run(delta => {
+			camera.update(delta);
+			console.log(camera.position());
+		});
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

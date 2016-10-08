@@ -250,6 +250,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'vertexshaderart'),
         MajVj.loadPlugin('frame', 'wired'),
         MajVj.loadPlugin('misc', 'api2d'),
+        MajVj.loadPlugin('misc', 'camera'),
         MajVj.loadPlugin('misc', 'midi'),
         MajVj.loadPlugin('misc', 'mixer'),
         MajVj.loadPlugin('misc', 'perlin'),
