@@ -614,19 +614,26 @@ Tma3DScreen.prototype.fillColor = function (r, g, b, a) {
 /**
  * Sets alpha blending mode.
  * @param on enable alpha blending
- * @param src source drawing mode
- * @param dst destination drawing mode
+ * @param src source drawing mode (optional for !on)
+ * @param dst destination drawing mode (optional for !on)
+ * @param depth enable depth test (optional)
  */
-Tma3DScreen.prototype.setAlphaMode = function (on, src, dst) {
-    this._currentAlphaMode = { on: on, src: src, dst: dst };
+Tma3DScreen.prototype.setAlphaMode = function (on, src, dst, depth) {
+    depth = depth || !on;
+    src = src || this.gl.ONE;
+    dst = dst || this.gl.ONE;
+    this._currentAlphaMode = { on: on, src: src, dst: dst, depth: depth };
     if (on) {
-        this.gl.disable(this.gl.DEPTH_TEST);
         this.gl.enable(this.gl.BLEND);
         this.gl.blendFunc(src, dst);
     } else {
         this.gl.disable(this.gl.BLEND);
+    }
+    if (depth) {
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
+    } else {
+        this.gl.disable(this.gl.DEPTH_TEST);
     }
 };
 
@@ -642,7 +649,7 @@ Tma3DScreen.prototype.pushAlphaMode = function () {
  */
 Tma3DScreen.prototype.popAlphaMode = function () {
     var mode = this._alphaModeStack.pop();
-    this.setAlphaMode(mode.on, mode.src, mode.dst);
+    this.setAlphaMode(mode.on, mode.src, mode.dst, mode.depth);
 };
 
 /**
