@@ -409,6 +409,82 @@ Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
 };
 
 /**
+ * Create specified type texture buffer.
+ * @param data Float32Array|UInt8Array object (should be alighed with type)
+ * @param width texture width
+ * @param height texture height
+ * @param flip image flip flag
+ * @param filter texture mag filter
+ * @param type data type like gl.FLOAT, gl.UNSIGNED_BYTE
+ * @param image souce is image source
+ */
+Tma3DScreen.prototype._createTexture =
+        function (data, width, height, flip, filter, format, type, image) {
+    var texture = this.gl.createTexture();
+    texture.width = width;
+    texture.height = height;
+    texture.format = format;
+    texture.type = type;
+    texture.data = data;
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
+    if (image) {
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, format, format, type, data);
+    } else {
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, format, width, height, 0,
+                format, type, data);
+    }
+    this.gl.texParameteri(
+            this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, filter);
+    this.gl.texParameteri(
+            this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, filter);
+    this.gl.texParameteri(
+            this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(
+            this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+    texture._flip = flip;
+    texture._owner = this;
+    texture.update = image ? function (data) {
+        var gl = this._owner.gl;
+        gl.bindTexture(gl.TEXTURE_2D, this);
+        gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type,
+                data);
+    } : function (data) {
+        var gl = this._owner.gl;
+        gl.bindTexture(gl.TEXTURE_2D, this);
+        gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.width, this.height,
+                0, this.format, this.type, data);
+    }
+    return texture;
+};
+
+/**
+ * Create alpha texture buffer from Float32Array object.
+ * @param data Float32Array object
+ * @param width texture width
+ * @param height texture height
+ * @param flip image flip flag
+ */
+Tma3DScreen.prototype.createAlphaFloatTexture =
+        function (data, width, height, flip) {
+    return this._createTexture(data, width, height, flip, this.gl.NEAREST,
+            this.gl.ALPHA, this.gl.FLOAT, false);
+};
+
+/**
+ * Create alpha texture buffer from UInt8Array object.
+ * @param data UInt8Array object
+ * @param width texture width
+ * @param height texture height
+ * @param flip image flip flag
+ */
+Tma3DScreen.prototype.createAlphaTexture =
+        function (data, width, height, flip) {
+    return this._createTexture(data, width, height, flip, this.gl.NEAREST,
+            this.gl.ALPHA, this.gl.UNSIGNED_BYTE, false);
+};
+
+/**
  * Create texture buffer from Float32Array object.
  * @param data Float32Array object
  * @param width texture width
@@ -417,31 +493,8 @@ Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
  */
 Tma3DScreen.prototype.createFloatTexture =
         function (data, width, height, flip) {
-    var texture = this.gl.createTexture();
-    texture.width = width;
-    texture.height = height;
-    texture.data = data;
-    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, width, height, 0,
-            this.gl.RGBA, this.gl.FLOAT, data);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    texture._flip = flip;
-    texture._owner = this;
-    texture.update = function (data) {
-        var gl = this._owner.gl;
-        gl.bindTexture(gl.TEXTURE_2D, this);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0,
-                gl.RGBA, gl.FLOAT, data);
-    };
-    return texture;
+    return this._createTexture(data, width, height, flip, this.gl.NEAREST,
+            this.gl.RGBA, this.gl.FLOAT, false);
 };
 
 /**
@@ -451,32 +504,8 @@ Tma3DScreen.prototype.createFloatTexture =
  * @param filter texture mag filter
  */
 Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
-    var texture = this.gl.createTexture();
-    texture.width = image.width;
-    texture.height = image.height;
-    texture.image = image;
-    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
-    // TODO: Handles level of detail
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA,
-            this.gl.UNSIGNED_BYTE, image);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, filter);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, filter);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    texture._flip = flip;
-    texture._owner = this;
-    texture.update = function (image) {
-        var gl = this._owner.gl;
-        gl.bindTexture(gl.TEXTURE_2D, this);
-        gl.texImage2D(
-                gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    };
-    return texture;
+    return this._createTexture(image, image.width, image.height, flip, filter,
+            this.gl.RGBA, this.gl.UNSIGNED_BYTE, true);
 };
 
 /**
