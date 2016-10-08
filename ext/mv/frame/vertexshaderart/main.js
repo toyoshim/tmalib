@@ -14,26 +14,41 @@ MajVj.frame.vertexshaderart = function (options) {
                     MajVj.frame.vertexshaderart._vheader + this._vshader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.vertexshaderart._fshader));
-    this._sound = this._screen.createAlphaTexture(
-            new Uint8Array(1024 * 240), 1024, 240, false);
-    this._floatSound = this._screen.createAlphaFloatTexture(
-            new Float32Array(1024 * 240), 1024, 240, false);
     this._vertexCount = 0;
     this._vertices = null;
     this.properties = {
         vertexCount: options.vertexCount || 1024,
+        resolution: options.resolution || [ this._width, this._height ],
+        mouse: options.mouse || [ 0, 0 ],
         background: options.background || [ 0.0, 0.0, 0.0, 1.0 ],
         mode: options.mode || Tma3DScreen.MODE_POINTS,
         time: 0.0,
-        sound: new Uint8Array(1024),
-        floatSound: new Float32Array(1024)
+        sound: options.sound || new Uint8Array(1024),
+        soundHistory: options.soundHistory || new Uint8Array(1024 * 240),
+        floatSound: options.floatSound || new Float32Array(1024),
+        floatSoundHistory:
+                options.floatSoundHistory || new Float32Array(1024 * 240),
+        soundRes: [ 1024, 240 ],
+        update : {
+            mouse: options.updateMouse !== false,
+            time: options.updateTime !== false,
+            soundHistory: options.soundHistory === undefined,
+            floatSoundHistory: options.floatSoundHistory === undefined,
+        }
     };
+    this._touch = this._screen.createFloatTexture(
+            new Float32Array(32 * 240), 32, 240, false);
+    this._sound = this._screen.createAlphaTexture(
+            this.properties.soundHistory, 1024, 240, false);
+    this._floatSound = this._screen.createAlphaFloatTexture(
+            this.properties.floatSoundHistory, 1024, 240, false);
 };
 
 MajVj.frame.vertexshaderart._vheader = ' \
         attribute float vertexId; \
         uniform float vertexCount; \
         uniform vec2 resolution; \
+        uniform vec2 mouse; \
         uniform float time; \
         uniform sampler2D sound; \
         uniform sampler2D floatSound; \
@@ -108,21 +123,38 @@ MajVj.frame.vertexshaderart.prototype.draw = function (delta) {
     // BLEND is enabled, function is ONE,ONE_MINUS_SRC_ALPHA,
     // DEPTH_TEST is enabled.
 
-    this.properties.time += delta;
+    if (this.properties.update.mouse) {
+        var mouse = this._screen.mouse();
+        if (!mouse.over) {
+            mouse.x = mouse.width / 2;
+            mouse.y = mouse.height / 2;
+        }
+        this.properties.mouse[0] = -1 + mouse.x * 2 / mouse.width;
+        this.properties.mouse[1] = -1 + mouse.y * 2 / mouse.height;
+    }
 
-    var sound = this._sound.data;
-    var floatSound = this._floatSound.data;
-    for (var i = 1024 * 240 - 1; i >= 1024; --i) {
-        var j = i - 1024;
-        sound[i] = sound[j];
-        floatSound[i] = floatSound[j];
+    // TODO: Update touch information.
+
+    if (this.properties.update.time)
+        this.properties.time += delta;
+
+    var i;
+    if (this.properties.update.soundHistory) {
+        var sound = this.properties.soundHistory;
+        for (i = 1024 * 240 - 1; i >= 1024; --i)
+            sound[i] = sound[i - 1024];
+        for (; i >= 0; --i)
+            sound[i] = this.properties.sound[i];
     }
-    for (; i >= 0; --i) {
-        sound[i] = this.properties.sound[i];
-        floatSound[i] = this.properties.floatSound[i];
+    this._sound.update(this.properties.soundHistory);
+    if (this.properties.update.floatSoundHistory) {
+        var floatSound = this.properties.floatSoundHistory;
+        for (i = 1024 * 240 - 1; i >= 1024; --i)
+            floatSound[i] = floatSound[i - 1024];
+        for (; i >= 0; --i)
+            floatSound[i] = this.properties.floatSound[i];
     }
-    this._sound.update(sound);
-    this._floatSound.update(floatSound);
+    this._floatSound.update(this.properties.floatSoundHistory);
 
     if (this.properties.vertexCount != this._vertexCount)
         this._prepareVertices();
@@ -141,12 +173,12 @@ MajVj.frame.vertexshaderart.prototype.draw = function (delta) {
     this._program.setAttributeArray('vertexId', this._vertices, 0, 1, 0);
     this._program.setUniformVector('vertexCount', [ this._vertexCount ]);
     this._program.setUniformVector('resolution', [ this._width, this._height ]);
-    // TODO: mouse
-    // TODO: touch
+    this._program.setUniformVector('mouse', this.properties.mouse);
+    this._program.setTexture('touch', this._touch);
     this._program.setUniformVector('time', [ this.properties.time / 1000 ]);
     this._program.setTexture('sound', this._sound);
     this._program.setTexture('floatSound', this._floatSound);
-    // TODO: soundRes
+    this._program.setUniformVector('soundRes', this.properties.soundRes);
     this._program.setUniformVector('background', this.properties.background);
 
     this._program.drawArrays(this.properties.mode, 0, this._vertexCount);
