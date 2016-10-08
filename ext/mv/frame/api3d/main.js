@@ -239,6 +239,8 @@ MajVj.frame.api3d.prototype._drawLine = function (src, dst) {
     this._drawProgram.setUniformVector('uColor', this._api.color);
     this._drawProgram.setUniformMatrix('uMatrix', this._iMatrix);
 
+    // TODO: Camera position is not applied here.
+
     this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrix);
     this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixL);
     this._drawProgram.drawArrays(Tma3DScreen.MODE_LINES, 0, 2);

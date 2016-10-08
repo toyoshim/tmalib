@@ -1,0 +1,57 @@
+<html>
+<head><title>Noise Cube</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj();
+  MajVj.loadAllPlugins().then(function () {
+    var api3d = vj.create('frame', 'api3d', { draw: draw });
+    var noise = vj.create('misc', 'perlin');
+    var camera = vj.create('misc', 'camera', { mode: 'ease-in-out' });
+    var t = 0;
+    function draw(api) {
+      api.color = [0.01, 0.01, 0.1, 0.01];
+      var m = 4;
+      var h = m / 2;
+      var s = 200;
+      var r = 20;
+      t += 0.1;
+      for (var x = 0; x < m; ++x) {
+        for (var y = 0; y < m; ++y) {
+          for (var z = 0; z < m; ++z) {
+            var u = noise.noise(x / 4 + (4 + z / 4), y / 4, t);
+            var v = noise.noise(y / 4 + (4 + x / 4), z / 4, t);
+            var w = noise.noise(z / 4 + (4 + y / 4), x / 4, t);
+            api.drawCube(
+                r, r, r,
+                [s * (x - h) + u, s * (y - h) + v, s * (z - h) + w]);
+          }
+        }
+      }
+    }
+    setInterval(() => {
+      var n = 200;
+      camera.moveTo(
+          200, [Math.random() * n, Math.random() * n, Math.random() * n]);
+    }, 1000);
+    vj.run(function (delta) {
+      camera.update(delta);
+      api3d.properties.position = camera.position();
+      vj.screen().setAlphaMode(false);
+      vj.screen().fillColor(0, 0, 0, 1);
+      vj.screen().setAlphaMode(
+          true, vj.screen().gl.DST_ALPHA, vj.screen().gl.ONE);
+      api3d.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      api3d.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>

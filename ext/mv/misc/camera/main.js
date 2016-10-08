@@ -5,13 +5,13 @@
  * @param options options (See MajVj.prototype.create)
  */
 MajVj.misc.camera = function (options) {
-    this._src = options.position || [ 0.0, 0.0, 0.0 ];
-    this._dst = options.position || [ 0.0, 0.0, 0.0 ];
-    this._v = [ 0.0, 0.0, 0.0 ];
+    this._psrc = options.position || [ 0.0, 0.0, 0.0 ];
+    this._pdst = options.position || [ 0.0, 0.0, 0.0 ];
+    this._pv = [ 0.0, 0.0, 0.0 ];
     this._p = options.position || [ 0.0, 0.0, 0.0 ];
-    this._time = 0;
-    this._duration = 0;
-    this._mode = options.mode || 'ease-in-out';
+    this._ptime = 0;
+    this._pduration = 0;
+    this._pmode = options.mode || 'ease-in-out';
 };
 
 /**
@@ -35,17 +35,17 @@ MajVj.misc.camera.prototype.moveTo = function (duration, destination) {
         this._p[1] = destination[1];
         this._p[2] = destination[2];
     }
-    this._src[0] = this._p[0];
-    this._src[1] = this._p[2];
-    this._src[2] = this._p[1];
-    this._dst[0] = destination[0];
-    this._dst[1] = destination[1];
-    this._dst[2] = destination[2];
-    this._v[0] = this._dst[0] - this._src[0];
-    this._v[1] = this._dst[1] - this._src[1];
-    this._v[2] = this._dst[2] - this._src[2];
-    this._time = 0;
-    this._duration = duration;
+    this._psrc[0] = this._p[0];
+    this._psrc[1] = this._p[1];
+    this._psrc[2] = this._p[2];
+    this._pdst[0] = destination[0];
+    this._pdst[1] = destination[1];
+    this._pdst[2] = destination[2];
+    this._pv[0] = this._pdst[0] - this._psrc[0];
+    this._pv[1] = this._pdst[1] - this._psrc[1];
+    this._pv[2] = this._pdst[2] - this._psrc[2];
+    this._ptime = 0;
+    this._pduration = duration;
 };
 
 /**
@@ -67,23 +67,23 @@ MajVj.misc.camera.prototype.moveBy = function (duration, destination) {
  * @param delta delta time from the last rendering (in msec)
  */
 MajVj.misc.camera.prototype.update = function (delta) {
-    if (this._duration == 0)
-        return;
-    this._time += delta;
-    var t = this._time / this._duration;
-    if (this._time > 1000.0) {
-        this._duration = 0;
-        this._p[0] = this._dst[0];
-        this._p[1] = this._dst[1];
-        this._p[2] = this._dst[2];
-        return;
+    if (this._pduration != 0) {
+        this._ptime += delta;
+        var t = this._ptime / this._pduration;
+        if (this._ptime > this._pduration) {
+            this._pduration = 0;
+            this._p[0] = this._pdst[0];
+            this._p[1] = this._pdst[1];
+            this._p[2] = this._pdst[2];
+        } else {
+            var tl = TmaTimeline.convert(this._mode, t);
+            this._p = [
+                this._psrc[0] + this._pv[0] * tl,
+                this._psrc[1] + this._pv[1] * tl,
+                this._psrc[2] + this._pv[2] * tl
+            ];
+        }
     }
-    var tl = TmaTimeline.convert(this._mode, t);
-    this._p = [
-        this._src[0] + this._v[0] * tl,
-        this._src[1] + this._v[1] * tl,
-        this._src[2] + this._v[2] * tl
-    ];
 };
 
 /**
