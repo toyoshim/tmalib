@@ -234,6 +234,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'filter'),
         MajVj.loadPlugin('frame', 'grid'),
         MajVj.loadPlugin('frame', 'laser'),
+        MajVj.loadPlugin('frame', 'light'),
         MajVj.loadPlugin('frame', 'morphere'),
         MajVj.loadPlugin('frame', 'movie'),
         MajVj.loadPlugin('frame', 'nico_test'),

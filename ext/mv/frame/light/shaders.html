@@ -1,0 +1,29 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+precision mediump float;
+attribute vec2 aCoord;
+varying vec2 vCoord;
+
+void main() {
+    gl_Position = vec4(aCoord, 0., 1.);
+    vCoord = aCoord;
+}
+</script>
+
+<script id='fragment' type='x-shader/x-fragment'>
+precision mediump float;
+uniform vec4 uColor;
+uniform vec2 uCoord;
+uniform vec2 uScale;
+varying vec2 vCoord;
+
+void main() {
+    vec3 color = uColor.rgb / distance(vCoord / uScale, uCoord / uScale);
+    gl_FragColor = vec4(color, uColor.a);
+}
+</script>
+
+</head>
+</html>
