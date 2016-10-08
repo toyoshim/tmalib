@@ -1,0 +1,50 @@
+<html>
+<head><title>vertexshaderart compatible shader test</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<!--
+From vertexshaderart.com tutorial movie:
+https://www.youtube.com/watch?v=mOEbXQWtP3M&list=PLC80qbPkXBmw3IR6JVvh7jyKogIo5Bi-d&index=1
+-->
+<script id="vertex" type='x-shader/x-vertex'>
+void main() {
+  float down = floor(sqrt(vertexCount));
+  float across = floor(vertexCount / down);
+  
+  float x = mod(vertexId, across);
+  float y = floor(vertexId / across);
+  
+  float u = x / (across - 1.);
+  float v = y / (across - 1.);
+  
+  float ux = u * 2. - 1.;
+  float vy = v * 2. - 1.;
+  
+  gl_Position = vec4(ux, vy, 0, 1);
+  
+  gl_PointSize = 10.0;
+  gl_PointSize *= 20. / across;
+  gl_PointSize *= resolution.x / 600.;
+  
+  v_color = vec4(1, 0, 0, 1);
+}
+</script>
+<script>
+/* global tma */
+/* global MajVj */
+tma.extlibs = [ 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj();
+  var size = vj.size();
+  MajVj.loadAllPlugins().then(function () {
+    var vertexshaderart = vj.create('frame', 'vertexshaderart', {
+      vshader: document.getElementById('vertex').text
+    });
+    vj.run(function (delta) {
+      vertexshaderart.draw(delta);
+    });
+  }, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
