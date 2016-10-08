@@ -19,7 +19,7 @@ var MajVj = function (width, height, fullscreen, parent) {
     this._fullscreen = (fullscreen === undefined) ? true : fullscreen;
     this._aspect = width / height;
     this._timestamp = undefined;
-    this._screen = new TmaScreen(width, height, TmaScreen.MODE_3D);
+    this._screen = new TmaScreen(this._width, this._height, TmaScreen.MODE_3D);
     this._screen.setAlphaMode(
             true, this._screen.gl.SRC_ALPHA, this._screen.gl.ONE);
     this._screen.attachTo(parent || TmaScreen.BODY);
