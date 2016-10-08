@@ -49,8 +49,8 @@ function Tma3DScreen (width, height) {
     this._mouseY = 0;
     this._mouseClickX = 0;
     this._mouseClickY = 0;
-    this._mouseWidth = 0;
-    this._mouseHeight = 0;
+    this._mouseWidth = this.width;
+    this._mouseHeight = this.height;
 
     // Logging GL capabilities.
     tma.log('WebGL max vertex uniform vectors: ' +
@@ -410,7 +410,7 @@ Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
 
 /**
  * Create specified type texture buffer.
- * @param data Float32Array|UInt8Array object (should be alighed with type)
+ * @param data Float32Array|Uint8Array object (should be alighed with type)
  * @param width texture width
  * @param height texture height
  * @param flip image flip flag
@@ -472,8 +472,8 @@ Tma3DScreen.prototype.createAlphaFloatTexture =
 };
 
 /**
- * Create alpha texture buffer from UInt8Array object.
- * @param data UInt8Array object
+ * Create alpha texture buffer from Uint8Array object.
+ * @param data Uint8Array object
  * @param width texture width
  * @param height texture height
  * @param flip image flip flag
@@ -742,13 +742,13 @@ Tma3DScreen.prototype.mouse = function () {
             click: {
                 on: false,
                 x: 0,
-                y: 0,
+                y: 0
             },
-            width: 0,
-            height: 0,
+            width: this._mouseWidth,
+            height: this._mouseHeight
         };
     return {
-        over: this._mouse,
+        over: true,
         x: this._mouseX,
         y: this._mouseY,
         click: {
@@ -757,7 +757,7 @@ Tma3DScreen.prototype.mouse = function () {
             y: this._mouseClickY
         },
         width: this._mouseWidth,
-        height: this._mouseHeight,
+        height: this._mouseHeight
     };
 };
 
