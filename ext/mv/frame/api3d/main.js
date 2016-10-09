@@ -133,6 +133,18 @@ MajVj.frame.api3d.prototype.onresize = function (aspect) {
  * @param delta delta time from the last rendering
  */
 MajVj.frame.api3d.prototype.draw = function (delta) {
+    var api = this.beginDraw();
+    this._module.clear(api);
+    this._module.draw(api);
+    this.endDraw();
+};
+
+/**
+ * Sets up to call APIs and returns an API handle.
+ * @param delta delta time from the last rendering
+ * @return an API handle
+ */
+MajVj.frame.api3d.prototype.beginDraw = function (delta) {
     this._screen.pushAlphaMode();
 
     var aspect = this._aspect;
@@ -168,9 +180,13 @@ MajVj.frame.api3d.prototype.draw = function (delta) {
     this._viewport(this._api.vr ? 1 : 0);
 
     this._api.delta = delta;
-    this._module.clear(this._api);
-    this._module.draw(this._api);
+    return this._api;
+};
 
+/**
+ * Cleans up to call APIs. Should be called for each beginDraw().
+ */
+MajVj.frame.api3d.prototype.endDraw = function () {
     this._screen.popAlphaMode();
 };
 
