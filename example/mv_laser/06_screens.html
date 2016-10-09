@@ -1,0 +1,104 @@
+<html>
+<head><title>Laser test</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+var api3d = null;
+var fbo1 = null;
+var r = Math.PI / 2;
+
+var t = 0;
+
+var lines = [];
+
+function draw (api) {
+  api3d.drawBox(320, 240, [-250, 0, -500], [[0,  r, 0]], fbo1.texture);
+  api3d.drawBox(320, 240, [ 250, 0, -500], [[0, -r, 0]], fbo1.texture);
+  
+  var z = 160 * Math.sin(t / 1000);
+
+  api.color = [ 0.0, 1.0, 0.0, 1.0 ];
+  api.line3d([   0,  300, -500], [   0,  300, -1500], 90);
+  api.line3d([-200,  300, -500], [-200,  300, -1500], 90);
+  api.line3d([ 200,  300, -500], [ 200,  300, -1500], 90);
+  api.line3d([-400,  300, -500], [-400,  300, -1500], 90);
+  api.line3d([ 400,  300, -500], [ 400,  300, -1500], 90);
+  api.color = [ 1.0, 0.0, 1.0, 1.0 ];
+  api.line3d([   0, -300, -500], [   0, -300, -1500], 90);
+  api.line3d([-200, -300, -500], [-200, -300, -1500], 90);
+  api.line3d([ 200, -300, -500], [ 200, -300, -1500], 90);
+  api.line3d([-400, -300, -500], [-400, -300, -1500], 90);
+  api.line3d([ 400, -300, -500], [ 400, -300, -1500], 90);
+
+  api.color = [ 0.0, 0.0, 1.0, 1.0 ];
+  api.line3d([-250, -120, -500 + z], [-250, 120, -500 + z], 90);
+  api.line3d([ 250, -120, -500 + z], [ 250, 120, -500 + z], 90);
+  
+  for (var i = 1; i < lines.length; ++i) {
+    var l1 = lines[i - 1];
+    var l2 = lines[i];
+    l2.x += l2.xv;
+    l2.y += l2.yv;
+    l2.z += l2.zv;
+    api.line3d(
+        [l1.xb + l1.xs * Math.sin(l1.x), l1.ys * Math.sin(l1.y), -500 + z + l1.zs * Math.sin(l1.z)],
+        [l2.xb + l2.xs * Math.sin(l2.x), l2.ys * Math.sin(l2.y), -500 + z + l2.zs * Math.sin(l2.z)],
+        50);
+  }
+}
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  MajVj.loadAllPlugins().then(function () {
+    var vj = new MajVj();
+    var frame = vj.create('frame', 'laser', { draw: draw });
+    api3d = vj.create('frame', 'api3d').beginDraw();
+    var light = vj.create('frame', 'light');
+    var glow = vj.create('effect', 'glow');
+    fbo1 = vj.screen().createFrameBuffer(320, 240);
+    var fbo = vj.screen().createFrameBuffer();
+
+    var n = 16;
+    for (var i = 0; i < n; ++i) {
+      var x = -250 + 500 * i / (n - 1);
+      lines.push({
+        xb: x,
+        x: 0,
+        xs: (i == 0 || i == (n - 1)) ? 0 : Math.random() * 10,
+        xv: Math.random() * 1,
+        y: 0,
+        ys: (i == 0 || i == (n - 1)) ? 0 : Math.random() * 100,
+        yv: Math.random() * 10,
+        z: 0,
+        zs: (i == 0 || i == (n - 1)) ? 0 : Math.random() * 100,
+        zv: Math.random() * 10
+      })
+    }
+
+    vj.run(function (delta) {
+      t += delta;
+      fbo1.bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      light.properties.color = [ 0.008, 0.0, 0.001, 1.0 ];
+      light.properties.coord = [ -0.0, 1.2 ];
+      light.draw(delta);
+      light.properties.coord = [ -0.5, 1.2 ];
+      light.draw(delta);
+      light.properties.coord = [  0.5, 1.2 ];
+      light.draw(delta);
+      fbo.bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      frame.draw(delta);
+      vj.screen().bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      glow.draw(delta, fbo.texture);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      frame.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>
