@@ -21,19 +21,24 @@ MajVj.frame.api3d = function (options) {
 
     this._drawProgram = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    options.drawModeVertexShader ||
                     MajVj.frame.api3d._vDrawShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    options.drawModeFragmentShader ||
                     MajVj.frame.api3d._fDrawShader));
     this._textureProgram = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    options.textureModeVertexShader ||
                     MajVj.frame.api3d._vTextureShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     options.textureModeFragmentShader ||
                     MajVj.frame.api3d._fTextureShader));
     this._pointProgram = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    options.pointModeVertexShader ||
                     MajVj.frame.api3d._vPointShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    options.pointModeFragmentShader ||
                     MajVj.frame.api3d._fPointShader));
 
     this._api = {
@@ -316,9 +321,10 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
     program.setUniformMatrix('uMVMatrix', this._mvMatrixL);
     if (mode != Tma3DScreen.MODE_LINE_TRIANGLES) {
         program.drawElements(
-                mode, o.getIndicesBuffer(this._screen), 0, o.items());
+                mode, o.getIndicesBuffer(this._screen), o.getIndicesOffset(),
+                o.getIndicesLength());
     } else {
-        for (var i = 0; i < o.items(); i += 3) {
+        for (var i = o.getIndicesOffset(); i < o.getIndicesLength(); i += 3) {
             program.drawElements(
                     Tma3DScreen.MODE_LINE_LOOP,
                     o.getIndicesBuffer(this._screen), i * 2, 3);
@@ -329,9 +335,11 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
         program.setUniformMatrix('uMVMatrix', this._mvMatrixR);
         if (mode != Tma3DScreen.MODE_LINE_TRIANGLES) {
             program.drawElements(
-                    mode, o.getIndicesBuffer(this._screen), 0, o.items());
+                    mode, o.getIndicesBuffer(this._screen),
+                    o.getIndicesOffset(), o.getIndicesLength());
         } else {
-            for (var i = 0; i < o.items(); i += 3) {
+            for (var i = o.getIndicesOffset(); i < o.getIndicesLength();
+                    i += 3) {
                 program.drawElements(
                         Tma3DScreen.MODE_LINE_LOOP,
                         o.getIndicesBuffer(this._screen), i * 2, 3);

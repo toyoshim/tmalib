@@ -32,8 +32,8 @@ TmaModelPrimitives.prototype.scale = function (scale) {
 };
 
 /**
- * Gets number of vertices.
- * @return number of vertices.
+ * Gets number of total vertices.
+ * @return number of total vertices.
  */
 TmaModelPrimitives.prototype.items = function () {
     return this._indices.length;
@@ -61,6 +61,22 @@ TmaModelPrimitives.prototype.getCoords = function () {
  */
 TmaModelPrimitives.prototype.getIndices = function () {
     return this._indices;
+};
+
+/**
+ * Gets model's active vertex indices offset.
+ * @return model's vertex indices offset (in bytes)
+ */
+TmaModelPrimitives.prototype.getIndicesOffset = function () {
+    return 0;
+};
+
+/**
+ * Gets model's active vertex indices length.
+ * @return model's vertex indices length (in count)
+ */
+TmaModelPrimitives.prototype.getIndicesLength = function () {
+    return this._indices.length;
 };
 
 /**
