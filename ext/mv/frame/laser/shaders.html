@@ -27,6 +27,32 @@ void main() {
 }
 </script>
 
+<script id='v_line3d' type='x-shader/x-vertex'>
+attribute vec3 aCoord;
+uniform mat4 uPMatrix;
+uniform mat4 uMVMatrix;
+uniform mat4 uMatrix;
+varying vec4 vCoord;
+
+void main() {
+  vec3 coord = vec3(aCoord.y, 0., aCoord.x);
+  gl_Position = uPMatrix * uMVMatrix * uMatrix * vec4(coord, 1.0);
+  vCoord = vec4(aCoord, 0.);
+}
+</script>
+
+<script id='f_line3d' type='x-shader/x-fragment'>
+precision mediump float;
+varying vec4 vCoord;
+uniform vec4 uColor;
+uniform float uWidth;
+
+void main() {
+  float l = exp(3.5 - 7. * distance(vCoord.xy, vCoord.zw) / uWidth * 100.);
+  vec3 baseColor = uColor.rgb + vec3(0.05);
+  gl_FragColor = vec4(baseColor * l, uColor.a);
+}
+</script>
 
 </head>
 </html>

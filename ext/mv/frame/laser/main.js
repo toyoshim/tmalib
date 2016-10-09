@@ -12,7 +12,15 @@ MajVj.frame.laser = function (options) {
     this._zoomMatrix = mat3.create();
     this._draw = options.draw || function (api) {};
 
+    this._api3d = this._mv.create('frame', 'api3d', {
+        drawModeVertexShader: MajVj.frame.laser._vLine3dShader,
+        drawModeFragmentShader: MajVj.frame.laser._fLine3dShader
+    });
+    this._api3d_handle = null;
+
     this.properties = {};
+    this.properties.api3d = this._api3d.properties;
+
     this.onresize(options.aspect);
 
     this._line2dProgram = this._screen.createProgram(
@@ -22,7 +30,7 @@ MajVj.frame.laser = function (options) {
                     MajVj.frame.laser._fLine2dShader));
 
     this._coords = this._screen.createBuffer([
-        // X     Y     Z
+        // X     Y     U     V ( = 0)
         -1.0, -1.0,  0.0,  // 0
         -1.0,  1.0,  0.0,  // 1
          0.0, -1.0,  0.0,  // 2
@@ -45,8 +53,20 @@ MajVj.frame.laser = function (options) {
     this._rightSquareIndicesOffset = 16;
     this._squareIndicesLength = 4;
 
+    this._model = {
+        _main: this,
+        offset: this._leftSquareIndicesOffset,
+        getDrawMode: function() { return Tma3DScreen.MODE_TRIANGLE_STRIP; },
+        getTexture: function() { return null; },
+        getVerticesBuffer: function(screen) { return this._main._coords; },
+        getIndicesBuffer: function(screen) { return this._main._indices; },
+        getIndicesOffset: function() { return this.offset; },
+        getIndicesLength: function() { return this._main._squareIndicesLength; }
+    };
+
     this._api = {
         line2d: this._line2d.bind(this),
+        line3d: this._line3d.bind(this),
         toScreenX: this._toScreenX.bind(this),
         toScreenY: this._toScreenY.bind(this),
         color: [ 0.0, 0.0, 1.0, 1.0 ],
@@ -59,6 +79,8 @@ MajVj.frame.laser = function (options) {
 // Shader programs.
 MajVj.frame.laser._vLine2dShader = null;
 MajVj.frame.laser._fLine2dShader = null;
+MajVj.frame.laser._vLine3dShader = null;
+MajVj.frame.laser._fLine3dShader = null;
 
 /**
  * Loads resources asynchronously.
@@ -70,10 +92,14 @@ MajVj.frame.laser.load = function () {
         var path = 'shaders.html';
         Promise.all([
                 MajVj.loadShader('frame', name, path, 'v_line2d'),
-                MajVj.loadShader('frame', name, path, 'f_line2d')
+                MajVj.loadShader('frame', name, path, 'f_line2d'),
+                MajVj.loadShader('frame', name, path, 'v_line3d'),
+                MajVj.loadShader('frame', name, path, 'f_line3d')
         ]).then(function (results) {
             MajVj.frame.laser._vLine2dShader = results[0];
             MajVj.frame.laser._fLine2dShader = results[1];
+            MajVj.frame.laser._vLine3dShader = results[2];
+            MajVj.frame.laser._fLine3dShader = results[3];
             resolve();
         }, function () { reject('laser.load fails'); });
     });
@@ -96,6 +122,8 @@ MajVj.frame.laser.prototype.onresize = function (aspect) {
         this._zoom[0] = 1 / this._aspect;
     mat3.identity(this._zoomMatrix);
     mat3.scale(this._zoomMatrix, this._zoomMatrix, this._zoom);
+
+    this._api3d.onresize(aspect);
 };
 
 /**
@@ -104,11 +132,13 @@ MajVj.frame.laser.prototype.onresize = function (aspect) {
  */
 MajVj.frame.laser.prototype.draw = function (delta) {
     this._api.delta = delta;
+    this._api3d_handle = this._api3d.beginDraw();
     this._draw(this._api);
+    this._api3d.endDraw();
 };
 
 /**
- * Draws a line to all displays.
+ * Draws a line.
  * @param src source position in [x, y] (0 <= x, y <= 1)
  * @param dst destination position in [x, y] (0 <= x, y <= 1)
  * @param width line width
@@ -157,6 +187,72 @@ MajVj.frame.laser.prototype._line2d = function (src, dst, width) {
                                      this._indices,
                                      this._rightSquareIndicesOffset,
                                      this._squareIndicesLength);
+};
+
+/**
+ * Draws a line to all displays.
+ * @param src source position in [x, y] (0 <= x, y <= 1)
+ * @param dst destination position in [x, y] (0 <= x, y <= 1)
+ * @param width line width
+ */
+MajVj.frame.laser.prototype._line3d = function (src, dst, width) {
+    this._api3d_handle.color = this._api.color;
+    this._api3d_handle.drawModeShader.setUniformVector('uWidth', [width]);
+    var hw = width / 2;
+    var hv = [
+        (dst[0] - src[0]) / 2,
+        (dst[1] - src[1]) / 2,
+        (dst[2] - src[2]) / 2
+    ];
+    var hyz2 = hv[1] * hv[1] + hv[2] * hv[2];
+    var hd = Math.sqrt(hv[0] * hv[0] + hyz2);
+    var hyz = Math.sqrt(hyz2);
+    var rotate = [
+        -Math.atan2(hv[1], hv[2]),
+        Math.atan2(hv[0], hyz),
+        0
+    ];
+
+    this._model.offset = this._centerSquareIndicesOffset;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hd,
+            [ src[0] + hv[0], src[1] + hv[1], src[2] + hv[2] ],
+            [rotate]);
+    rotate[2] = Math.PI / 2;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hd,
+            [ src[0] + hv[0], src[1] + hv[1], src[2] + hv[2] ],
+            [rotate]);
+
+    this._model.offset = this._leftSquareIndicesOffset;
+    rotate[2] = 0;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hw,
+            [ src[0], src[1], src[2] ],
+            [rotate]);
+    rotate[2] = Math.PI / 2;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hw,
+            [ src[0], src[1], src[2] ],
+            [rotate]);
+
+    this._model.offset = this._rightSquareIndicesOffset;
+    rotate[2] = 0;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hw,
+            [ dst[0], dst[1], dst[2] ],
+            [rotate]);
+    rotate[2] = Math.PI / 2;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hw,
+            [ dst[0], dst[1], dst[2] ],
+            [rotate]);
 };
 
 /**

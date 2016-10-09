@@ -1,0 +1,50 @@
+<html>
+<head><title>Laser line test</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+var api3d = null;
+
+function draw (api) {
+  var w = 100;
+  api.color = [ 0.0, 0.0, 1.0, 1.0 ];
+  api.line3d([   0,    0, -1000], [ 500,    0, -1000], w);
+  api.line3d([   0,    0, -1000], [ 500,  500, -1000], w);
+  api.line3d([-500,    0, -1000], [ 500,    0, -1000], w);
+  api.line3d([-500, -500, -1000], [ 500, -500, -1000], w);
+  api.line3d([   0, -500, -1000], [   0, -500, -1500], w);
+  api.line3d([   0,    0, -1000], [-500,  500, -1500], w);
+  api3d.color = [ 1.0, 0.0, 0.0, 1.0 ];
+  var d = 0;
+  api3d.drawBox(10, 10, [   0,    0, -1000 + d]);
+  api3d.drawBox(10, 10, [ 500,    0, -1000 + d]);
+  api3d.drawBox(10, 10, [ 500,  500, -1000 + d]);
+  api3d.drawBox(10, 10, [-500,    0, -1000 + d]);
+  api3d.drawBox(10, 10, [ 500, -500, -1000 + d]);
+  api3d.drawBox(10, 10, [-500, -500, -1000 + d]);
+  api3d.drawBox(10, 10, [   0, -500, -1000 + d]);
+  api3d.drawBox(10, 10, [   0, -500, -1500 + d]);
+  api3d.drawBox(10, 10, [-500,  500, -1500 + d]);
+}
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  Promise.all([MajVj.loadPlugin('frame', 'api3d'),
+               MajVj.loadPlugin('frame', 'laser')]).then(function () {
+    var vj = new MajVj();
+    
+    api3d = vj.create('frame', 'api3d').beginDraw();
+    var frame = vj.create('frame', 'laser', { draw: draw });
+    vj.run(function (delta) {
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      frame.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      frame.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>
