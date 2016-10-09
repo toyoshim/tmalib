@@ -81,17 +81,39 @@ MajVj.misc.camera.prototype.moveBy = function (duration, destination) {
  * @param destination absolute destination camera rotation
  */
 MajVj.misc.camera.prototype.rotateTo = function (duration, destination) {
+    var dst = [
+        destination[0] % this._PIx2,
+        destination[1] % this._PIx2,
+        destination[2] % this._PIx2
+    ];
     if (duration == 0) {
-        this._r[0] = destination[0];
-        this._r[1] = destination[1];
-        this._r[2] = destination[2];
+        this._r[0] = dst[0];
+        this._r[1] = dst[1];
+        this._r[2] = dst[2];
+    }
+    for (var i = 0; i < 3; ++i) {
+        var diff = dst[i] - this._r[i];
+        if (diff > this._PI)
+            dst[i] -= this._PIx2;
+        else if (diff < -this._PI)
+            dst[i] += this._PIx2;
+        if (i == 0) {
+            console.log(diff);
+            if (dst[0] >= this._PI) {
+                dst[0] -= this._PI;
+                dst[1] = (this._PI - dst[1]) % this._PIx2;
+            } else if (dst[0] <= -this._PI) {
+                dst[0] += this._PI;
+                dst[1] = (-this._PI - dst[1]) % this._PIx2;
+            }
+        }
     }
     this._rsrc[0] = this._r[0];
     this._rsrc[1] = this._r[1];
     this._rsrc[2] = this._r[2];
-    this._rdst[0] = destination[0];
-    this._rdst[1] = destination[1];
-    this._rdst[2] = destination[2];
+    this._rdst[0] = dst[0];
+    this._rdst[1] = dst[1];
+    this._rdst[2] = dst[2];
     this._rv[0] = this._rdst[0] - this._rsrc[0];
     this._rv[1] = this._rdst[1] - this._rsrc[1];
     this._rv[2] = this._rdst[2] - this._rsrc[2];
@@ -154,7 +176,7 @@ MajVj.misc.camera.prototype.update = function (delta) {
             this._p[1] = this._pdst[1];
             this._p[2] = this._pdst[2];
         } else {
-            var tl = TmaTimeline.convert(this._mode, t);
+            var tl = TmaTimeline.convert(this._pmode, t);
             this._p = [
                 this._psrc[0] + this._pv[0] * tl,
                 this._psrc[1] + this._pv[1] * tl,
@@ -167,15 +189,15 @@ MajVj.misc.camera.prototype.update = function (delta) {
         var t = this._rtime / this._rduration;
         if (this._rtime > this._rduration) {
             this._rduration = 0;
-            this._r[0] = this._rdst[0];
-            this._r[1] = this._rdst[1];
-            this._r[2] = this._rdst[2];
+            this._r[0] = this._rdst[0] % this._PIx2;
+            this._r[1] = this._rdst[1] % this._PIx2;
+            this._r[2] = this._rdst[2] % this._PIx2;
         } else {
-            var tl = TmaTimeline.convert(this._mode, t);
+            var tl = TmaTimeline.convert(this._rmode, t);
             this._r = [
-                this._rsrc[0] + this._rv[0] * tl,
-                this._rsrc[1] + this._rv[1] * tl,
-                this._rsrc[2] + this._rv[2] * tl
+                (this._rsrc[0] + this._rv[0] * tl) % this._PIx2,
+                (this._rsrc[1] + this._rv[1] * tl) % this._PIx2,
+                (this._rsrc[2] + this._rv[2] * tl) % this._PIx2
             ];
         }
     }
