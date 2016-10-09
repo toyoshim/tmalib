@@ -2,7 +2,7 @@
 <head>
 
 <script id='v_line2d' type='x-shader/x-vertex'>
-attribute vec4 aCoord;
+attribute vec3 aCoord;
 varying vec4 vCoord;
 uniform mat3 uMatrix;
 uniform mat3 uZoomMatrix;
@@ -10,7 +10,7 @@ uniform mat3 uZoomMatrix;
 void main() {
   vec3 position = uZoomMatrix * uMatrix * vec3(aCoord.xy, 1.0);
   gl_Position = vec4(position.xy, vec2(1.));
-  vCoord = aCoord;
+  vCoord = vec4(aCoord, 0.);
 }
 </script>
 
