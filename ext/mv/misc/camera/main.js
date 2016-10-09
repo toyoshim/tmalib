@@ -99,7 +99,7 @@ MajVj.misc.camera.prototype.rotateTo = function (duration, destination) {
  * @param destination relative destination camera rotation
  */
 MajVj.misc.camera.prototype.rotateBy = function (duration, destination) {
-    this.moveTo(duration, [
+    this.rotateTo(duration, [
         this._r[0] + destination[0],
         this._r[1] + destination[1],
         this._r[2] + destination[2]
