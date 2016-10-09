@@ -1,0 +1,45 @@
+<html>
+<head><title>Laser 3D line test</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+var t = 0;
+var api3d = null;
+var sphere = null;
+function draw (api) {
+  api3d.color = [0.1, 0.0, 0.0, 1.0];
+  api3d.draw
+  t += 0.01;
+  api.color = [0.0, 0.0, 1.0, 1.0];
+  var n = 200;
+  var t1 = t * 3;
+  var t2 = t * 7;
+  api3d.drawPrimitive(sphere, n, n, n, [0, 0, -1000]);
+  api.line3d([0, 0, -1000], [
+      Math.sin(t1) * Math.cos(t2) * n,
+      Math.sin(t1) * Math.sin(t2) * n,
+      Math.cos(t2) * n + -1000], 100);
+}
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  sphere = TmaModelPrimitives.createSphere(
+      5, TmaModelPrimitives.SPHERE_METHOD_EVEN);
+  Promise.all([MajVj.loadPlugin('frame', 'api3d'),
+               MajVj.loadPlugin('frame', 'laser')]).then(function () {
+    var vj = new MajVj();
+    var frame = vj.create('frame', 'laser', { draw: draw });
+    api3d = vj.create('frame', 'api3d').beginDraw();
+    vj.run(function (delta) {
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      frame.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      frame.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>
