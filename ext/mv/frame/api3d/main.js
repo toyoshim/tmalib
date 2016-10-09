@@ -56,7 +56,9 @@ MajVj.frame.api3d = function (options) {
       gl: this._screen.gl,
       screen: this._screen,
       setAlphaMode: this._screen.setAlphaMode,
+      drawModeShader: this._drawProgram,
       textureModeShader: this._textureProgram,
+      pointModeShader: this._pointProgram,
       vr: false,
       properties: this.properties
     };
