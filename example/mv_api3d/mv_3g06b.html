@@ -1,0 +1,81 @@
+<html>
+<head><title>Cube Matrix</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj();
+  MajVj.loadAllPlugins().then(function () {
+    var api3d = vj.create('frame', 'api3d', { draw: draw });
+    api3d.properties.vr = true;
+    api3d.properties.parallax_overlap = 1.0;
+    api3d.properties.parallax_distance = 3.0;
+    var glow = vj.create('effect', 'glow');
+    var camera = vj.create('misc', 'camera', { mode: 'ease-in-out' });
+    var fbo = vj.screen().createFrameBuffer();
+    var t1 = 0;
+    var t2 = 0;
+    var tv1 = 3.33;
+    var tv2 = 8.19;
+    var r = 20;
+    var u = 20;
+    function draw(api) {
+      api.color = [0.3, 0.3, 1.0, 1.0];
+      for (var i = 0; i < 4; ++i) {
+        var s = [
+            r * Math.sin(t1) * Math.cos(t2),
+            r * Math.sin(t1) * Math.sin(t2),
+            r * Math.cos(t1),
+        ];
+        t1 += tv1;
+        t2 += tv2;
+        var e = [
+            r * Math.sin(t1) * Math.cos(t2),
+            r * Math.sin(t1) * Math.sin(t2),
+            r * Math.cos(t1),
+        ];
+        for (var x = -2; x < 2; ++x) {
+          for (var y = -2; y < 2; ++y) {
+            for (var z = -2; z < 2; ++z) {
+              api.drawLine(
+                [ s[0] + x * u, s[1] + y * u, s[2] + z * u],
+                [ e[0] + x * u, e[1] + y * u, e[2] + z * u]);
+            }
+          }
+        }
+      }
+    }
+    setInterval(() => {
+      var n = 150;
+      var t1 = Math.random() * Math.PI * 2;
+      var t2 = Math.random() * Math.PI * 2;
+      var p = [
+        n * Math.sin(t1) * Math.cos(t2),
+        n * Math.sin(t1) * Math.sin(t2),
+        n * Math.cos(t1)
+      ];
+      camera.moveTo(300, p);
+      camera.lookTo(300, [ -p[0], -p[1], -p[2] ]);
+    }, 500);
+    vj.run(function (delta) {
+      camera.update(delta);
+      api3d.properties.position = camera.position();
+      api3d.properties.orientation = camera.orientation();
+      fbo.bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      api3d.draw(delta);
+      vj.screen().bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      glow.draw(delta, fbo.texture);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      api3d.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>
