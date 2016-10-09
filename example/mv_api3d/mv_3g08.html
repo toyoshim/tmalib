@@ -1,0 +1,53 @@
+<html>
+<head><title>Camera Check between Cube and Line</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var vj = new MajVj();
+  MajVj.loadAllPlugins().then(function () {
+    var api3d = vj.create('frame', 'api3d', { draw: draw });
+    api3d.properties.vr = true;
+    api3d.properties.parallax_overlap = 1.0;
+    api3d.properties.parallax_distance = 1.0;
+    var noise = vj.create('misc', 'perlin');
+    var camera = vj.create('misc', 'camera', { mode: 'ease-in-out' });
+    function draw(api) {
+      var s = 10;
+      var m = s * 1.2;
+      var z = -100;
+      api.drawLine([-m,  m, z], [m,  m, z]);
+      api.drawLine([-m, -m, z], [m, -m, z]);
+      api.drawCube(s, s, s, [0, 0, z]);
+    }
+    setInterval(() => {
+      var n = 100;
+      var p = [
+          Math.random() * n - n / 2,
+          Math.random() * n - n / 2,
+          Math.random() * n - n / 2
+      ];
+      camera.moveTo(150, p);
+      camera.lookTo(300, [ -p[0], -p[1], -p[2] - 100 ]);
+    }, 500);
+    vj.run(function (delta) {
+      camera.update(delta);
+      api3d.properties.position = camera.position();
+      api3d.properties.orientation = camera.orientation();
+      vj.screen().setAlphaMode(false);
+      vj.screen().fillColor(0, 0, 0, 1);
+      vj.screen().setAlphaMode(
+          true, vj.screen().gl.DST_ALPHA, vj.screen().gl.ONE);
+      api3d.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      api3d.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>
