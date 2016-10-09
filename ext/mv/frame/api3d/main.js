@@ -244,14 +244,16 @@ MajVj.frame.api3d.prototype._drawCube = function (w, h, d, p, r) {
  */
 MajVj.frame.api3d.prototype._drawLine = function (src, dst) {
     var buffer = this._buffer2.buffer();
-    buffer[0] = src[0]; buffer[1] = src[1]; buffer[2] = src[2];
-    buffer[3] = dst[0]; buffer[4] = dst[1]; buffer[5] = dst[2];
+    buffer[0] = src[0] - this.properties.position[0];
+    buffer[1] = src[1] - this.properties.position[1];
+    buffer[2] = src[2] - this.properties.position[2];
+    buffer[3] = dst[0] - this.properties.position[0];
+    buffer[4] = dst[1] - this.properties.position[1];
+    buffer[5] = dst[2] - this.properties.position[2];
     this._buffer2.update();
     this._drawProgram.setAttributeArray('aCoord', this._buffer2, 0, 3, 0);
     this._drawProgram.setUniformVector('uColor', this._api.color);
     this._drawProgram.setUniformMatrix('uMatrix', this._iMatrix);
-
-    // TODO: Camera position is not applied here.
 
     this._drawProgram.setUniformMatrix('uPMatrix', this._pMatrix);
     this._drawProgram.setUniformMatrix('uMVMatrix', this._mvMatrixL);
