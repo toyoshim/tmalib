@@ -12,7 +12,10 @@ MajVj.frame.api3d = function (options) {
         parallax_overlap: 0.0,
         parallax_distance: 100,
         orientation: [ 0.0, 0.0, -90.0 ],
-        position: [ 0.0, 0.0, 0.0 ]
+        position: [ 0.0, 0.0, 0.0 ],
+        rotation: [ 0.0, 0.0, 0.0 ],
+        use_orientation: true,
+        use_rotation: false
     };
     this.onresize(options.aspect);
 
@@ -127,11 +130,19 @@ MajVj.frame.api3d.prototype.draw = function (delta) {
 
     var aspect = this._aspect;
 
-    // TODO: Something is wrong on looking at sides.
-    var orientation = this.properties.orientation;
-    var rx = (90 + orientation[2]) / 360 * Math.PI * 2;
-    var ry = -orientation[0] / 360 * Math.PI * 2;
-    var rz = orientation[1] / 360 * Math.PI * 2;
+    var rx, ry, rz;
+    if (this.properties.use_rotation) {
+        var rotation = this.properties.rotation;
+        rx = rotation[0];
+        ry = rotation[1];
+        rz = rotation[2];
+    } else if (this.properties.use_orientation) {
+        // TODO: Something is wrong on looking at sides.
+        var orientation = this.properties.orientation;
+        rx = (90 + orientation[2]) / 360 * Math.PI * 2;
+        ry = -orientation[0] / 360 * Math.PI * 2;
+        rz = orientation[1] / 360 * Math.PI * 2;
+    }
     mat4.identity(this._mvMatrixL);
     mat4.rotateZ(this._mvMatrixL, this._mvMatrixL, rz);
     mat4.rotateY(this._mvMatrixL, this._mvMatrixL, ry);
@@ -140,6 +151,7 @@ MajVj.frame.api3d.prototype.draw = function (delta) {
     this._api.vr = this.properties.vr;
 
     if (this._api.vr) {
+        // TODO: Parallax calculation is also wrong.
         aspect *= (1 + this.properties.parallax_overlap) / 2;
         var distance = this.properties.parallax_distance;
         mat4.translate(this._mvMatrixR, this._mvMatrixL, [-distance, 0, 0]);
