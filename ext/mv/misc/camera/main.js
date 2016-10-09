@@ -98,7 +98,6 @@ MajVj.misc.camera.prototype.rotateTo = function (duration, destination) {
         else if (diff < -this._PI)
             dst[i] += this._PIx2;
         if (i == 0) {
-            console.log(diff);
             if (dst[0] >= this._PI) {
                 dst[0] -= this._PI;
                 dst[1] = (this._PI - dst[1]) % this._PIx2;
