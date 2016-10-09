@@ -185,7 +185,7 @@ MajVj.frame.api3d.prototype._viewport = function (view) {
 };
 
 /**
- * Clears all displays.
+ * Clears the display.
  * @param flag flag, e.g., gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
  */
 MajVj.frame.api3d.prototype._clear = function (flag) {
@@ -200,7 +200,7 @@ MajVj.frame.api3d.prototype._clear = function (flag) {
 };
 
 /**
- * Draws a box to all displays.
+ * Draws a box.
  * @param w width
  * @param h height
  * @param p position in [x, y, z]
@@ -213,7 +213,7 @@ MajVj.frame.api3d.prototype._drawBox = function (w, h, p, r, texture) {
 };
 
 /**
- * Draws a character to all displays.
+ * Draws a character.
  * @param font a font set that is created by createFont API
  * @param c a character to show
  * @param w width scale (actual size depends on font size)
@@ -231,7 +231,7 @@ MajVj.frame.api3d.prototype._drawCharacter =
 };
 
 /**
- * Draws a cube to all displays.
+ * Draws a cube.
  * @param w width
  * @param h height
  * @param d depth
@@ -243,7 +243,7 @@ MajVj.frame.api3d.prototype._drawCube = function (w, h, d, p, r) {
 };
 
 /**
- * Draws a line to all displays.
+ * Draws a line.
  * @param src source position in [x, y, z]
  * @param dst destination position in [x, y, z]
  */
@@ -273,7 +273,7 @@ MajVj.frame.api3d.prototype._drawLine = function (src, dst) {
 };
 
 /**
- * Draws a primitive to all displays.
+ * Draws a primitive.
  * @param o primitive
  * @param w width
  * @param h height
