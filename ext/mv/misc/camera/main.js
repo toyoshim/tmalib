@@ -20,6 +20,12 @@ MajVj.misc.camera = function (options) {
     this._rtime = 0;
     this._rduration = 0;
     this._rmode = options.mode || 'ease-in-out';
+
+    this._PI = Math.PI;
+    this._PIx2 = Math.PI * 2;
+    this._atan2 = Math.atan2;
+    this._sqrt = Math.sqrt;
+    this._toDegree = 180 / Math.PI;
 };
 
 /**
@@ -113,10 +119,10 @@ MajVj.misc.camera.prototype.rotateBy = function (duration, destination) {
  */
 MajVj.misc.camera.prototype.lookTo = function (duration, destination) {
     var d = destination;
-    var yz = Math.sqrt(d[1] * d[1] + d[2] * d[2]);
+    var yz = this._sqrt(d[1] * d[1] + d[2] * d[2]);
     this.rotateTo(duration, [
-        -Math.atan2(d[1], -d[2]),
-        Math.atan2(d[0], yz),
+        -this._atan2(d[1], -d[2]),
+        this._atan2(d[0], yz),
         0
     ]);
 };
@@ -197,8 +203,8 @@ MajVj.misc.camera.prototype.rotation = function () {
  */
 MajVj.misc.camera.prototype.orientation = function () {
     return [
-        -this._r[1] / Math.PI * 180,
-        this._r[2] / Math.PI * 180,
-        this._r[0] / Math.PI * 180 - 90
+        -this._r[1] * this._toDegree,
+        this._r[2] * this._toDegree,
+        this._r[0] * this._toDegree - 90
     ];
 };
