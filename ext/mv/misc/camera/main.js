@@ -108,7 +108,6 @@ MajVj.misc.camera.prototype.rotateBy = function (duration, destination) {
 
 /**
  * Looks to the destination.
- * TODO: This is not correct, but somehow useful to show in a cool way.
  * @param duration time duration to rotate to the destination (in msec)
  * @param destination absolute direction camera faces to
  */
@@ -117,8 +116,8 @@ MajVj.misc.camera.prototype.lookTo = function (duration, destination) {
     var yz = Math.sqrt(d[1] * d[1] + d[2] * d[2]);
     this.rotateTo(duration, [
         -Math.atan2(d[1], -d[2]),
-        0,
-        -Math.atan2(yz, d[0])
+        Math.atan2(d[0], yz),
+        0
     ]);
 };
 
