@@ -147,7 +147,7 @@ MajVj.prototype.fps = function () {
     var stabilize = function (time) {
         if (this._timestamp) {
             var delta = time - this._timestamp;
-            if (delta < 100)
+            if (0 <= delta && delta < 100)
                 return loop(time);
         }
         this._timestamp = time;
@@ -219,6 +219,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('effect', 'glow'),
         MajVj.loadPlugin('effect', 'led'),
         MajVj.loadPlugin('effect', 'mask'),
+        MajVj.loadPlugin('effect', 'mirror'),
         MajVj.loadPlugin('effect', 'nicofarre'),
         MajVj.loadPlugin('effect', 'rgb'),
         MajVj.loadPlugin('effect', 'rollpanel'),

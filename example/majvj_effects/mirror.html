@@ -1,0 +1,46 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	var name = 'rolline';
+//  var name = 'wired';
+	Promise.all([MajVj.loadPlugin('frame', name),
+				 MajVj.loadPlugin('effect', 'mirror'),
+				 MajVj.loadPlugin('effect', 'glow')]).then(function () {
+		var vj = new MajVj();
+		var frame = vj.create('frame', name);
+		var effect = vj.create('effect', 'mirror', { division: 4 });
+		var glow = vj.create('effect', 'glow');
+		var fbo1 = vj.screen().createFrameBuffer();
+		var fbo2 = vj.screen().createFrameBuffer();
+		window.fx = effect;  // for debug.
+		setInterval(() => {
+			var d = (Math.random() * 32)|0;
+			effect.properties.division = (d + 2) * 2;
+		}, 500);
+		vj.run(function (delta) {
+			fbo1.bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			frame.draw(delta);
+			fbo2.bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			effect.draw(delta, fbo1.texture);
+			vj.screen().bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			glow.draw(delta, fbo2.texture);
+			vj.screen().flush();
+		});
+		window.onresize = function () {
+			var aspect = vj.onresize();
+			frame.onresize(aspect);
+			effect.onresize(aspect);
+			fbo1 = vj.screen().createFrameBuffer();
+			fbo2 = vj.screen().createFrameBuffer();
+		};
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
