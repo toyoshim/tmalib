@@ -18,10 +18,17 @@ tma.onload = function () {
       vertexCount: 100000,
       mode: Tma3DScreen.MODE_POINTS
     });
+    var effect = vj.create('effect', 'noise');
+    effect.properties.scanline = false;
+    var fbo = vj.screen().createFrameBuffer();
     vj.run(delta => {
       sound.getByteFrequencyData(vertexshaderart.properties.sound);
       sound.getFloatFrequencyData(vertexshaderart.properties.floatSound);
+      fbo.bind();
       vertexshaderart.draw(delta);
+      vj.screen().bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      effect.draw(delta, fbo.texture);
     });
   }, function (e) { console.log('plugin load error: ' + e); });
 };

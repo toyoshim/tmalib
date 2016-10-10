@@ -1,0 +1,32 @@
+<html>
+<head>
+
+<script id='vertex' type='x-shader/x-vertex'>
+precision mediump float;
+attribute vec2 aCoord;
+varying vec2 vCoord;
+
+void main() {
+    gl_Position = vec4(aCoord, 0., 1.);
+    vCoord = (aCoord + vec2(1.)) / 2.;
+}
+</script>
+
+<script id='fragment' type='x-shader/x-fragment'>
+precision mediump float;
+uniform sampler2D uTexture;
+uniform sampler2D uLineTexture;
+varying vec2 vCoord;
+
+void main() {
+    vec4 lineMask = texture2D(uLineTexture, vec2(0, vCoord.y));
+    vec2 coord = vec2(vCoord.x - lineMask.a, vCoord.y);
+    vec4 textureColor = texture2D(uTexture, coord);
+    vec4 color = textureColor * lineMask;
+    vec3 noise = vec3(lineMask.a) * lineMask.rgb * 2.;
+    gl_FragColor = vec4(color.rgb + noise, 1.);
+}
+</script>
+
+</head>
+</html>

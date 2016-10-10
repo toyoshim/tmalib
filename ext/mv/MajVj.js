@@ -221,6 +221,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('effect', 'mask'),
         MajVj.loadPlugin('effect', 'mirror'),
         MajVj.loadPlugin('effect', 'nicofarre'),
+        MajVj.loadPlugin('effect', 'noise'),
         MajVj.loadPlugin('effect', 'rgb'),
         MajVj.loadPlugin('effect', 'rollpanel'),
         MajVj.loadPlugin('effect', 'tuning'),
