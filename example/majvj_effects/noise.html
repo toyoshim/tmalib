@@ -7,7 +7,7 @@ tma.onload = function () {
 	MajVj.loadAllPlugins().then(function () {
 		var vj = new MajVj();
 		var fbo = vj.screen().createFrameBuffer();
-		var frame = vj.create('frame', 'rolline');
+		var frame = vj.create('frame', 'ab2');
 		var effect = vj.create('effect', 'noise');
 		window.onresize = e => {
 			var ratio = vj.onresize();
@@ -20,6 +20,14 @@ tma.onload = function () {
 			frame.draw(delta);
 			vj.screen().bind();
 			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			if (Math.random() < 0.4) {
+				var n = 0;
+				if (Math.random() < 0.1)
+					n = Math.random() * 0.1;
+				effect.properties.color_shift[0] = -n;
+				effect.properties.color_shift[2] =  n;
+				effect.properties.raster_level = 0.3 + n * 10;
+			}
 			effect.draw(delta, fbo.texture);
 			vj.screen().flush();
 		});

@@ -8,7 +8,8 @@ MajVj.effect.noise = function (options) {
     this._mv = options.mv;
     this._width = options.width;
     this._height = options.height;
-    this._properties = {
+    this.properties = {
+        update: true,
         scanline: true,
         scanline_frequency: this._height / 4,
         scanline_velocity: 0.5,
@@ -18,18 +19,10 @@ MajVj.effect.noise = function (options) {
         analog_color_distribution: [ 0.5, 0.7, 0.3 ],
         raster: true,
         raster_velocity: 7,
-    };
-    this.properties = {
-        scanline: this._properties.scanline,
-        scanline_frequency: this._properties.scanline_frequency,
-        scanline_velocity: this._properties.scanline_velocity,
-        analog: this._properties.analog,
-        analog_frequency: this._properties.analog_frequency,
-        analog_speed: this._properties.analog_speed,
-        analog_color_distribution: this._properties.analog_color_distribution,
-        raster: this._properties.raster,
-        raster_velocity: this._properties.raster_velocity
-        
+        raster_speed: 0.005,
+        raster_level: 0.6,
+        color_shift: [ -0.005, 0.0, 0.005 ],
+        noise_level: [ 0.15, 0.01 ]
     };
 
     this._noise = this._mv.create('misc', 'perlin');
@@ -47,6 +40,17 @@ MajVj.effect.noise = function (options) {
     this._lineTexture = this._screen.createTexture(
             this._lineImage, false, Tma3DScreen.FILTER_LINEAR);
 
+    this._noiseImage = this._screen.createImage(this._width, this._height);
+    for (var y = 0; y < this._height; ++y) {
+        for (var x = 0; x < this._width; ++x) {
+            var white = ((Math.random() * 256)|0) % 256;
+            var parlin1 = (this._noise.noise(x / 3, y / 3, 0.3) + 1) * 127;
+            var parlin2 = (this._noise.noise(x / 3, y / 3, 0.6) + 1) * 127;
+            this._noiseImage.setPixel(x, y, white, parlin1, parlin2, 255);
+        }
+    }
+    this._noiseTexture = this._screen.createTexture(
+            this._noiseImage, false, Tma3DScreen.FILTER_NEAREST);
 };
 
 // Shader programs.
@@ -84,16 +88,20 @@ MajVj.effect.noise.prototype.onresize = function (aspect) {
 MajVj.effect.noise.prototype.draw = function (delta, texture) {
     this._delta += delta;
 
-    if (this.properties.scanline != this._properties.scanline ||
-            this.properties.scanline_frequency !=
-                    this._properties.scanline_frequency ||
-            this.properties.analog) {
+    if (this.properties.update) {
         this._updateLineImage();
         this._lineTexture.update(this._lineImage);
     }
+
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setTexture('uTexture', texture);
     this._program.setTexture('uLineTexture', this._lineTexture);
+    this._program.setTexture('uNoiseTexture', this._noiseTexture);
+    this._program.setUniformVector('uColorShift', this.properties.color_shift);
+    this._program.setUniformVector('uNoiseShift',
+                                   [Math.random(), Math.random()]);
+    this._program.setUniformVector('uNoiseLevel', this.properties.noise_level);
+    this._program.setUniformVector('uTime', [this._delta / 10]);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
 
@@ -109,7 +117,8 @@ MajVj.effect.noise.prototype._updateLineImage = function () {
     var analogZ = this.properties.analog_color_distribution;
     var rasterEnabled = this.properties.raster;
     var rasterVelocity = this.properties.raster_velocity;
-    var rasterTime = this._delta * 0.005;
+    var rasterTime = this._delta * this.properties.raster_speed;
+    var rasterLevel = 1.0 - this.properties.raster_level;
     var sin = Math.sin;
     for (var y = 0; y < this._height; ++y) {
         var fy = y / (this._height - 1);
@@ -138,7 +147,8 @@ MajVj.effect.noise.prototype._updateLineImage = function () {
             var ry2 = fy * 32;
             var n1 = this._noise.noise(ry1, rasterTime, 2.27);
             var n2 = this._noise.noise(ry2, rasterTime, 6.23);
-            a = (((n2 > 0.6) ? (1 + n1) : 0) + (1 + n2) * 0.1) * rasterVelocity;
+            a = (((n2 > rasterLevel) ? (1 + n1) : 0) + (1 + n2) * 0.1) *
+                    rasterVelocity;
         }
         this._lineImage.setPixel(0, y, r|0, g|0, b|0, a|0);
     }
