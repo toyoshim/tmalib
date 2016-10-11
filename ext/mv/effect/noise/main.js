@@ -22,7 +22,9 @@ MajVj.effect.noise = function (options) {
         raster_speed: 0.005,
         raster_level: 0.6,
         color_shift: [ -0.005, 0.0, 0.005 ],
-        noise_level: [ 0.15, 0.01 ]
+        noise_level: [ 0.15, 0.01 ],
+        slitscan: true,
+        slitscan_size: 4
     };
 
     this._noise = this._mv.create('misc', 'perlin');
@@ -99,9 +101,12 @@ MajVj.effect.noise.prototype.draw = function (delta, texture) {
     this._program.setTexture('uNoiseTexture', this._noiseTexture);
     this._program.setUniformVector('uColorShift', this.properties.color_shift);
     this._program.setUniformVector('uNoiseShift',
-                                   [Math.random(), Math.random()]);
+                                   [ Math.random(), Math.random() ]);
     this._program.setUniformVector('uNoiseLevel', this.properties.noise_level);
-    this._program.setUniformVector('uTime', [this._delta / 10]);
+    this._program.setUniformVector(
+            'uSlitscanResolution',
+            [ this._width / this.properties.slitscan_size ]);
+    this._program.setUniformVector('uTime', [ this._delta / 10 ]);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
 

@@ -7,7 +7,9 @@ tma.onload = function () {
 	MajVj.loadAllPlugins().then(function () {
 		var vj = new MajVj();
 		var fbo = vj.screen().createFrameBuffer();
-		var frame = vj.create('frame', 'ab2');
+//		var frame = vj.create('frame', 'ab2');
+//		var frame = vj.create('frame', 'sandbox', { id: '18922.0' });
+		var frame = vj.create('frame', 'sandbox', { id: '14373.1' });
 		var effect = vj.create('effect', 'noise');
 		window.onresize = e => {
 			var ratio = vj.onresize();
@@ -26,7 +28,14 @@ tma.onload = function () {
 					n = Math.random() * 0.1;
 				effect.properties.color_shift[0] = -n;
 				effect.properties.color_shift[2] =  n;
+				effect.properties.noise_level[0] = 0.1 + n * 3;
 				effect.properties.raster_level = 0.3 + n * 10;
+			}
+			if (Math.random() < 0.2) {
+				var n = 1;
+				if (Math.random() < 0.2)
+					n = Math.random() * 64;
+				effect.properties.slitscan_size = n;
 			}
 			effect.draw(delta, fbo.texture);
 			vj.screen().flush();

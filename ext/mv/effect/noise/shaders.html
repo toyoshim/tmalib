@@ -20,12 +20,14 @@ uniform sampler2D uNoiseTexture;
 uniform vec3 uColorShift;
 uniform vec2 uNoiseShift;
 uniform vec2 uNoiseLevel;
+uniform float uSlitscanResolution;
 uniform float uTime;
 varying vec2 vCoord;
 
 void main() {
     vec4 lineMask = texture2D(uLineTexture, vec2(0, vCoord.y));
-    vec2 coord = vec2(vCoord.x - lineMask.a, vCoord.y);
+    float x = floor((vCoord.x - lineMask.a) * uSlitscanResolution);
+    vec2 coord = vec2(x / uSlitscanResolution, vCoord.y);
     float r = texture2D(uTexture, vec2(coord.x + uColorShift.r, coord.y)).r;
     float g = texture2D(uTexture, vec2(coord.x + uColorShift.g, coord.y)).g;
     float b = texture2D(uTexture, vec2(coord.x + uColorShift.b, coord.y)).b;
