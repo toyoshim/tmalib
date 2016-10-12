@@ -28,6 +28,7 @@ MajVj.effect.noise = function (options) {
 
         color: true,
         color_shift: [-0.005, 0.0, 0.005],
+        color_level: [0, 0, 0],
 
         noise: true,
         noise_level: [0.15, 0.01],
@@ -114,6 +115,8 @@ MajVj.effect.noise.prototype.draw = function (delta, texture) {
     this._program.setTexture('uNoiseTexture', this._noiseTexture);
     this._program.setUniformVector('uColorShift',
             this.properties.color ? this.properties.color_shift : [0, 0, 0]);
+    this._program.setUniformVector('uColorLevel',
+            this.properties.color ? this.properties.color_level : [0, 0, 0]);
     this._program.setUniformVector('uNoiseShift',
             this.properties.noise ? [Math.random(), Math.random()] : [0, 0]);
     this._program.setUniformVector('uNoiseLevel',
