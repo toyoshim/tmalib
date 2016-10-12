@@ -16,13 +16,16 @@ void main() {
 precision mediump float;
 uniform sampler2D uTexture;
 uniform float uVolume;
+uniform float uBend;
 varying vec2 vCoord;
 
 const float PI = 3.1415926;
 
 void main() {
     vec2 grad = vCoord * (vec2(1.0, 1.0) - vCoord);
-    vec2 coord = vec2(vCoord.x + cos(PI * vCoord.x) * grad.x * 0.4, vCoord.y + cos(PI * vCoord.y) * grad.y * 0.4);
+    vec2 coord = vec2(
+            vCoord.x + cos(PI * vCoord.x) * grad.x * uBend,
+            vCoord.y + cos(PI * vCoord.y) * grad.y * uBend);
     vec4 color = texture2D(uTexture, coord) * uVolume * grad.x * grad.y * 20.0;
     gl_FragColor = vec4(color.rgb, 1.0);
 }
