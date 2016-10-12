@@ -1,7 +1,6 @@
 /**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - misc plugin - camera -
- * based on Ken camera's reference implementation of improved noise in Java.
  * @param options options (See MajVj.prototype.create)
  */
 MajVj.misc.camera = function (options) {
