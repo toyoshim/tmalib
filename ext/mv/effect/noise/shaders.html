@@ -22,12 +22,15 @@ uniform vec2 uNoiseShift;
 uniform vec2 uNoiseLevel;
 uniform float uSlitscanResolution;
 uniform float uTime;
+uniform vec2 uAdjustRepeat;
+uniform vec2 uAdjustOffset;
 varying vec2 vCoord;
 
 void main() {
+    vec2 adjustCoord = mod(vCoord * uAdjustRepeat + uAdjustOffset, vec2(1.));
     vec4 lineMask = texture2D(uLineTexture, vec2(0, vCoord.y));
-    float x = floor((vCoord.x - lineMask.a) * uSlitscanResolution);
-    vec2 coord = vec2(x / uSlitscanResolution, vCoord.y);
+    float x = floor((adjustCoord.x - lineMask.a) * uSlitscanResolution);
+    vec2 coord = vec2(x / uSlitscanResolution, adjustCoord.y);
     float r = texture2D(uTexture, vec2(coord.x + uColorShift.r, coord.y)).r;
     float g = texture2D(uTexture, vec2(coord.x + uColorShift.g, coord.y)).g;
     float b = texture2D(uTexture, vec2(coord.x + uColorShift.b, coord.y)).b;

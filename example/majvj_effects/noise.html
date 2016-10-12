@@ -11,6 +11,7 @@ tma.onload = function () {
 //		var frame = vj.create('frame', 'sandbox', { id: '18922.0' });
 		var frame = vj.create('frame', 'sandbox', { id: '14373.1' });
 		var effect = vj.create('effect', 'noise');
+		window.fx = effect;  // for debug
 		window.onresize = e => {
 			var ratio = vj.onresize();
 			frame.onresize(ratio);

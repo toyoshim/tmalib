@@ -9,22 +9,35 @@ MajVj.effect.noise = function (options) {
     this._width = options.width;
     this._height = options.height;
     this.properties = {
+        // for scanline, analog, and raster that needs updating a line texture.
         update: true,
+
         scanline: true,
         scanline_frequency: this._height / 4,
         scanline_velocity: 0.5,
+
         analog: true,
         analog_frequency: 8,
         analog_speed: 0.0001,
-        analog_color_distribution: [ 0.5, 0.7, 0.3 ],
+        analog_color_distribution: [0.5, 0.7, 0.3],
+
         raster: true,
         raster_velocity: 7,
         raster_speed: 0.005,
         raster_level: 0.6,
-        color_shift: [ -0.005, 0.0, 0.005 ],
-        noise_level: [ 0.15, 0.01 ],
+
+        color: true,
+        color_shift: [-0.005, 0.0, 0.005],
+
+        noise: true,
+        noise_level: [0.15, 0.01],
+
         slitscan: true,
-        slitscan_size: 4
+        slitscan_size: 4,
+
+        adjust: true,
+        adjust_repeat: [1, 1],
+        adjust_offset: [0, 0]
     };
 
     this._noise = this._mv.create('misc', 'perlin');
@@ -99,14 +112,20 @@ MajVj.effect.noise.prototype.draw = function (delta, texture) {
     this._program.setTexture('uTexture', texture);
     this._program.setTexture('uLineTexture', this._lineTexture);
     this._program.setTexture('uNoiseTexture', this._noiseTexture);
-    this._program.setUniformVector('uColorShift', this.properties.color_shift);
+    this._program.setUniformVector('uColorShift',
+            this.properties.color ? this.properties.color_shift : [0, 0, 0]);
     this._program.setUniformVector('uNoiseShift',
-                                   [ Math.random(), Math.random() ]);
-    this._program.setUniformVector('uNoiseLevel', this.properties.noise_level);
-    this._program.setUniformVector(
-            'uSlitscanResolution',
-            [ this._width / this.properties.slitscan_size ]);
-    this._program.setUniformVector('uTime', [ this._delta / 10 ]);
+            this.properties.noise ? [Math.random(), Math.random()] : [0, 0]);
+    this._program.setUniformVector('uNoiseLevel',
+            this.properties.noise ? this.properties.noise_level : [0, 0]);
+    this._program.setUniformVector('uSlitscanResolution',
+            this.properties.slitscan
+                    ? [this._width / this.properties.slitscan_size] : [1]);
+    this._program.setUniformVector('uTime', [this._delta / 10]);
+    this._program.setUniformVector('uAdjustRepeat',
+            this.properties.adjust ? this.properties.adjust_repeat : [1, 1]);
+    this._program.setUniformVector('uAdjustOffset',
+            this.properties.adjust ? this.properties.adjust_offset : [1, 1]);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
 
