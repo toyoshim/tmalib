@@ -1,0 +1,67 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script src="shadertoy_common.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	var st = new ShadertoyCommon();
+//	var name = 'wired';
+//	var name = 'morphere';
+	var name = 'specticle';
+	Promise.all([st.init(true),
+				 MajVj.loadPlugin('frame', name),
+				 MajVj.loadPlugin('effect', 'noise'),
+				 MajVj.loadPlugin('misc', 'perlin'),
+				 MajVj.loadPlugin('misc', 'automator')]).then(function () {
+		var fbo = st.mv.screen().createFrameBuffer();
+		var frame = st.mv.create('frame', name);
+		var effect = st.mv.create('effect', 'noise', { enable: ['adjust'] });
+		var prop = { properties: st.prop() };
+		var autoparam1 = {
+			type: 'vibration',
+			rate: 0.04,
+			input: prop.properties.fft,
+			index: 2,
+			tension: 0.3,
+			threshold: 200, //240,
+			offset: 0,
+			volume: 0.0001
+		};
+		var autoparam2 = {
+			type: autoparam1.type,
+			rate: 0.031,
+			input: prop.properties.fft,
+			index: 3,
+			threshold: autoparam1.threshold,
+			tension: autoparam1.tension,
+			offset: autoparam1.offset,
+			volume: autoparam1.volume
+		}
+		var automator1 = st.mv.create('misc', 'automator', autoparam1);
+		var automator2 = st.mv.create('misc', 'automator', autoparam2);
+		window.onresize = e => {
+			var ratio = st.mv.onresize();
+			frame.onresize(ratio);
+			effect.onresize(ratio);
+		};
+		st.mv.run(delta => {
+			st.run(prop);
+			fbo.bind();
+			st.mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			frame.properties.fftDb = prop.properties.fftDb;
+			frame.draw(delta);
+			st.mv.screen().bind();
+			st.mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			effect.properties.adjust_offset = [
+				automator1.generate(delta),
+				automator2.generate(delta)
+			];
+			effect.draw(delta, fbo.texture);
+			st.mv.screen().flush();
+		});
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
