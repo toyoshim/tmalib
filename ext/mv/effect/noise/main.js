@@ -40,7 +40,8 @@ MajVj.effect.noise = function (options) {
         color_level: [0, 0, 0],
 
         noise: prop('noise'),
-        noise_level: [0.15, 0.01],
+        noise_level: [0.05, 0.2, 0.01],  // white, pink, perlin
+        noise_color: [1, 1, 1],
 
         slitscan: prop('slitscan'),
         slitscan_size: 4,
@@ -66,12 +67,21 @@ MajVj.effect.noise = function (options) {
             this._lineImage, false, Tma3DScreen.FILTER_LINEAR);
 
     this._noiseImage = this._screen.createImage(this._width, this._height);
+    var nhist = 100;
     for (var y = 0; y < this._height; ++y) {
+        var rhist = [];
+        for (var i = 0; i < (nhist - 1); ++i)
+            rhist[i] = Math.random();
         for (var x = 0; x < this._width; ++x) {
             var white = ((Math.random() * 256)|0) % 256;
             var parlin1 = (this._noise.noise(x / 3, y / 3, 0.3) + 1) * 127;
             var parlin2 = (this._noise.noise(x / 3, y / 3, 0.6) + 1) * 127;
-            this._noiseImage.setPixel(x, y, white, parlin1, parlin2, 255);
+            rhist[nhist - 1 + x] = Math.random();
+            var pink = 0;
+            for (i = nhist; i > 0; --i)
+                pink += rhist[x + nhist - i] / i / 2;
+            pink = ((pink + 1) * 128) % 256;
+            this._noiseImage.setPixel(x, y, white, pink, parlin1, parlin2);
         }
     }
     this._noiseTexture = this._screen.createTexture(
@@ -130,6 +140,8 @@ MajVj.effect.noise.prototype.draw = function (delta, texture) {
             this.properties.noise ? [Math.random(), Math.random()] : [0, 0]);
     this._program.setUniformVector('uNoiseLevel',
             this.properties.noise ? this.properties.noise_level : [0, 0]);
+    this._program.setUniformVector('uNoiseColor',
+            this.properties.noise ? this.properties.noise_color : [0, 0, 0]);
     this._program.setUniformVector('uSlitscanResolution',
             this.properties.slitscan
                     ? [this._width / this.properties.slitscan_size]

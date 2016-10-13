@@ -20,7 +20,8 @@ uniform sampler2D uNoiseTexture;
 uniform vec3 uColorShift;
 uniform vec3 uColorLevel;
 uniform vec2 uNoiseShift;
-uniform vec2 uNoiseLevel;
+uniform vec3 uNoiseLevel;
+uniform vec3 uNoiseColor;
 uniform float uSlitscanResolution;
 uniform float uTime;
 uniform vec2 uAdjustRepeat;
@@ -44,14 +45,15 @@ void main() {
     vec4 noiseTexture = texture2D(uNoiseTexture, mod(vCoord + uNoiseShift, 1.));
     vec4 fixedNoiseTexture = texture2D(uNoiseTexture, vCoord);
     float whiteNoise = noiseTexture.r * uNoiseLevel.r;
-    float parlinNoise1 = fixedNoiseTexture.g;
-    float parlinNoise2 = fixedNoiseTexture.b;
+    float pinkNoise = noiseTexture.g * uNoiseLevel.g;
+    float parlinNoise1 = fixedNoiseTexture.b;
+    float parlinNoise2 = fixedNoiseTexture.a;
     float s = (sin(uTime) + 1.) / 2.;
     float parlinNoise =
-            (parlinNoise1 * s + parlinNoise2 * (1. - s)) * uNoiseLevel.g;
+            (parlinNoise1 * s + parlinNoise2 * (1. - s)) * uNoiseLevel.b;
     vec3 lineNoise = vec3(lineMask.a) * lineMask.rgb * 2.;
     vec3 color = vec3(r, g, b) * lineMask.rgb + lineNoise +
-            vec3(whiteNoise + parlinNoise);
+            vec3(whiteNoise + pinkNoise + parlinNoise) * uNoiseColor;
     gl_FragColor = vec4(color, 1.);
 }
 </script>

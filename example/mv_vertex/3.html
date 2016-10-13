@@ -18,17 +18,26 @@ tma.onload = function () {
       vertexCount: 100000,
       mode: Tma3DScreen.MODE_POINTS
     });
-    var effect = vj.create('effect', 'noise');
-    effect.properties.scanline = false;
-    var fbo = vj.screen().createFrameBuffer();
+    var noise = vj.create('effect', 'noise');
+    noise.properties.scanline = true;
+    noise.properties.noise_level = [0.1, 0.4, 0.0];
+    noise.properties.noise_color = [0.3, 0.5, 1.0];
+    noise.properties.color_level = [0.1, 0.1, 1.0];
+    var cathode = vj.create('effect', 'cathode');
+    cathode.properties.bend = 0.2;
+    var fbo1 = vj.screen().createFrameBuffer();
+    var fbo2 = vj.screen().createFrameBuffer();
     vj.run(delta => {
       sound.getByteFrequencyData(vertexshaderart.properties.sound);
       sound.getFloatFrequencyData(vertexshaderart.properties.floatSound);
-      fbo.bind();
+      fbo1.bind();
       vertexshaderart.draw(delta);
+      fbo2.bind();
+      vj.screen().fillColor(0, 0, 0, 1);
+      noise.draw(delta, fbo1.texture);
       vj.screen().bind();
       vj.screen().fillColor(0, 0, 0, 1);
-      effect.draw(delta, fbo.texture);
+      cathode.draw(delta, fbo2.texture);
     });
   }, function (e) { console.log('plugin load error: ' + e); });
 };
