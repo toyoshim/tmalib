@@ -153,7 +153,7 @@ MajVj.misc.camera.prototype.lookTo = function (duration, destination) {
  * @param destination absolute position camera looks at
  */
 MajVj.misc.camera.prototype.lookAt = function (duration, destination) {
-    this.lookTo([
+    this.lookTo(duration, [
         destination[0] - this._p[0],
         destination[1] - this._p[1],
         destination[2] - this._p[2]
