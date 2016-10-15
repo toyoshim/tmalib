@@ -224,9 +224,11 @@ TmaModelPrimitives.prototype._createPoints = function (points) {
 /**
  * Creates a sphere model with evenly divided triangles.
  * @param resolution divition depth
+ * @param flag SPHERE_FLAG_NO_TEXTURE (optional)
  */
-TmaModelPrimitives.prototype._createSphereEven = function (resolution) {
+TmaModelPrimitives.prototype._createSphereEven = function (resolution, flag) {
     // Maybe there are smarter ways to use quotanion or something.
+    var no_texture = flag && (flag & TmaModelPrimitives.SPHERE_FLAG_NO_TEXTURE);
     var square = [ [ 1, 0, 0 ], [ 0, 1, 0 ], [ -1, 0, 0 ], [ 0, -1, 0 ] ];
     var pushVertex = function (v, p) {
         var length = this._vertices.length / 3;
@@ -244,8 +246,9 @@ TmaModelPrimitives.prototype._createSphereEven = function (resolution) {
             if (this._vertices[i * 3 + 0] != v[0] ||
                 this._vertices[i * 3 + 1] != v[1] ||
                 this._vertices[i * 3 + 2] != v[2] ||
-                this._coords[i * 2 + 0] != x ||
-                this._coords[i * 2 + 1] != y)
+                (!no_texture && (
+                    this._coords[i * 2 + 0] != x ||
+                    this._coords[i * 2 + 1] != y)))
                 continue;
             this._indices.push(i);
             return;
@@ -287,10 +290,13 @@ TmaModelPrimitives.prototype._createSphereEven = function (resolution) {
         create(resolution, square[i], square[next], [ 0, 0, 1]);
         create(resolution, square[i], square[next], [ 0, 0, -1]);
     }
+    if (no_texture)
+        this.setDrawMode(Tma3DScreen.MODE_LINE_TRIANGLES);
 };
 
 TmaModelPrimitives.SPHERE_METHOD_THEODOLITE = 0;
 TmaModelPrimitives.SPHERE_METHOD_EVEN = 1;
+TmaModelPrimitives.SPHERE_FLAG_NO_TEXTURE = 1;
 
 /**
  * Creates a box model.
@@ -327,12 +333,13 @@ TmaModelPrimitives.createPoints = function (points) {
  * Creates a sphere model.
  * @param resolution mesh resolution
  * @param method SPHERE_METHOD_THEODOLITE or SPHERE_METHOD_EVEN
+ * @param flag SPHERE_FLAG_NO_TEXTURE (optional)
  * @return A TmaModelPrimitives object containing a sphere model
  */
-TmaModelPrimitives.createSphere = function (resolution, method) {
+TmaModelPrimitives.createSphere = function (resolution, method, flag) {
     var sphere = new TmaModelPrimitives();
     // TODO: implement theodolite method.
-    sphere._createSphereEven(resolution);
+    sphere._createSphereEven(resolution, flag);
     return sphere;
 };
 
