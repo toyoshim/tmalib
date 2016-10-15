@@ -14,7 +14,18 @@ function Draw (screen, prop, camera) {
       TmaModelPrimitives.SPHERE_METHOD_EVEN,
       TmaModelPrimitives.SPHERE_FLAG_NO_TEXTURE
       );
-  this._stars = TmaModelPrimitives.createStars(100000, 100000);
+  var or = 220;
+  var ir = 130;
+  this._ring = TmaModelPrimitives.createFlagRing(64, ir, or);
+  this._ring.setTexture(this._screen.createStringTexture(
+      'Tamura Yukari - Mellow Pretty - ', {
+      size: or - ir,
+      name: 'Serif',
+      foreground: 'rgba(255, 0, 100, 255)',
+      background: 'rgba(0, 0, 0, 0)' }, {
+      width: Math.PI * or * 2,
+      height: or - ir }));
+  this._stars = TmaModelPrimitives.createStars(10000, 30000);
   this._r = 0;
   this._size = 300;
   this._vertices = this._sphere.getVertices().slice(0);
@@ -43,8 +54,9 @@ Draw.prototype.draw = function (api) {
   }
   vertices.update();
   api.color = [0.1, 0.1, 1.0, 1.0];
-  api.drawPrimitive(this._stars, 0.06, 0.06, 0.06, [0, 0, 0]);
+  api.drawPrimitive(this._stars, 0.02, 0.02, 0.02, [0, 0, 0]);
   api.drawPrimitive(this._sphere, 100, 100, 100, [0, 0, 0]);
+  api.drawPrimitive(this._ring, 1, 1, 1, [0, 0, 0], [[0, 0, this._r * 10]]);
 
   if (Math.abs(this._s - this.properties.fft[0]) > 32) {
     //this._r = Math.random() * 1000;

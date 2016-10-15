@@ -202,6 +202,35 @@ TmaModelPrimitives.prototype._createCube = function () {
 };
 
 /**
+ * Creates a flat ring model.
+ * @param resolution resolution
+ * @param ir inner radius
+ * @param or outer radius
+ */
+TmaModelPrimitives.prototype._createFlatRing = function (resolution, ir, or) {
+    var max = resolution - 1;
+    var delta = 2 * Math.PI / max;
+    for (var i = 0; i < resolution; ++i) {
+        var t = delta * i;
+        var x = Math.cos(t);
+        var y = Math.sin(t);
+        this._vertices.push(or * x);
+        this._vertices.push(or * y);
+        this._vertices.push(0);
+        this._vertices.push(ir * x);
+        this._vertices.push(ir * y);
+        this._vertices.push(0);
+        this._coords.push(i / max);
+        this._coords.push(1);
+        this._coords.push(i / max);
+        this._coords.push(0);
+        this._indices.push(i * 2 + 0);
+        this._indices.push(i * 2 + 1);
+    }
+    this._mode = Tma3DScreen.MODE_TRIANGLE_STRIP;
+};
+
+/**
  * Creates a model containing points.
  * @param points an Array containing points, e.g. [x0, y0, z0, x1, y1, z1, ...]
  * @param colors an Array containing colors, as [r0, g0, b0, a0, ...] (optional)
@@ -292,7 +321,7 @@ TmaModelPrimitives.prototype._createSphereEven = function (resolution, flag) {
         create(resolution, square[i], square[next], [ 0, 0, -1]);
     }
     if (no_texture)
-        this.setDrawMode(Tma3DScreen.MODE_LINE_TRIANGLES);
+        this._mode = Tma3DScreen.MODE_LINE_TRIANGLES;
 };
 
 TmaModelPrimitives.SPHERE_METHOD_THEODOLITE = 0;
@@ -317,6 +346,19 @@ TmaModelPrimitives.createCube = function () {
     var cube = new TmaModelPrimitives();
     cube._createCube();
     return cube;
+};
+
+/**
+ * Creates a flat ring model.
+ * @param resolution resolution
+ * @param ir inner radius
+ * @param or outer radius
+ * @return A TmaModelPromitives object containing a flat ring model
+ */
+TmaModelPrimitives.createFlagRing = function (resolution, ir, or) {
+    var ring = new TmaModelPrimitives();
+    ring._createFlatRing(resolution, ir, or);
+    return ring;
 };
 
 /**
