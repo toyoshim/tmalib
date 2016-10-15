@@ -133,7 +133,7 @@ MajVj.frame.api3d.prototype.onresize = function (aspect) {
  * @param delta delta time from the last rendering
  */
 MajVj.frame.api3d.prototype.draw = function (delta) {
-    var api = this.beginDraw();
+    var api = this.beginDraw(delta);
     this._module.clear(api);
     this._module.draw(api);
     this.endDraw();
