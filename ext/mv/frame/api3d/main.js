@@ -312,6 +312,7 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
                'aTexCoord', o.getCoordsBuffer(this._screen), 0, 2, 0);
         program.setTexture('uTexture', texture);
     } else if (point) {
+        program.setUniformVector('uSize', [(w + h + d) / 3]);
         program.setAttributeArray(
                 'aColor', o.getColorsBuffer(this._screen), 0, 4, 0);
     } else {

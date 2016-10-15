@@ -54,12 +54,13 @@ attribute vec4 aColor;
 uniform mat4 uPMatrix;
 uniform mat4 uMVMatrix;
 uniform mat4 uMatrix;
+uniform float uSize;
 varying vec4 vColor;
 
 void main() {
   vec4 position = uPMatrix * uMVMatrix * uMatrix * vec4(aCoord, 1.0);
   gl_Position = position;
-  gl_PointSize = 1000.0 / (abs(position.z / 100.0) + 1.0);
+  gl_PointSize = 1000.0 / (abs(position.z / 100.0) + 1.0) * uSize;
   vColor = aColor;
 }
 </script>

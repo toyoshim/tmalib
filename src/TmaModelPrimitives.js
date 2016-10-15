@@ -204,8 +204,9 @@ TmaModelPrimitives.prototype._createCube = function () {
 /**
  * Creates a model containing points.
  * @param points an Array containing points, e.g. [x0, y0, z0, x1, y1, z1, ...]
+ * @param colors an Array containing colors, as [r0, g0, b0, a0, ...] (optional)
  */
-TmaModelPrimitives.prototype._createPoints = function (points) {
+TmaModelPrimitives.prototype._createPoints = function (points, colors) {
     this._vertices = points;
     var count = points.length / 3;
     this._indices = new Array(count);
@@ -213,10 +214,10 @@ TmaModelPrimitives.prototype._createPoints = function (points) {
     this._coords = null;
     for (var i = 0; i < count; ++i) {
         this._indices[i] = i;
-        this._colors[i * 4 + 0] = 1.0;
-        this._colors[i * 4 + 1] = 1.0;
-        this._colors[i * 4 + 2] = 1.0;
-        this._colors[i * 4 + 3] = 1.0;
+        this._colors[i * 4 + 0] = colors ? colors[i * 4 + 0] : 1.0;
+        this._colors[i * 4 + 1] = colors ? colors[i * 4 + 1] : 1.0;
+        this._colors[i * 4 + 2] = colors ? colors[i * 4 + 2] : 1.0;
+        this._colors[i * 4 + 3] = colors ? colors[i * 4 + 3] : 1.0;
     }
     this._mode = Tma3DScreen.MODE_POINTS;
 };
@@ -321,11 +322,41 @@ TmaModelPrimitives.createCube = function () {
 /**
  * Creates a model containing points.
  * @param points an Array containing points, e.g. [x0, y0, z0, x1, y1, z1, ...]
- * @return A TmaModelPrimitives object containing a points
+ * @param colors an Array containing colors, as [r0, g0, b0, a0, ...] (optional)
+ * @return A TmaModelPrimitives object containing points
  */
-TmaModelPrimitives.createPoints = function (points) {
+TmaModelPrimitives.createPoints = function (points, colors) {
     var model = new TmaModelPrimitives();
-    model._createPoints(points);
+    model._createPoints(points, colors);
+    return model;
+};
+
+/**
+ * Creates a model containing stars.
+ * @param stars total number of starts
+ * @param range space size in float for x, y, z being between -space and space
+ * @return A TmaModelPrimitives object containing stars
+ */
+TmaModelPrimitives.createStars = function (stars, space) {
+    var model = new TmaModelPrimitives();
+    var points = new Array(stars * 3);
+    var colors = new Array(stars * 4);
+    for (var i = 0; i < stars; ++i) {
+        points[i * 3 + 0] = space * (Math.random() * 2 - 1);
+        points[i * 3 + 1] = space * (Math.random() * 2 - 1);
+        points[i * 3 + 2] = space * (Math.random() * 2 - 1);
+        // Avoid green-ish colors thouse H is in 60-240.
+        var h = (240 + Math.random() * 180) % 360;
+        var s = Math.random() * Math.random() * Math.random();
+        if (250 < h && h < 280)
+            s = Math.random * 0.1;
+        var rgb = TmaScreen.HSV2RGB(h, s, Math.random());
+        colors[i * 4 + 0] = rgb.r / 255;
+        colors[i * 4 + 1] = rgb.g / 255;
+        colors[i * 4 + 2] = rgb.b / 255;
+        colors[i * 4 + 3] = 1;  // Always set max value as a alpha
+    }
+    model._createPoints(points, colors);
     return model;
 };
 
