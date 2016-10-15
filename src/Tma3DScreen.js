@@ -501,10 +501,11 @@ Tma3DScreen.prototype.createFloatTexture =
  * Create texture buffer from Image object.
  * @param image Image object or ImageData object
  * @param flip image flip flag
- * @param filter texture mag filter
+ * @param filter texture mag filter (optional)
  */
 Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
-    return this._createTexture(image, image.width, image.height, flip, filter,
+    return this._createTexture(image, image.width, image.height, flip,
+            filter ? filter : Tma3DScreen.FILTER_LINEAR,
             this.gl.RGBA, this.gl.UNSIGNED_BYTE, true);
 };
 

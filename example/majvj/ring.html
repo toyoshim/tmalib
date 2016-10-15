@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>Overlapped Parallax</title>
+<link href="https://fonts.googleapis.com/css?family=Tangerine" rel="stylesheet">
+</head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+
+var jupiter = null;
+
+function Draw (mv, camera) {
+  this._screen = mv.screen();
+  this._camera = camera;
+  this._sphere = TmaModelPrimitives.createSphere(
+      5, TmaModelPrimitives.SPHERE_METHOD_EVEN);
+  this._sphere.setTexture(this._screen.createTexture(jupiter, true));
+  var or = 200;
+  var ir = 110;
+  this._ring = TmaModelPrimitives.createFlagRing(256, ir, or);
+  var w = (Math.PI * or * 2) | 0;
+  var h = or - ir;
+  this._ring.setTexture(this._screen.createStringTexture(
+      '☆  -  Tamura Yukari  -  ☆  -  Mellow Pretty  -  ', {
+      size: h,
+      name: "'Tangerine', cursive",
+      foreground: 'rgba(255, 100, 100, 255)',
+      background: 'rgba(0, 0, 0, 0)' }, {
+      width: w,
+      height: h }));
+  this._stars = TmaModelPrimitives.createStars(1000, 30000);
+  this._r = 0;
+  this._size = 300;
+  this._vertices = this._sphere.getVertices().slice(0);
+}
+
+Draw.prototype.draw = function (api) {
+  api.color = [0.0, 0.0, 0.0, 1.0];
+  api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
+  var t1 = this._r * 3.1;
+  var t2 = this._r * 5.1;
+  var p = [this._size * Math.sin(t1) * Math.cos(t2),
+           this._size * Math.sin(t1) * Math.sin(t2),
+           this._size * Math.cos(t1)];
+  this._camera.moveTo(100, p);
+  this._camera.lookTo(150, [-p[0], -p[1], -p[2]]);
+  this._r += api.delta / 10000;
+  api.color = [0.1, 0.1, 1.0, 1.0];
+  api.drawPrimitive(this._stars, 0.02, 0.02, 0.02, [0, 0, 0]);
+  api.screen.pushAlphaMode();
+  api.screen.setAlphaMode(false);
+  api.drawPrimitive(this._sphere, 100, 100, 100, [0, 0, 0]);
+  api.screen.popAlphaMode();
+  api.screen.pushAlphaMode();
+  api.screen.setAlphaMode(true, api.screen.gl.ONE, api.screen.gl.ONE, true);
+  api.drawPrimitive(this._ring, 1, 1, 1, [0, 0, 0], [[0, 0, this._r * 20]]);
+  api.screen.popAlphaMode();
+
+  if (Math.random() < 0.001) {
+    //this._r = Math.random() * 1000;
+    this._size = (1 + Math.random() * 5) * 100;
+  }
+};
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  Promise.all([document.fonts.ready,
+               MajVj.loadImageFrom('../data/jupiter.jpg'),
+               MajVj.loadAllPlugins()]).then(function (values) {
+    jupiter = values[1];
+    var mv = new MajVj();
+    var camera = mv.create('misc', 'camera');
+    var draw = new Draw(mv, camera);
+    var frame = mv.create('frame', 'api3d', {
+      draw: draw.draw.bind(draw)
+    });
+
+    var fbo = mv.screen().createFrameBuffer();
+    mv.run(function (delta) {
+      mv.screen().fillColor(0, 0, 0, 1);
+      camera.update(delta);
+      frame.properties.position = camera.position();
+      frame.properties.orientation = camera.orientation();
+      frame.draw(delta);
+      mv.screen().flush();
+    });
+    window.onresize = function () {
+      frame.onresize(st.mv.onresize());
+      fbo = mv.screen().createFrameBuffer();
+    };
+  });
+};
+</script>
+</body>
+</html>
