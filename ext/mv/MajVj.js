@@ -124,7 +124,7 @@ MajVj.prototype.fps = function () {
  * Run the main function periodically.
  * @param main a function to run periodically
  */
- MajVj.prototype.run = function (main) {
+MajVj.prototype.run = function (main) {
     var requestAnimationFrame = window.requestAnimationFrame ||
             window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame;
