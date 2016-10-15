@@ -1,7 +1,7 @@
 <html>
 <head><title>Nicofarre test</title></head>
 <body style="margin: 0; cursor: none">
-<script src="../tma.js"></script>
+<script src="../../tma.js"></script>
 <script src="mv_common.js"></script>
 <script>
 var Box = function () {
@@ -20,14 +20,10 @@ Box.prototype.init = function (i, z) {
   this._x[i] = (Math.random() - 0.5) * 10000.0;
   this._y[i] = (Math.random() - 0.5) * 1000.0;
   this._z[i] = z;
-  this._s[i] = 100.0;  // Math.random() * 100.0;
+  this._s[i] = 100.0;
   var r = Math.random();
   var g = Math.random();
   var b = Math.random();
-  var avg = (r + g + b) / 3.0;
-  r = (r + avg) / 2.0;
-  g = (r + avg) / 2.0;
-  b = (r + avg) / 2.0;
   this._c[i] = [r, g, b, 1.0];
   this._r[i] = Math.random() * Math.PI * 2.0;
 };
@@ -40,7 +36,7 @@ Box.prototype.draw = function (api) {
   var rs = speed / 1000.0;
   for (var i = 0; i < this._n; ++i) {
     api.color = this._c[i];
-    api.drawBox(this._s[i], this._s[i],
+    api.drawCube(this._s[i], this._s[i], this._s[i],
                 [this._x[i], this._y[i], this._z[i]],
                 [this._r[i], 0.0, 0.0]);
     this._r[i] += rs;
@@ -59,6 +55,11 @@ tma.onload = function () {
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
   MajVj.loadAllPlugins().then(_(function () {
+    var ceil = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_CEILING,
+                          frames: [
+                            { name: 'sandbox', options: { id: '18543.2' } }
+                          ]});
     var wall = vj.create('frame', 'nicofarre3d', { draw: box.draw.bind(box) });
     var fx = vj.create('effect', 'nicofarre', { front: false,
                                                 position: [0, 0, 0]});
@@ -68,6 +69,7 @@ tma.onload = function () {
       if (emulate)
         fbo.bind();
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      ceil.draw(delta);
       wall.draw(delta);
       if (emulate) {
         vj.screen().bind();

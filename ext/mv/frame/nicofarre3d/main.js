@@ -16,7 +16,7 @@ MajVj.frame.nicofarre3d = function (options) {
       clear: this._clear.bind(this),
       color: [1.0, 1.0, 1.0, 1.0],
       createFont: this._createFont.bind(this),
-      createTexture: this._screen.createTexture,
+      createTexture: this._screen.createTexture.bind(this._screen),
       delta: 0.0,
       drawBox: this._drawBox.bind(this),
       drawCharacter: this._drawCharacter.bind(this),
@@ -94,31 +94,35 @@ MajVj.frame.nicofarre3d = function (options) {
     this._fboLeft = this._screen.createFrameBuffer(1480 * scale, height);
     this._fboBack = this._screen.createFrameBuffer(840 * scale, height);
 
-    var theta0 = Math.atan(1480 / 840) * 180 / Math.PI;
-    var theta1 = (180 - theta0 * 2) * Math.PI / 180;
-    var theta2 = (180 - theta1) * Math.PI / 180;
+    var theta0 = Math.atan(1480 / 840);
+    var theta1 = Math.PI - theta0 * 2;
+    var theta2 = Math.PI - theta1;
     var scale1 = [840 / 280, 840 / 280, 1];
     var scale2 = [1480 / 280, 1480 / 280, 1];
     this._iMatrix = mat4.identity(mat4.create());
     this._pMatrixRight = mat4.scale(
+            mat4.create(),
             mat4.perspective(mat4.create(), theta2, 1480 / 280, 420, 100000),
             scale2);
     this._pMatrixStage = mat4.scale(
+            mat4.create(),
             mat4.perspective(mat4.create(), theta1, 840 / 280, 740, 100000),
             scale1);
     this._pMatrixLeft = mat4.scale(
+            mat4.create(),
             mat4.perspective(mat4.create(), theta2, 1480 / 280, 420, 100000),
             scale2);
     this._pMatrixBack = mat4.scale(
+            mat4.create(),
             mat4.perspective(mat4.create(), theta1, 840 / 280, 740, 100000),
             scale1);
     this._mvMatrixRight =
             mat4.rotateY(mat4.create(), this._iMatrix, Math.PI / 2);
     this._mvMatrixStage = mat4.clone(this._iMatrix);
     this._mvMatrixLeft =
-            mat4.rotateY(mat4.create(), his._iMatrix, -Math.PI / 2);
+            mat4.rotateY(mat4.create(), this._iMatrix, -Math.PI / 2);
     this._mvMatrixBack =
-            mat4.rotateY(mat4.create(), his._iMatrix, -Math.PI);
+            mat4.rotateY(mat4.create(), this._iMatrix, -Math.PI);
     this._matrix = mat4.create();
 
     this._buffer2 = this._screen.createBuffer(new Array(2 * 3));

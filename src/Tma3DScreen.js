@@ -648,9 +648,9 @@ Tma3DScreen.prototype.fillColor = function (r, g, b, a) {
  * @param depth enable depth test (optional)
  */
 Tma3DScreen.prototype.setAlphaMode = function (on, src, dst, depth) {
-    depth = depth || !on;
-    src = src || this.gl.ONE;
-    dst = dst || this.gl.ONE;
+    src = (src !== undefined) ? src : this.gl.ONE;
+    dst = (dst !== undefined) ? dst : this.gl.ONE;
+    depth = (depth !== undefined) ? depth : !on;
     this._currentAlphaMode = { on: on, src: src, dst: dst, depth: depth };
     if (on) {
         this.gl.enable(this.gl.BLEND);

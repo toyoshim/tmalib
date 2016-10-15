@@ -1,25 +1,7 @@
 <html>
 <head><title>Nicofarre test</title></head>
 <body style="margin: 0; cursor: none">
-<script id="18207.0" type="x-shader/x-fragment">
-precision mediump float;
-uniform float time;
-uniform vec2 resolution;
-void main( void ) {
-  vec2 coord = gl_FragCoord.xy / resolution * 3.141592 * 2.0;
-  float dr = sin(coord.x * 10.0 + time * 3.0) - sin(coord.y + time * 10.0);
-  float dg = sin(coord.x * 20.0 - time * 2.0) - sin(coord.y * 2.0 + time * 5.0);
-  float db = sin(coord.x * 15.0 - time) - sin(coord.y * 1.5 + time * 7.0);
-  float er = sin(coord.x * 12.0 + time * 5.0) - sin(coord.y + time * 11.0);
-  float eg = sin(coord.x * 22.0 - time * 1.0) - sin(coord.y * 2.0 + time * 9.0);
-  float eb = sin(coord.x * 32.0 - time * 4.0) - sin(coord.y * 1.5 + time * 3.0);
-  float r = dr * dg * er * eg;
-  float g = dg * db * eg * eb;
-  float b = db * dr * eb * er;
-  gl_FragColor = vec4(r, g, b, 1.0);
-}
-</script>
-<script src="../tma.js"></script>
+<script src="../../tma.js"></script>
 <script src="mv_common.js"></script>
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
@@ -29,11 +11,21 @@ tma.onload = function () {
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
   MajVj.loadAllPlugins().then(function () {
-    var e18207_0 = document.getElementById('18207.0').text;
-    var wall = vj.create('frame', 'nicofarre',
-                        { led: MajVj.frame.nicofarre.LED_WHOLE_WALLS,
+    var ceil = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_CEILING,
                           frames: [
-                            { name: 'sandbox', options: { shader: e18207_0 } }
+                            { name: 'sandbox', options: { id: '18918.0' } }
+                          ]});
+    var wall = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_LEFT_STAGE_RIGHT,
+                          frames: [
+                            { name: 'sandbox', options: { id: '18759.0' } },
+                            { name: 'sandbox', options: { id: '19336.0' } }
+                          ]});
+    var front = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_FRONT_BOTH,
+                          frames: [
+                            { name: 'sandbox', options: { id: '18981.0' } }
                           ]});
     var fx = vj.create('effect', 'nicofarre');
     var fbo = vj.screen().createFrameBuffer(width, height);
@@ -42,6 +34,8 @@ tma.onload = function () {
       if (emulate)
         fbo.bind();
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      ceil.draw(delta);
+      front.draw(delta);
       wall.draw(delta);
       if (emulate) {
         vj.screen().bind();

@@ -1,7 +1,7 @@
 <html>
 <head><title>Nicofarre test</title></head>
 <body style="margin: 0; cursor: none">
-<script src="../tma.js"></script>
+<script src="../../tma.js"></script>
 <script src="mv_common.js"></script>
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
@@ -10,23 +10,17 @@ tma.onload = function () {
   var height = 1080;
   var vj = new MajVj(width, height, true);
   MajVj.loadAllPlugins().then(function () {
-    var gen = [];
-    gen[0] = vj.create('frame', 'nico_test');
-    gen[1] = vj.create('frame', 'nicofarre',
-                       { led: MajVj.frame.nicofarre.LED_FRONT_BOTH,
-                         mirror: MajVj.frame.nicofarre.MIRROR_ON_RIGHT,
-                         frames: ['wired', 'ab2', 'snow']});
+    var movie = vj.create('frame', 'movie', {url: '../data/nico_test.webm'});
     var fx = vj.create('effect', 'nicofarre');
-    var fbo = vj.screen().createFrameBuffer(width, height);
+    var size = vj.size();
+    var fbo = vj.screen().createFrameBuffer(size.width, size.height);
     vj.run(function (delta) {
-      gen[1].properties.volume[0] = controller.volume[0];
-      gen[1].properties.volume[1] = controller.volume[1];
-      if (emulate) {
+      fx.properties.volume[0] = controller.volume[0];
+      fx.properties.volume[1] = controller.volume[1];
+      if (emulate)
         fbo.bind();
-        vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
-      }
-      gen[0].draw(delta);
-      gen[1].draw(delta);
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      movie.draw(delta);
       if (emulate) {
         vj.screen().bind();
         vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
@@ -35,10 +29,7 @@ tma.onload = function () {
       vj.screen().flush();
     });
     window.onresize = function () {
-      vj.onresize();
       var ratio = vj.aspect();
-      gen[0].onresize(ratio);
-      gen[1].onresize(ratio);
       fx.onresize(ratio);
     };
   }, function (e) { console.log('plugin load error: ' + e); });

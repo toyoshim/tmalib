@@ -1,7 +1,7 @@
 <html>
 <head><title>Nicofarre test</title></head>
 <body style="margin: 0; cursor: none">
-<script src="../tma.js"></script>
+<script src="../../tma.js"></script>
 <script src="mv_common.js"></script>
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
@@ -11,32 +11,42 @@ tma.onload = function () {
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
   MajVj.loadAllPlugins().then(function () {
-    var ceil = vj.create('frame', 'nicofarre',
-                        { led: MajVj.frame.nicofarre.LED_CEILING,
+    var stage = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_STAGE_AND_BACK,
+                          mirror: MajVj.frame.nicofarre.MIRROR_ON_LEFT,
+                          frames: [
+                            { name: 'sandbox', options: { id: '18922.0' } }
+                          ]});
+    var wall = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_WALL_BOTH,
+                          mirror: MajVj.frame.nicofarre.MIRROR_ON_RIGHT,
                           frames: [
                             { name: 'sandbox', options: { id: '18918.0' } }
                           ]});
-    var wall = vj.create('frame', 'nicofarre',
-                        { led: MajVj.frame.nicofarre.LED_LEFT_STAGE_RIGHT,
-                          frames: [
-                            { name: 'sandbox', options: { id: '18759.0' } },
-                            { name: 'sandbox', options: { id: '19336.0' } }
-                          ]});
-    var front = vj.create('frame', 'nicofarre',
+    var side = vj.create('frame', 'nicofarre',
                         { led: MajVj.frame.nicofarre.LED_FRONT_BOTH,
+                          mirror: MajVj.frame.nicofarre.MIRROR_ON_RIGHT,
                           frames: [
-                            { name: 'sandbox', options: { id: '18981.0' } }
+                            { name: 'sandbox', options: { id: '18451.0' } }
+                          ]});
+    var ceil = vj.create('frame', 'nicofarre',
+                        { led: MajVj.frame.nicofarre.LED_CEILING,
+                          frames: [
+                            { name: 'sandbox', options: { id: '18568.0' } }
                           ]});
     var fx = vj.create('effect', 'nicofarre');
+    // TODO: Controller support for mv_nico3.html to mv_nico25.html.
+    // TODO: High DPI support for mv_nico3.html to mv_nico25.html.
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.screen().setAlphaMode(false);
     vj.run(function (delta) {
       if (emulate)
         fbo.bind();
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
-      ceil.draw(delta);
-      front.draw(delta);
+      stage.draw(delta);
       wall.draw(delta);
+      side.draw(delta);
+      ceil.draw(delta);
       if (emulate) {
         vj.screen().bind();
         vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);

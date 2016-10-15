@@ -1,7 +1,7 @@
 <html>
 <head><title>Nicofarre test</title></head>
 <body style="margin: 0; cursor: none">
-<script src="../tma.js"></script>
+<script src="../../tma.js"></script>
 <script src="mv_common.js"></script>
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
@@ -11,13 +11,10 @@ tma.onload = function () {
   var height = 1080 / r;
   var vj = new MajVj(width, height, true);
   var fftController = { volume: [1.0] };
-  var fftLeftController = { volume: [1.0] };
-  var fftRightController = { volume: [1.0] };
   MajVj.loadAllPlugins().then(_(function () {
     var snd = vj.create('misc', 'sound', { delay: 0.0 });
-    snd.fetch('data/bustling.mp3', true);
-    var fftL = new Float32Array(snd.getFftCount());
-    var fftR = new Float32Array(snd.getFftCount());
+    snd.fetch('../data/sample.mp3', true);
+    var fft = new Float32Array(snd.getFftCount());
     var fftCalc = function (fft) {
       var size = fft.length;
       var sum = 0.0;
@@ -30,42 +27,33 @@ tma.onload = function () {
                               frames: [
                                 { name: 'morphere', options:
                                   { controller: fftController } } ] });
-    var left = vj.create('frame', 'nicofarre',
-                           { led: MajVj.frame.nicofarre.LED_FRONT_LEFT,
-                             frames: [
-                               { name: 'morphere', options:
-                                 { controller: fftLeftController } } ] });
-    var right = vj.create('frame', 'nicofarre',
-                            { led: MajVj.frame.nicofarre.LED_FRONT_RIGHT,
-                              frames: [
-                                { name: 'morphere', options:
-                                  { controller: fftRightController } } ] });
-
-    var fx = vj.create('effect', 'nicofarre');
+    var fx = vj.create('effect', 'rgb', { controller: fftController });
+    var fxb = vj.screen().createFrameBuffer(width, height);
+    var emu = vj.create('effect', 'nicofarre');
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.run(function (delta) {
-      snd.getFloatFrequencyData(fftL);
-      fftController.volume[0] = fftCalc(fftL);
-      snd.getFloatFrequencyData(fftL, fftR);
-      fftLeftController.volume[0] = fftCalc(fftL);
-      fftRightController.volume[0] = fftCalc(fftR);
-      if (emulate)
-        fbo.bind();
+      snd.getFloatFrequencyData(fft);
+      fftController.volume[0] = fftCalc(fft);
+      fxb.bind();
       vj.screen().setAlphaMode(false);
       vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
       stage.draw(delta);
-      left.draw(delta);
-      right.draw(delta);
+      if (emulate)
+        fbo.bind();
+      else
+        vj.screen().bind();
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      fx.draw(delta, fxb.texture);
       if (emulate) {
         vj.screen().bind();
         vj.screen().setAlphaMode(false);
-        fx.draw(delta, fbo.texture);
+        emu.draw(delta, fbo.texture);
       }
       vj.screen().flush();
     });
     window.onresize = function () {
       vj.onresize();
-      fx.onresize(vj.aspect());
+      emu.onresize(vj.aspect());
     };
   }), function (e) { console.error('plugin load error: ' + e.stack); });
 };

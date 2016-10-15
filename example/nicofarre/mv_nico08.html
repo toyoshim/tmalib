@@ -1,7 +1,7 @@
 <html>
 <head><title>Nicofarre test</title></head>
 <body style="margin: 0; cursor: none">
-<script src="../tma.js"></script>
+<script src="../../tma.js"></script>
 <script src="mv_common.js"></script>
 <script>
 Line = function () {
@@ -37,12 +37,13 @@ Line.prototype.update = function (p, v, max, min) {
 };
 
 Line.prototype.draw = function (api) {
-  api.setAlphaMode(true, api.gl.DST_COLOR, api.gl.ZERO);
   var rate = 0.91;
   if (!this._init) {
     this._init = true;
+    api.color = [0, 0, 0, 1];
     api.clear(api.gl.COLOR_BUFFER_BIT | api.gl.DEPTH_BUFFER_BIT);
   }
+  api.setAlphaMode(true, api.gl.DST_COLOR, api.gl.ZERO);
   api.fill([rate, rate, rate, 1.0]);
   api.setAlphaMode(true, api.gl.ONE, api.gl.ONE);
   for (var i = 0; i < this._n; ++i) {

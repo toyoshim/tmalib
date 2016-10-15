@@ -1,7 +1,7 @@
 <html>
 <head><title>Nicofarre test</title></head>
 <body style="margin: 0; cursor: none">
-<script src="../tma.js"></script>
+<script src="../../tma.js"></script>
 <script src="mv_common.js"></script>
 <script>
 
@@ -9,7 +9,7 @@ var snd;
 document.body.addEventListener('keydown', function (e) {
   switch (e.which) {
     case 49:  // 1
-      snd.fetch('data/bustling.mp3', true);
+      snd.fetch('../data/sample.mp3', true);
       break;
     case 50:  // 2
       snd.capture();
@@ -26,21 +26,16 @@ tma.onload = function () {
     var height = 1080 / r;
     var vj = new MajVj(width, height, true);
     snd = vj.create('misc', 'sound', { delay: 0.0 });
-    snd.fetch('data/bustling.mp3', true);
-    var fft = new Float32Array(snd.getFftCount());
-    controller.sound = {
-        fftDb: fft
-    };
+    snd.fetch('../data/sample.mp3', true);
     var panel = vj.create('frame', 'nicofarre', {
         led: MajVj.frame.nicofarre.LED_FRONT_BOTH,
         mirror: MajVj.frame.nicofarre.MIRROR_ON_LEFT,
-        frames: [
-            { name: 'specticle', options: { controller: controller } }
-            ]});
+        frames: [ { name: 'specticle' } ]
+    });
     var fx = vj.create('effect', 'nicofarre');
     var fbo = vj.screen().createFrameBuffer(width, height);
     vj.run(function (delta) {
-      snd.getFloatFrequencyData(fft);
+      snd.getFloatFrequencyData(panel.getFrame(0).properties.fftDb);
       if (emulate)
         fbo.bind();
       vj.screen().setAlphaMode(false);
