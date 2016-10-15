@@ -1,0 +1,99 @@
+<html>
+<head><title>Overlapped Parallax</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script src="shadertoy_common.js"></script>
+<script>
+
+function Draw (screen, prop, camera) {
+  this._screen = screen;
+  this.properties = prop;
+  this._camera = camera;
+  this._sphere = TmaModelPrimitives.createSphere(
+      5,
+      TmaModelPrimitives.SPHERE_METHOD_EVEN,
+      TmaModelPrimitives.SPHERE_FLAG_NO_TEXTURE
+      );
+  this._r = 0;
+  this._size = 300;
+  this._vertices = this._sphere.getVertices().slice(0);
+  this._s = 0;
+}
+
+Draw.prototype.init = function (frame) {
+  frame.properties.vr = true;
+  frame.properties.parallax_overlap = 1;
+  frame.properties.parallax_distance = 2;
+};
+
+Draw.prototype.draw = function (api) {
+  var t1 = this._r * 3.1;
+  var t2 = this._r * 5.1;
+  var p = [this._size * Math.sin(t1) * Math.cos(t2),
+           this._size * Math.sin(t1) * Math.sin(t2),
+           this._size * Math.cos(t1)];
+  this._camera.moveTo(100, p);
+  this._camera.lookTo(150, [-p[0], -p[1], -p[2]]);
+  this._r += api.delta / 10000;
+  var vertices = this._sphere.getVerticesBuffer(this._screen);
+  var buffer = vertices.buffer();
+  var n = buffer.length - 1;
+  var fft = this.properties.fft;
+  var m = (fft.length - 1) * 2;
+  for (var i = 0; i < buffer.length; ++i) {
+    var offset = (i / n * m) | 0;
+    if (offset >= fft.length)
+      offset = offset - fft.length;
+    buffer[i] = this._vertices[i] * (1 + fft[offset] / 255);
+  }
+  vertices.update();
+  api.color = [0.1, 0.1, 1.0, 1.0];
+  api.drawPrimitive(this._sphere, 100, 100, 100, [0, 0, 0]);
+
+  if (Math.abs(this._s - this.properties.fft[0]) > 32) {
+    //this._r = Math.random() * 1000;
+    this._size = (1 + Math.random() * 5) * 100;
+  }
+  this._s = this.properties.fft[0];
+};
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  var st = new ShadertoyCommon();
+  Promise.all([MajVj.loadAllPlugins(), st.init(true)]).then(function () {
+    var camera = st.mv.create('misc', 'camera');
+    var draw = new Draw(st.mv.screen(), st.prop(), camera);
+    var frame = st.mv.create('frame', 'api3d', {
+      draw: draw.draw.bind(draw)
+    });
+    var noise = st.mv.create('effect', 'noise', {
+      disable: ['color', 'slitscan']
+    });
+    noise.properties.noise_level = [0.0, 0.1, 0.0];  // white, pink, perlin
+    noise.properties.noise_color = [1, 1, 0];
+
+    var fbo = st.mv.screen().createFrameBuffer();
+    draw.init(frame);
+    st.mv.run(function (delta) {
+      st.run(draw);
+      fbo.bind();
+      st.mv.screen().fillColor(0, 0, 0, 1);
+      camera.update(delta);
+      frame.properties.position = camera.position();
+      frame.properties.orientation = camera.orientation();
+      frame.draw(delta);
+      st.mv.screen().bind();
+      st.mv.screen().fillColor(0, 0, 0, 1);
+      noise.properties.volume = Math.random() * 0.03;
+      noise.draw(delta, fbo.texture);
+      st.mv.screen().flush();
+    });
+    window.onresize = function () {
+      frame.onresize(st.mv.onresize());
+      fbo = st.mv.screen().createFrameBuffer();
+    };
+  });
+};
+</script>
+</body>
+</html>
