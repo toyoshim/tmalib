@@ -38,6 +38,7 @@ MajVj.effect.noise = function (options) {
         color: prop('color'),
         color_shift: [-0.005, 0.0, 0.005],
         color_level: [0, 0, 0],
+        color_weight: [1.0, 0.7, 0.4],  // sepia
 
         noise: prop('noise'),
         noise_level: [0.05, 0.2, 0.01],  // white, pink, perlin
@@ -48,7 +49,10 @@ MajVj.effect.noise = function (options) {
 
         adjust: prop('adjust'),
         adjust_repeat: [1, 1],
-        adjust_offset: [0, 0]
+        adjust_offset: [0, 0],
+
+        tube: prop('tube'),
+        tube_adjust: [0, 16],
     };
 
     this._noise = this._mv.create('misc', 'perlin');
@@ -136,6 +140,8 @@ MajVj.effect.noise.prototype.draw = function (delta, texture) {
             this.properties.color ? this.properties.color_shift : [0, 0, 0]);
     this._program.setUniformVector('uColorLevel',
             this.properties.color ? this.properties.color_level : [1, 1, 1]);
+    this._program.setUniformVector('uColorWeight',
+            this.properties.color ? this.properties.color_weight : [1, 1, 1]);
     this._program.setUniformVector('uNoiseShift',
             this.properties.noise ? [Math.random(), Math.random()] : [0, 0]);
     this._program.setUniformVector('uNoiseLevel',
@@ -151,6 +157,8 @@ MajVj.effect.noise.prototype.draw = function (delta, texture) {
             this.properties.adjust ? this.properties.adjust_repeat : [1, 1]);
     this._program.setUniformVector('uAdjustOffset',
             this.properties.adjust ? this.properties.adjust_offset : [0, 0]);
+    this._program.setUniformVector('uTubeAdjust',
+            this.properties.tube ? this.properties.tube_adjust : [1, 0]);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
 
