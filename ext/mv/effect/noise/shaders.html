@@ -1,7 +1,22 @@
 <html>
 <head>
 
-<script id='vertex' type='x-shader/x-vertex'>
+<script id='lineVertex' type='x-shader/x-vertex'>
+precision mediump float;
+attribute vec2 aCoord;
+
+void main() {
+    gl_Position = vec4(aCoord, 0., 1.);
+}
+</script>
+
+<script id='lineFragment' type='x-shader/x-fragment'>
+void main() {
+    gl_FragColor = vec4(vec3(0.), 0.7);
+}
+</script>
+
+<script id='effectVertex' type='x-shader/x-vertex'>
 precision mediump float;
 attribute vec2 aCoord;
 varying vec2 vCoord;
@@ -12,7 +27,7 @@ void main() {
 }
 </script>
 
-<script id='fragment' type='x-shader/x-fragment'>
+<script id='effectFragment' type='x-shader/x-fragment'>
 precision mediump float;
 uniform sampler2D uTexture;
 uniform sampler2D uLineTexture;

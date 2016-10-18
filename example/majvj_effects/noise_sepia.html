@@ -8,11 +8,12 @@ tma.onload = function () {
 		var vj = new MajVj();
 		var fbo = vj.screen().createFrameBuffer();
 //		var frame = vj.create('frame', 'ab2');
-//		var frame = vj.create('frame', 'sandbox', { id: '18922.0' });
-		var frame = vj.create('frame', 'sandbox', { id: '14373.1' });
+		var frame = vj.create('frame', 'sandbox', { id: '18922.0' });
+//		var frame = vj.create('frame', 'sandbox', { id: '14373.1' });
 		var effect = vj.create('effect', 'noise', {
-			enable: ['color', 'tube', 'noise']
+			enable: ['color', 'tube', 'film']
 		});
+		effect.properties.color_shift = [0, 0, 0];
 		window.fx = effect;  // for debug
 		window.onresize = e => {
 			var ratio = vj.onresize();

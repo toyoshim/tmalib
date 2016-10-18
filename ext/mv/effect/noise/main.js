@@ -37,7 +37,7 @@ MajVj.effect.noise = function (options) {
 
         color: prop('color'),
         color_shift: [-0.005, 0.0, 0.005],
-        color_level: [0, 0, 0],
+        color_level: [0.1, 0.1, 0.1],
         color_weight: [1.0, 0.7, 0.4],  // sepia
 
         noise: prop('noise'),
@@ -52,18 +52,35 @@ MajVj.effect.noise = function (options) {
         adjust_offset: [0, 0],
 
         tube: prop('tube'),
-        tube_adjust: [0, 16],
+        tube_adjust: [0.1, 48],
+
+        film: prop('film'),
+        film_lines: 3,  // 0-5
+        film_flash: 0.4
     };
 
     this._noise = this._mv.create('misc', 'perlin');
     this._delta = 0;
 
-    this._program = this._screen.createProgram(
+    this._effectProgram = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.effect.noise._vertexShader),
+                    MajVj.effect.noise._effectVertexShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
-                    MajVj.effect.noise._fragmentShader));
+                    MajVj.effect.noise._effectFragmentShader));
     this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1]);
+
+    this._lineProgram = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.effect.noise._lineVertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.effect.noise._lineFragmentShader));
+    this._lineCoords = this._screen.createBuffer([
+        0.0, -1, 0.0, 1,
+        0.1, -1, 0.1, 1,
+        0.2, -1, 0.2, 1,
+        0.3, -1, 0.3, 1,
+        0.4, -1, 0.4, 1
+    ]);
 
     this._lineImage = this._screen.createImage(1, this._height);
     this._updateLineImage();
@@ -93,8 +110,10 @@ MajVj.effect.noise = function (options) {
 };
 
 // Shader programs.
-MajVj.effect.noise._vertexShader = null;
-MajVj.effect.noise._fragmentShader = null;
+MajVj.effect.noise._lineVertexShader = null;
+MajVj.effect.noise._lineFragmentShader = null;
+MajVj.effect.noise._effectVertexShader = null;
+MajVj.effect.noise._effectFragmentShader = null;
 
 /**
  * Loads resources asynchronously.
@@ -102,11 +121,16 @@ MajVj.effect.noise._fragmentShader = null;
 MajVj.effect.noise.load = function () {
     return new Promise(function (resolve, reject) {
         Promise.all([
-            MajVj.loadShader('effect', 'noise', 'shaders.html', 'vertex'),
-            MajVj.loadShader('effect', 'noise', 'shaders.html', 'fragment')
+            MajVj.loadShader('effect', 'noise', 'shaders.html', 'lineVertex'),
+            MajVj.loadShader('effect', 'noise', 'shaders.html', 'lineFragment'),
+            MajVj.loadShader('effect', 'noise', 'shaders.html', 'effectVertex'),
+            MajVj.loadShader(
+                    'effect', 'noise', 'shaders.html', 'effectFragment')
         ]).then(function (data) {
-            MajVj.effect.noise._vertexShader = data[0];
-            MajVj.effect.noise._fragmentShader = data[1];
+            MajVj.effect.noise._lineVertexShader = data[0];
+            MajVj.effect.noise._lineFragmentShader = data[1];
+            MajVj.effect.noise._effectVertexShader = data[2];
+            MajVj.effect.noise._effectFragmentShader = data[3];
             resolve();
         }, function () { reject('noise.load fails'); });
     });
@@ -132,34 +156,60 @@ MajVj.effect.noise.prototype.draw = function (delta, texture) {
         this._lineTexture.update(this._lineImage);
     }
 
-    this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
-    this._program.setTexture('uTexture', texture);
-    this._program.setTexture('uLineTexture', this._lineTexture);
-    this._program.setTexture('uNoiseTexture', this._noiseTexture);
-    this._program.setUniformVector('uColorShift',
+    this._effectProgram.setAttributeArray('aCoord', this._coords, 0, 2, 0);
+    this._effectProgram.setTexture('uTexture', texture);
+    this._effectProgram.setTexture('uLineTexture', this._lineTexture);
+    this._effectProgram.setTexture('uNoiseTexture', this._noiseTexture);
+    this._effectProgram.setUniformVector('uColorShift',
             this.properties.color ? this.properties.color_shift : [0, 0, 0]);
-    this._program.setUniformVector('uColorLevel',
+    this._effectProgram.setUniformVector('uColorLevel',
             this.properties.color ? this.properties.color_level : [1, 1, 1]);
-    this._program.setUniformVector('uColorWeight',
+    this._effectProgram.setUniformVector('uColorWeight',
             this.properties.color ? this.properties.color_weight : [1, 1, 1]);
-    this._program.setUniformVector('uNoiseShift',
+    this._effectProgram.setUniformVector('uNoiseShift',
             this.properties.noise ? [Math.random(), Math.random()] : [0, 0]);
-    this._program.setUniformVector('uNoiseLevel',
+    this._effectProgram.setUniformVector('uNoiseLevel',
             this.properties.noise ? this.properties.noise_level : [0, 0]);
-    this._program.setUniformVector('uNoiseColor',
+    this._effectProgram.setUniformVector('uNoiseColor',
             this.properties.noise ? this.properties.noise_color : [0, 0, 0]);
-    this._program.setUniformVector('uSlitscanResolution',
+    this._effectProgram.setUniformVector('uSlitscanResolution',
             this.properties.slitscan
                     ? [this._width / this.properties.slitscan_size]
                     : [this._width]);
-    this._program.setUniformVector('uTime', [this._delta / 10]);
-    this._program.setUniformVector('uAdjustRepeat',
+    this._effectProgram.setUniformVector('uTime', [this._delta / 10]);
+    this._effectProgram.setUniformVector('uAdjustRepeat',
             this.properties.adjust ? this.properties.adjust_repeat : [1, 1]);
-    this._program.setUniformVector('uAdjustOffset',
+    this._effectProgram.setUniformVector('uAdjustOffset',
             this.properties.adjust ? this.properties.adjust_offset : [0, 0]);
-    this._program.setUniformVector('uTubeAdjust',
-            this.properties.tube ? this.properties.tube_adjust : [1, 0]);
-    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+    var adjust = [
+        this.properties.tube_adjust[0],
+        this.properties.tube_adjust[1]
+    ];
+    if (this.properties.film)
+        adjust[1] = adjust[1] * (1 +
+                this._noise.noise(0.1, 0.1, this._delta / 10) *
+                this.properties.film_flash);
+    this._effectProgram.setUniformVector('uTubeAdjust',
+            this.properties.tube ? adjust : [1, 0]);
+    this._effectProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+
+    if (this.properties.film && this.properties.film_lines != 0) {
+        this._screen.pushAlphaMode();
+        this._screen.setAlphaMode(
+                true, this._screen.gl.ONE, this._screen.gl.SRC_ALPHA);
+        var buffer = this._lineCoords.buffer();
+        for (var i = 0; i < this.properties.film_lines; ++i) {
+            buffer[i * 4 + 0] = buffer[i * 4 + 2] = 2 *
+                    (this._noise.noise(this._delta / 1000, i * 3.33, i * 7.77) +
+                     this._noise.noise(this._delta / 10, i * 4, i * 8) * 0.01);
+        }
+        this._lineCoords.update();
+        this._lineProgram.setAttributeArray(
+                'aCoord', this._lineCoords, 0, 2, 0);
+        this._lineProgram.drawArrays(
+                Tma3DScreen.MODE_LINES, 0, this.properties.film_lines * 2);
+        this._screen.popAlphaMode();
+    }
 };
 
 MajVj.effect.noise.prototype._updateLineImage = function () {
