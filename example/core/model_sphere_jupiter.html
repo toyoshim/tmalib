@@ -1,9 +1,8 @@
 <html>
 <head>
-    <script src="../tma.js"></script>
+    <script src="../../tma.js"></script>
     <script id="shader-vs" type="x-shader/x-vertex">
         attribute vec3 aVertexPosition;
-        attribute vec2 aTextureCoord;
         uniform mat4 uMVMatrix;
         uniform mat4 uPMatrix;
         uniform mat3 uNMatrix;
@@ -13,8 +12,17 @@
         varying vec2 vTextureCoord;
         varying vec3 vLightWeighting;
         void main() {
+            float PI = 3.14159265358979323846264;
+            float PI2 = PI * 2.0;
             gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-            vTextureCoord = aTextureCoord;
+            float r = length(aVertexPosition.xz);
+            float u;
+            if (aVertexPosition.z < 0.0)
+                u = acos(aVertexPosition.x / r);
+            else
+                u = PI2 - acos(aVertexPosition.x / r);
+            float v = acos(aVertexPosition.y) / PI;
+            vTextureCoord = vec2(u / PI2, v);
             vec3 transformedNormal = uNMatrix * aVertexPosition;
             float directionalLightWeighting =
                     max(dot(transformedNormal, uLightingDirection), 0.0);
@@ -46,52 +54,54 @@
                         image, true, Tma3DScreen.FILTER_LINEAR);
                 program.setTexture('uSampler', texture);
             }
-            image.src = 'data/earth.png';
+            image.src = '../data/jupiter.jpg';
 
             var sphere = [];
             var vertices = [];
-            var coords = [];
             var indices = [];
 
             for (var i = 0; i < 5; ++i) {
                 sphere[i] = TmaModelPrimitives.createSphere(i,
                         TmaModelPrimitives.SPHERE_METHOD_EVEN);
                 vertices[i] = screen.createBuffer(sphere[i].getVertices());
-                coords[i] = screen.createBuffer(sphere[i].getCoords());
                 indices[i] = screen.createElementBuffer(sphere[i].getIndices());
             }
             resolution = 0;
             setResolution = function (n) {
                 resolution = n;
                 program.setAttributeArray(
-                        'aVertexPosition', vertices[n], 0, 3, 0);
-                program.setAttributeArray(
-                        'aTextureCoord', coords[n], 0, 2, 0);
+                       'aVertexPosition', vertices[n], 0, 3, 0);
+                // Note: This example does not use texture coords that
+                // TmaModelPrimitives provides. That results in using wrong
+                // texture address on polygons around date-line, u = 0 or 1.
+                // To calculate a right u position, we need to know where other
+                // two vertices are, but vertex shader could not know.
             }
-            setResolution(4);
+            setResolution(2);
 
             // Initializes matrices.
             var pMatrix = mat4.create();
             var mvMatrix = mat4.create();
             var nMatrix = mat3.create();
             mat4.perspective(
-                    45, screen.width / screen.height, 0.1, 100.0, pMatrix);
+                    pMatrix, Math.PI / 4, screen.width / screen.height, 0.1,
+                    100.0);
             mat4.identity(mvMatrix);
             program.setUniformMatrix('uPMatrix', pMatrix);
 
             var r = 0;
-            var mvMatrixBase = mat4.create(mvMatrix);
+            var mvMatrixBase = mat4.clone(mvMatrix);
 
             setInterval(function () {
                 // Initializes screen.
                 screen.fillColor(0.0, 0.0, 0.0, 1.0);
 
                 // Draws cube.
-                mat4.set(mvMatrixBase, mvMatrix);
-                mat4.translate(mvMatrix, [0.0, 0.0, -5.0]);
-                mat4.rotate(mvMatrix, r, [1.0, 0.5, 1]);
-                mat4.toInverseMat3(mvMatrix, nMatrix);
-                mat3.transpose(nMatrix);
+                mat4.copy(mvMatrix, mvMatrixBase);
+                mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, -5.0]);
+                mat4.rotate(mvMatrix, mvMatrix, r, [1.0, 0.5, 1]);
+                mat3.normalFromMat4(nMatrix, mvMatrix);
+//                mat3.transpose(nMatrix);
                 program.setUniformMatrix('uMVMatrix', mvMatrix);
                 program.setUniformMatrix('uNMatrix', nMatrix);
                 program.setUniformVector('uLightingDirection', [

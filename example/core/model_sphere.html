@@ -1,8 +1,9 @@
 <html>
 <head>
-    <script src="../tma.js"></script>
+    <script src="../../tma.js"></script>
     <script id="shader-vs" type="x-shader/x-vertex">
         attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
         uniform mat4 uMVMatrix;
         uniform mat4 uPMatrix;
         uniform mat3 uNMatrix;
@@ -12,17 +13,8 @@
         varying vec2 vTextureCoord;
         varying vec3 vLightWeighting;
         void main() {
-            float PI = 3.14159265358979323846264;
-            float PI2 = PI * 2.0;
             gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-            float r = length(aVertexPosition.xz);
-            float u;
-            if (aVertexPosition.z < 0.0)
-                u = acos(aVertexPosition.x / r);
-            else
-                u = PI2 - acos(aVertexPosition.x / r);
-            float v = acos(aVertexPosition.y) / PI;
-            vTextureCoord = vec2(u / PI2, v);
+            vTextureCoord = aTextureCoord;
             vec3 transformedNormal = uNMatrix * aVertexPosition;
             float directionalLightWeighting =
                     max(dot(transformedNormal, uLightingDirection), 0.0);
@@ -34,9 +26,8 @@
         precision mediump float;
         varying vec2 vTextureCoord;
         varying vec3 vLightWeighting;
-        uniform sampler2D uSampler;
         void main() {
-            vec4 textureColor = texture2D(uSampler, vTextureCoord);
+            vec4 textureColor = vec4(1.0, 1.0, 1.0, 1.0);
             gl_FragColor =
                     vec4(textureColor.rgb * vLightWeighting, textureColor.a);
         }
@@ -47,14 +38,6 @@
             var screen = new TmaScreen(500, 500, TmaScreen.MODE_3D);
             screen.attachTo(document.getElementById('canvas'));
             var program = screen.createProgram('shader-vs', 'shader-fs');
-
-            var image = new Image();
-            image.onload = function () {
-                var texture = screen.createTexture(
-                        image, true, Tma3DScreen.FILTER_LINEAR);
-                program.setTexture('uSampler', texture);
-            }
-            image.src = 'data/jupiter.jpg';
 
             var sphere = [];
             var vertices = [];
@@ -79,23 +62,22 @@
             var mvMatrix = mat4.create();
             var nMatrix = mat3.create();
             mat4.perspective(
-                    45, screen.width / screen.height, 0.1, 100.0, pMatrix);
+                    pMatrix, Math.PI / 4, screen.width / screen.height, 0.1,
+                    100.0);
             mat4.identity(mvMatrix);
             program.setUniformMatrix('uPMatrix', pMatrix);
 
             var r = 0;
-            var mvMatrixBase = mat4.create(mvMatrix);
+            var mvMatrixBase = mat4.clone(mvMatrix);
 
             setInterval(function () {
                 // Initializes screen.
                 screen.fillColor(0.0, 0.0, 0.0, 1.0);
 
                 // Draws cube.
-                mat4.set(mvMatrixBase, mvMatrix);
-                mat4.translate(mvMatrix, [0.0, 0.0, -5.0]);
-                mat4.rotate(mvMatrix, r, [1.0, 0.5, 1]);
-                mat4.toInverseMat3(mvMatrix, nMatrix);
-                mat3.transpose(nMatrix);
+                mat4.translate(mvMatrix, mvMatrixBase, [0.0, 0.0, -5.0]);
+                mat4.rotate(mvMatrix, mvMatrix, r, [1.0, 0.5, 1]);
+                mat3.normalFromMat4(nMatrix, mvMatrix);
                 program.setUniformMatrix('uMVMatrix', mvMatrix);
                 program.setUniformMatrix('uNMatrix', nMatrix);
                 program.setUniformVector('uLightingDirection', [
