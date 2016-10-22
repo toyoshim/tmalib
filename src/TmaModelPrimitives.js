@@ -262,14 +262,11 @@ TmaModelPrimitives.prototype._createSphereEven = function (resolution, flag) {
     var square = [ [ 1, 0, 0 ], [ 0, 1, 0 ], [ -1, 0, 0 ], [ 0, -1, 0 ] ];
     var pushVertex = function (v, p) {
         var length = this._vertices.length / 3;
-        var r = Math.sqrt(v[0] * v[0] + v[1] * v[1]);
-        var x = 0.5;
-        if (r != 0)
-            x = Math.acos(v[0] / r) / Math.PI / 2;
-        if (v[1] < 0.0)
-            x = 1 - x;
-        if (x == 0.0 && !p)
+        var x = 0.5 + Math.atan2(v[1], v[0]) / Math.PI / 2;
+        if (x == 0.0 && p)
             x = 1.0;
+        if (x == 1.0 && !p)
+            x = 0.0;
         var y = 1 - Math.acos(v[2]) / Math.PI;
         for (var i = 0; i < length; ++i) {
             // TODO: Make following checks use hash if it costs.
