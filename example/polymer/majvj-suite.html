@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="../bower_components/platform/platform.js"></script>
-<script src="../bower_components/polymer/polymer.js"></script>
-<link rel="import" href="../polymer/majvj-suite.html">
+<script src="../../bower_components/platform/platform.js"></script>
+<script src="../../bower_components/polymer/polymer.js"></script>
+<link rel="import" href="../../polymer/majvj-suite.html">
 </head>
 <body>
 <majvj-suite></majvj-suite>
 <script>
 window.addEventListener('polymer-ready', function (e) {
   var mv = document.getElementsByTagName('majvj-suite')[0];
-  mv.loadAllPlugin('../').then(function () {
+  mv.loadAllPlugins('../../').then(function () {
     var vj = mv.create(300, 200, false);
     var frame = vj.create('frame', 'wired');
     vj.run(function (delta) {

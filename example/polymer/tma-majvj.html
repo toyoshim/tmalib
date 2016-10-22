@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="../bower_components/platform/platform.js"></script>
-<script src="../bower_components/polymer/polymer.js"></script>
-<link rel="import" href="../polymer/tma-majvj.html">
+<script src="../../bower_components/platform/platform.js"></script>
+<script src="../../bower_components/polymer/polymer.js"></script>
+<link rel="import" href="../../polymer/tma-majvj.html">
 </head>
 <body>
 <tma-majvj></tma-majvj>
@@ -12,7 +12,7 @@ window.addEventListener('polymer-ready', function (e) {
   // Example how to call an original plugin somehow.
   var mv = document.getElementsByTagName('tma-majvj')[0];
   // Need to set a base path to load a plugin.
-  mv.setBase('../');
+  mv.setBase('../../');
   // Make classes that the loading plugin uses global.
   MajVj = mv.MajVj;
   Tma3DScreen = mv.core.Tma3DScreen;
