@@ -55,11 +55,10 @@ MajVj.frame.at = function (options) {
     this._vertices = this._screen.createBuffer(this._sphere.getVertices());
     this._indices = this._screen.createElementBuffer(this._sphere.getIndices());
     this._program.setAttributeArray('aVertexPosition', this._vertices, 0, 3, 0);
-    this._pMatrix = mat4.create();
+    this._pMatrix = mat4.identity(mat4.create());
     this._mvMatrix = mat4.create();
     this._rotate = [0, 0, 0];
     this._translate = [0, 0, 0];
-    mat4.identity(this._mvMatrix);
 
     var crlogo = (function() {
         var data = [
@@ -219,8 +218,8 @@ MajVj.frame.at.load = function () {
  */
 MajVj.frame.at.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, aspect, 0.1, 100.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -70.0 ]);
+    mat4.perspective(this._pMatrix, Math.PI / 4, aspect, 0.1, 100.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -70.0 ]);
 };
 
 /**
@@ -231,21 +230,20 @@ MajVj.frame.at.prototype.draw = function (delta) {
     this._program.setAttributeArray('aVertexPosition', this._vertices, 0, 3, 0);
     this._program.setUniformMatrix('uPMatrix', this._pMatrix);
     var nMatrix = mat3.create();
-    var oMatrix = mat4.create(this._mvMatrix);
-    mat4.translate(oMatrix, this._translate);
-    mat4.rotate(oMatrix, this._rotate[0], [1, 0, 0]);
-    mat4.rotate(oMatrix, this._rotate[1], [0, 1, 0]);
-    mat4.rotate(oMatrix, this._rotate[2], [0, 0, 1]);
+    var oMatrix = mat4.clone(this._mvMatrix);
+    mat4.translate(oMatrix, oMatrix, this._translate);
+    mat4.rotate(oMatrix, oMatrix, this._rotate[0], [1, 0, 0]);
+    mat4.rotate(oMatrix, oMatrix, this._rotate[1], [0, 1, 0]);
+    mat4.rotate(oMatrix, oMatrix, this._rotate[2], [0, 0, 1]);
     this._screen.pushAlphaMode();
     this._screen.setAlphaMode(false);
     for (var i = 0; i < this._logo.length; ++i) {
         this._logo[i].update(delta);
-        var mvMatrix = mat4.create(oMatrix);
-        mat4.translate(mvMatrix, this._logo[i].p);
+        var mvMatrix = mat4.clone(oMatrix);
+        mat4.translate(mvMatrix, mvMatrix, this._logo[i].p);
         this._program.setUniformMatrix('uMVMatrix', mvMatrix);
         var nMatrix = mat3.create();
-        mat4.toInverseMat3(mvMatrix, nMatrix);
-        mat3.transpose(nMatrix);
+        mat3.normalFromMat4(nMatrix, mvMatrix);
         this._program.setUniformMatrix('uNMatrix', nMatrix);
         this._program.setUniformVector('uColor', this._logo[i].c);
         this._program.drawElements(Tma3DScreen.MODE_TRIANGLES,
@@ -356,7 +354,7 @@ MajVj.frame.rolline = function (options) {
     for (i = 0; i < colors.length; ++i) colors[i] = 0.0;
     this._colors = this._screen.createBuffer(colors);
 
-    this._pMatrix = mat4.identity();
+    this._pMatrix = mat4.identity(mat4.create());
     this.onresize(this._aspect);
 };
 
@@ -387,8 +385,8 @@ MajVj.frame.rolline.load = function () {
  */
 MajVj.frame.rolline.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, this._aspect, 0.1, 1000.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -3.0 ]);
+    mat4.perspective(this._pMatrix, Math.PI / 4, this._aspect, 0.1, 1000.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -3.0 ]);
 };
 
 /**
@@ -664,7 +662,7 @@ MajVj.frame.nicofarre.prototype.getFrame = function (i) {
     return this._frames[i];
 };
 /**
- * T'MediaArt library for JavaScript
+ * T'MediaArt library for Javascript
  *  - MajVj extension - frame plugin - color -
  * @param options options (See MajVj.prototype.create)
  */
@@ -707,7 +705,7 @@ MajVj.frame.color.prototype.draw = function (delta) {
             this.properties.r, this.properties.g, this.properties.b, 1.0);
 };
 /**
- * T'MediaArt library for Javascript
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - signal -
  * @param options options (See MajVj.prototype.create)
  */
@@ -778,6 +776,82 @@ MajVj.frame.signal.prototype.setColor = function (color) {
 
 /**
  * T'MediaArt library for JavaScript
+ *  - MajVj extension - frame plugin - equalizer -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.frame.equalizer = function (options) {
+    this._laser = options.mv.create('frame', 'laser', {
+            draw: this._draw.bind(this)
+    });
+    this.properties = {
+        fft: new Uint8Array(1024),
+        low_color: [ 0.0, 0.0, 1.0, 0.5 ],
+        high_color: [ 1.0, 0.0, 0.0, 0.5 ],
+        weak_color: [ 0.0, 0.0, 0.0, 0.5 ],
+        strong_color: [ 0.3, 0.3, 0.3, 0.5 ]
+    };
+};
+
+/**
+ * Loads resources asynchronously.
+ * @return a Promise object
+ */
+MajVj.frame.equalizer.load = function () {
+    return new Promise(function (resolve, reject) {
+        resolve();
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.frame.equalizer.prototype.onresize = function (aspect) {
+    this._laser.onresize(aspect);
+};
+
+/**
+ * Draws a frame.
+ * @param delta delta time from the last rendering
+ */
+MajVj.frame.equalizer.prototype.draw = function (delta) {
+    this._laser.draw(delta);
+};
+
+MajVj.frame.equalizer.prototype._draw = function (api) {
+    api.color = [ 0.1, 1.0, 0.1, 1.0 ];
+    var n = 2;
+    var prop = this.properties;
+    for (var i = 0; i < 16; ++i) {
+        var v = prop.fft[n - 1];
+        var sx = i / 8.0 - 1.0 + 0.035;
+        var ex = (i + 1) / 8.0 - 1.0 - 0.035;
+        var r = i / 15;
+        var rr = 1 - r;
+        var color = [
+            prop.low_color[0] * rr + prop.high_color[0] * r,
+            prop.low_color[1] * rr + prop.high_color[1] * r,
+            prop.low_color[2] * rr + prop.high_color[2] * r,
+            prop.low_color[3] * rr + prop.high_color[3] * r
+        ];
+        for (var h = 0; h < 16; ++h) {
+            r = h / 15;
+            rr = 1 - r;
+            api.color = [
+                color[0] + prop.weak_color[0] * rr + prop.strong_color[0] * r,
+                color[1] + prop.weak_color[1] * rr + prop.strong_color[1] * r,
+                color[2] + prop.weak_color[2] * rr + prop.strong_color[2] * r,
+                color[3] + prop.weak_color[3] * rr + prop.strong_color[3] * r
+            ];
+            var y = -0.9 + h * 0.1;
+            if (v > (h * 16))
+                api.line2d([sx, y], [ex, y], 0.45);
+        }
+        n += (n / 2)|0;
+    }
+};
+/**
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - ab2 -
  * @param options options (See MajVj.prototype.create)
  */
@@ -799,10 +873,9 @@ MajVj.frame.ab2 = function (options) {
     this._indices = this._screen.createElementBuffer(this._sphere.getIndices());
     this._program.setAttributeArray('aVertexPosition', this._vertices, 0, 3, 0);
     this._pMatrix = mat4.create();
-    this._mvMatrix = mat4.create();
+    this._mvMatrix = mat4.identity(mat4.create());
     this._rotate = [0, 0, 0];
     this._translate = [0, 0, 0];
-    mat4.identity(this._mvMatrix);
 
     var crlogo = [[-5,-5,255,255,255,255],[-4,-5,255,255,255,255],[-3,-5,255,255,255,255],[-2,-5,255,255,255,255],[-1,-5,255,255,255,255],[0,-5,255,255,255,255],[1,-5,255,255,255,255],[2,-5,255,255,255,255],[3,-5,255,255,255,255],[4,-5,255,255,255,255],[5,-5,255,255,255,255],[6,-5,255,255,255,255],[-5,-4,255,255,255,255],[-4,-4,255,255,255,255],[-3,-4,255,255,255,255],[-2,-4,255,255,255,255],[-1,-4,243,117,95,255],[0,-4,244,128,105,255],[1,-4,244,123,102,255],[2,-4,242,107,88,255],[3,-4,255,255,253,255],[4,-4,255,255,255,255],[5,-4,255,255,255,255],[6,-4,255,255,255,255],[-5,-3,255,255,255,255],[-4,-3,255,255,255,255],[-3,-3,237,239,238,255],[-2,-3,238,86,72,255],[-1,-3,238,95,79,255],[0,-3,240,99,82,255],[1,-3,239,98,81,255],[2,-3,240,90,75,255],[3,-3,235,77,65,255],[4,-3,238,237,243,255],[5,-3,255,255,255,255],[6,-3,255,255,255,255],[-5,-2,255,255,255,255],[-4,-2,254,254,254,255],[-3,-2,233,59,52,255],[-2,-2,233,64,57,255],[-1,-2,233,70,61,255],[0,-2,235,72,63,255],[1,-2,234,70,61,255],[2,-2,234,65,58,255],[3,-2,232,59,53,255],[4,-2,232,58,51,255],[5,-2,253,255,252,255],[6,-2,255,255,255,255],[-5,-1,255,255,255,255],[-4,-1,87,191,92,255],[-3,-1,92,193,91,255],[-2,-1,232,58,51,255],[-1,-1,241,249,251,255],[0,-1,131,182,225,255],[1,-1,132,183,226,255],[2,-1,244,254,255,255],[3,-1,253,217,1,255],[4,-1,253,217,1,255],[5,-1,251,215,5,255],[6,-1,255,255,255,255],[-5,0,255,255,255,255],[-4,0,89,191,91,255],[-3,0,91,193,91,255],[-2,0,209,45,36,255],[-1,0,87,156,211,255],[0,0,103,163,213,255],[1,0,105,165,215,255],[2,0,88,157,212,255],[3,0,253,217,1,255],[4,0,253,217,1,255],[5,0,250,213,0,255],[6,0,255,255,255,255],[-5,1,255,255,255,255],[-4,1,89,186,91,255],[-3,1,91,193,91,255],[-2,1,91,193,91,255],[-1,1,59,141,197,255],[0,1,67,148,204,255],[1,1,67,147,206,255],[2,1,60,142,200,255],[3,1,253,217,1,255],[4,1,253,217,1,255],[5,1,249,211,16,255],[6,1,255,255,255,255],[-5,2,255,255,255,255],[-4,2,89,175,88,255],[-3,2,90,192,92,255],[-2,2,91,193,91,255],[-1,2,213,226,217,255],[0,2,39,118,175,255],[1,2,39,122,176,255],[2,2,204,229,207,255],[3,2,253,217,1,255],[4,2,252,215,4,255],[5,2,243,198,34,255],[6,2,255,255,255,255],[-5,3,255,255,255,255],[-4,3,252,252,252,255],[-3,3,86,179,88,255],[-2,3,90,192,92,255],[-1,3,91,193,91,255],[0,3,91,193,91,255],[1,3,84,181,86,255],[2,3,252,217,1,255],[3,3,250,215,0,255],[4,3,244,203,27,255],[5,3,251,251,251,255],[6,3,255,255,255,255],[-5,4,255,255,255,255],[-4,4,255,255,255,255],[-3,4,223,223,223,255],[-2,4,85,175,87,255],[-1,4,89,184,90,255],[0,4,88,188,90,255],[1,4,249,211,12,255],[2,4,247,207,21,255],[3,4,239,195,36,255],[4,4,223,225,222,255],[5,4,255,255,255,255],[6,4,255,255,255,255],[-5,5,255,255,255,255],[-4,5,255,255,255,255],[-3,5,255,255,255,255],[-2,5,250,250,250,255],[-1,5,68,149,82,255],[0,5,72,158,87,255],[1,5,228,179,50,255],[2,5,220,169,52,255],[3,5,249,249,249,255],[4,5,255,255,255,255],[5,5,255,255,255,255],[6,5,255,255,255,255]];
     var ablogo = (function() {
@@ -933,8 +1006,8 @@ MajVj.frame.ab2.load = function () {
  */
 MajVj.frame.ab2.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, aspect, 0.1, 100.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -70.0 ]);
+    mat4.perspective(this._pMatrix, 45, aspect, 0.1, 100.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -70.0 ]);
 };
 
 /**
@@ -944,22 +1017,20 @@ MajVj.frame.ab2.prototype.onresize = function (aspect) {
 MajVj.frame.ab2.prototype.draw = function (delta) {
     this._program.setAttributeArray('aVertexPosition', this._vertices, 0, 3, 0);
     this._program.setUniformMatrix('uPMatrix', this._pMatrix);
+    var oMatrix = mat4.clone(this._mvMatrix);
     var nMatrix = mat3.create();
-    var oMatrix = mat4.create(this._mvMatrix);
-    mat4.translate(oMatrix, this._translate);
-    mat4.rotate(oMatrix, this._rotate[0], [1, 0, 0]);
-    mat4.rotate(oMatrix, this._rotate[1], [0, 1, 0]);
-    mat4.rotate(oMatrix, this._rotate[2], [0, 0, 1]);
+    mat4.translate(oMatrix, oMatrix, this._translate);
+    mat4.rotate(oMatrix, oMatrix, this._rotate[0], [1, 0, 0]);
+    mat4.rotate(oMatrix, oMatrix, this._rotate[1], [0, 1, 0]);
+    mat4.rotate(oMatrix, oMatrix, this._rotate[2], [0, 0, 1]);
     this._screen.pushAlphaMode();
     this._screen.setAlphaMode(false);
     for (var i = 0; i < this._logo.length; ++i) {
         this._logo[i].update(delta);
-        var mvMatrix = mat4.create(oMatrix);
-        mat4.translate(mvMatrix, this._logo[i].p);
+        var mvMatrix = mat4.clone(oMatrix);
+        mat4.translate(mvMatrix, mvMatrix, this._logo[i].p);
         this._program.setUniformMatrix('uMVMatrix', mvMatrix);
-        var nMatrix = mat3.create();
-        mat4.toInverseMat3(mvMatrix, nMatrix);
-        mat3.transpose(nMatrix);
+        mat3.normalFromMat4(nMatrix, mvMatrix);
         this._program.setUniformMatrix('uNMatrix', nMatrix);
         this._program.setUniformVector('uColor', this._logo[i].c);
         this._program.drawElements(Tma3DScreen.MODE_TRIANGLES,
@@ -1061,7 +1132,7 @@ MajVj.frame.specticle = function (options) {
                     MajVj.frame.specticle._vertexShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.specticle._fragmentShader));
-    this._matrix = mat4.identity();
+    this._matrix = mat4.identity(mat4.create());
     this.onresize(this._aspect);
     this._t = 0.0;
     this._n = 500;
@@ -1108,7 +1179,7 @@ MajVj.frame.specticle.load = function () {
  */
 MajVj.frame.specticle.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, aspect, 0.1, 100.0, this._matrix);
+    mat4.perspective(this._matrix, Math.PI / 4, aspect, 0.1, 100.0);
 };
 
 /**
@@ -1119,7 +1190,7 @@ MajVj.frame.specticle.prototype.draw = function (delta) {
     this._t += delta;
     var t = this._t / 10000;
     var buffer = this._coords.buffer();
-    var useLength = this.properties.fftDb.length - 128;
+    var useLength = this.properties.fftDb.length / 2 - 128;
     for (var i = 0; i < this._n; ++i) {
         var y = Math.sin(t * this._sv[i] + this._dv[i]) * 10;
         var r = 1.0;
@@ -1158,7 +1229,7 @@ MajVj.frame.crlogo = function (options) {
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.crlogo._fragmentShader));
     this._pMatrix = mat4.create();
-    this._mvMatrix = mat4.create();
+    this._mvMatrix = mat4.identity(mat4.create());
     this._rotate = 0.0;
 
     var logo = MajVj.frame.crlogo._logos[0];
@@ -1169,7 +1240,6 @@ MajVj.frame.crlogo = function (options) {
     this._ps = new MajVj.frame.crlogo.ps(this, 0);
 
     this.onresize(this._aspect);
-    mat4.identity(this._mvMatrix);
 };
 
 /**
@@ -1359,9 +1429,9 @@ MajVj.frame.crlogo.load = function () {
  * @param aspect screen aspect ratio
  */
 MajVj.frame.crlogo.prototype.onresize = function (aspect) {
-    mat4.perspective(45, aspect, 0.1, 1000.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -250.0 ]);
-    mat4.rotate(this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.perspective(this._pMatrix, 45, aspect, 0.1, 1000.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -250.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
 };
 
 /**
@@ -1372,7 +1442,7 @@ MajVj.frame.crlogo.prototype.draw = function (delta) {
     this._program.setUniformMatrix('uMVMatrix', this._mvMatrix);
     var rotate = 0.002 * delta * (0.5 + this.properties.slider * 1.5);
     this._rotate += rotate;
-    mat4.rotate(this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
 
     this._program.setUniformMatrix('uPMatrix', this._pMatrix);
     this._program.setAttributeArray(
@@ -1563,6 +1633,64 @@ MajVj.frame.crlogo.ps.prototype.update = function (delta) {
         }
     }
     this._parent._offsets.update();
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - frame plugin - light -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.frame.light = function (options) {
+    this._screen = options.screen;
+    this.properties = {
+        color: options.color || [ 0.0, 0.0, 0.03, 1.0 ],
+        coord: options.coord || [ 0.0, -1.2 ],
+        scale: options.scale || [ 1.0, 5.0 ]
+    };
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.frame.light._vertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.frame.light._fragmentShader));
+    this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1]);
+};
+
+// Shader programs.
+MajVj.frame.light._vertexShader = null;
+MajVj.frame.light._fragmentShader = null;
+
+/**
+ * Loads resources asynchronously.
+ */
+MajVj.frame.light.load = function () {
+    return new Promise(function (resolve, reject) {
+        Promise.all([
+            MajVj.loadShader('frame', 'light', 'shaders.html', 'vertex'),
+            MajVj.loadShader('frame', 'light', 'shaders.html', 'fragment')
+        ]).then(function (shaders) {
+            MajVj.frame.light._vertexShader = shaders[0];
+            MajVj.frame.light._fragmentShader = shaders[1];
+            resolve();
+        }, function () { reject('light.load fails'); });
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.frame.light.prototype.onresize = function (aspect) {
+};
+
+/**
+ * Draws a frame.
+ * @param delta delta time from the last rendering
+ */
+MajVj.frame.light.prototype.draw = function (delta) {
+    this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
+    this._program.setUniformVector('uColor', this.properties.color);
+    this._program.setUniformVector('uCoord', this.properties.coord);
+    this._program.setUniformVector('uScale', this.properties.scale);
+    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
 /**
  * T'MediaArt library for JavaScript
@@ -1759,9 +1887,9 @@ MajVj.frame.astalight.load = function () {
  * @param aspect screen aspect ratio
  */
 MajVj.frame.astalight.prototype.onresize = function (aspect) {
-    mat4.perspective(45, aspect, 0.1, 1000.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -200.0 ]);
-    mat4.rotate(this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.perspective(this._pMatrix, Math.PI / 4, aspect, 0.1, 1000.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -200.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
 };
 
 /**
@@ -1773,7 +1901,7 @@ MajVj.frame.astalight.prototype.draw = function (delta) {
     this._program.setUniformMatrix('uMVMatrix', this._mvMatrix);
     var rotate = 0.002 * delta;
     this._rotate += rotate;
-    mat4.rotate(this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
     this._program.setUniformMatrix('uPMatrix', this._pMatrix);
     this._program.setUniformVector('uAlpha', [this._alpha]);
     this._program.setTexture('uTexture', this._texture);
@@ -1915,6 +2043,116 @@ MajVj.frame.astalight.ps.prototype.update = function (delta) {
     this._parent._offsets.update();
 };
 /**
+ * T'MediaArt library for Javascript
+ *  - MajVj extension - frame plugin - grid -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.frame.grid = function (options) {
+    this._screen = options.screen;
+    this.onresize(options.aspect);
+    this._api2d = options.mv.get2DInterface({ width: 1, height: 1 });
+    this._api3d = options.mv.create('frame', 'api3d', {
+            draw: this._draw.bind(this)
+    });
+    this.properties = {
+        z: options.z,
+        n: 8,
+        orientation: [ 0, 0, -90 ],
+        vr: false,
+        parallax_overlap: 0.0,
+        color: (options.color === undefined) ? [ 1.0, 1.0, 1.0, 1.0 ]
+                                             : options.color,
+        zoom: (options.zoom === undefined) ? 1.0 : options.zoom
+    };
+};
+
+/**
+ * Loads resource asynchronously.
+ * @return a Promise object
+ */
+MajVj.frame.grid.load = function () {
+    return new Promise(function (resolve, reject) {
+        resolve();
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.frame.grid.prototype.onresize = function (aspect) {
+    this._aspect = aspect;
+    this._zoom = [ 1.0, 1.0 ];
+    if (this._aspect > 1)
+        this._zoom[1] = this._aspect;
+    else
+        this._zoom[0] /= this._aspect;
+};
+
+/**
+ * Draws a frame.
+ * @param delta delta time from the last rendering
+ */
+MajVj.frame.grid.prototype.draw = function (delta) {
+    if (this.properties.z) {
+        this._api3d.properties.orientation = this.properties.orientation;
+        this._api3d.properties.vr = this.properties.vr;
+        this._api3d.properties.parallax_overlap =
+                this.properties.parallax_overlap;
+        this._api3d.properties.parallax_distance =
+                this.properties.parallax_distance;
+        return this._api3d.draw(delta);
+    }
+
+    var c = this.properties.color;
+    var n = this.properties.n - 1;
+    var zoom = this.properties.zoom;
+    
+    this._api2d.stroke(c[0] * 255, c[1] * 255, c[2] * 255, c[3] * 255);
+    this._api2d.strokeWeight(1);
+
+    var linex = (1 - this._zoom[0] * zoom) / 2;
+    var stepx = this._zoom[0] * zoom / n;
+    for (var x = 0; x <= n; ++x) {
+        this._api2d.line(linex, 0, linex, 1.0);
+        linex += stepx;
+    }
+    var liney = (1 - this._zoom[1] * zoom) / 2;
+    var stepy = this._zoom[1] * zoom / n;
+    for (var y = 0; y <= n; ++y) {
+        this._api2d.line(0, liney, 1.0, liney);
+        liney += stepy;
+    }
+};
+
+MajVj.frame.grid.prototype._draw = function (api) {
+    api.color = this.properties.color;
+
+    var n = this.properties.n - 1;
+    var zoom = this.properties.zoom;
+
+    var s = -1 * zoom;
+    var e =  1 * zoom;
+    var step = (e - s) / n;
+    var linez = s;
+    var x, y, z;
+    for (var z = 0; z <= n; ++z) {
+        var linex = s;
+        for (var x = 0; x <= n; ++x) {
+            api.drawLine([linex, s, linez], [linex, e, linez]);
+            api.drawLine([linex, linez, s], [linex, linez, e]);
+            linex += step;
+        }
+        var liney = s;
+        for (var y = 0; y <= n; ++y) {
+            api.drawLine([s, liney, linez], [e, liney, linez]);
+            api.drawLine([linez, liney, s], [linez, liney, e]);
+            liney += step;
+        }
+        linez += step;
+    }
+};
+/**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - wired -
  * @param options options (See MajVj.prototype.create)
@@ -2000,9 +2238,9 @@ MajVj.frame.wired.load = function () {
  */
 MajVj.frame.wired.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, aspect, 0.1, 1000.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -250.0 ]);
-    mat4.rotate(this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.perspective(this._pMatrix, 45, aspect, 0.1, 1000.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -250.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, this._rotate, [ 0.1, 0.2, 0.0 ]);
 };
 
 /**
@@ -2012,7 +2250,7 @@ MajVj.frame.wired.prototype.onresize = function (aspect) {
 MajVj.frame.wired.prototype.draw = function (delta) {
     var rotate = 0.002 * delta * (0.5 + this.properties.slider * 1.5);
     this._rotate += rotate;
-    mat4.rotate(this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
+    mat4.rotate(this._pMatrix, this._pMatrix, rotate, [ 0.1, 0.2, 0.0 ]);
     this._program.setUniformMatrix('uPMatrix', this._pMatrix);
     this._program.setAttributeArray(
             'aVertexPosition', this._lines, 0, 3, 0);
@@ -2172,7 +2410,7 @@ MajVj.frame.morphere = function (options) {
             MajVj.frame.morphere.resolution,
             TmaModelPrimitives.SPHERE_METHOD_EVEN);
     this._sphere.scale(10);
-    this._pMatrix = mat4.identity();
+    this._pMatrix = mat4.identity(mat4.create());
     this._color = [0.1, 0.1, 0.4];
     this._vertices = this._sphere.getVertices().length;
     this._b = new Array(this._vertices);
@@ -2218,8 +2456,8 @@ MajVj.frame.morphere.load = function () {
  */
 MajVj.frame.morphere.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, aspect, 0.1, 100.0, this._pMatrix);
-    mat4.translate(this._pMatrix, [ 0.0, 0.0, -70.0 ]);
+    mat4.perspective(this._pMatrix, Math.PI / 4, aspect, 0.1, 100.0);
+    mat4.translate(this._pMatrix, this._pMatrix, [ 0.0, 0.0, -70.0 ]);
 };
 
 /**
@@ -2240,7 +2478,7 @@ MajVj.frame.morphere.prototype.draw = function (delta) {
     this._screen.pushAlphaMode();
     this._screen.setAlphaMode(false);
     var matrix = mat4.create();
-    mat4.scale(this._pMatrix, [size, size, size], matrix);
+    mat4.scale(matrix, this._pMatrix, [size, size, size]);
     this._program.setAttributeArray('aVertexPosition', buffer, 0, 3, 0);
     this._program.setUniformMatrix('uPMatrix', matrix);
     this._program.setUniformVector('uColor', this._color);
@@ -2361,6 +2599,280 @@ MajVj.frame.effect.prototype.getFrame = function (i) {
  */
 MajVj.frame.effect.prototype.getEffect = function (i) {
     return this._effects[i];
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - frame plugin - laser -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.frame.laser = function (options) {
+    this._screen = options.screen;
+    this._width = options.width;
+    this._height = options.height;
+    this._mv = options.mv;
+    this._zoom = [1.0, 1.0, 1.0];
+    this._zoomMatrix = mat3.create();
+    this._draw = options.draw || function (api) {};
+
+    this._api3d = this._mv.create('frame', 'api3d', {
+        drawModeVertexShader: MajVj.frame.laser._vLine3dShader,
+        drawModeFragmentShader: MajVj.frame.laser._fLine3dShader
+    });
+    this._api3d_handle = null;
+
+    this.properties = {};
+    this.properties.api3d = this._api3d.properties;
+
+    this.onresize(options.aspect);
+
+    this._line2dProgram = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.frame.laser._vLine2dShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.frame.laser._fLine2dShader));
+
+    this._coords = this._screen.createBuffer([
+        // X     Y     U     V ( = 0)
+        -1.0, -1.0,  0.0,  // 0
+        -1.0,  1.0,  0.0,  // 1
+         0.0, -1.0,  0.0,  // 2
+         0.0,  1.0,  0.0,  // 3
+        -1.0, -1.0, -1.0,  // 4
+        -1.0,  1.0, -1.0,  // 5
+         1.0, -1.0,  1.0,  // 6
+         1.0,  1.0,  1.0,  // 7
+         0.0, -1.0,  0.0,  // 8
+         0.0,  1.0,  0.0,  // 9
+         1.0, -1.0,  0.0,  // 10
+         1.0,  1.0,  0.0,  // 11
+    ]);
+    this._coords.dimension = 3;
+    this._indices = this._screen.createElementBuffer([
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+    ]);
+    this._leftSquareIndicesOffset = 0;
+    this._centerSquareIndicesOffset = 8;
+    this._rightSquareIndicesOffset = 16;
+    this._squareIndicesLength = 4;
+
+    this._model = {
+        _main: this,
+        offset: this._leftSquareIndicesOffset,
+        getDrawMode: function() { return Tma3DScreen.MODE_TRIANGLE_STRIP; },
+        getTexture: function() { return null; },
+        getVerticesBuffer: function(screen) { return this._main._coords; },
+        getIndicesBuffer: function(screen) { return this._main._indices; },
+        getIndicesOffset: function() { return this.offset; },
+        getIndicesLength: function() { return this._main._squareIndicesLength; }
+    };
+
+    this._api = {
+        line2d: this._line2d.bind(this),
+        line3d: this._line3d.bind(this),
+        toScreenX: this._toScreenX.bind(this),
+        toScreenY: this._toScreenY.bind(this),
+        color: [ 0.0, 0.0, 1.0, 1.0 ],
+        screen: this._screen,
+        delta: 0,
+        properties: this.properties
+    };
+};
+
+// Shader programs.
+MajVj.frame.laser._vLine2dShader = null;
+MajVj.frame.laser._fLine2dShader = null;
+MajVj.frame.laser._vLine3dShader = null;
+MajVj.frame.laser._fLine3dShader = null;
+
+/**
+ * Loads resources asynchronously.
+ * @return a Promise object
+ */
+MajVj.frame.laser.load = function () {
+    return new Promise(function (resolve, reject) {
+        var name = 'laser';
+        var path = 'shaders.html';
+        Promise.all([
+                MajVj.loadShader('frame', name, path, 'v_line2d'),
+                MajVj.loadShader('frame', name, path, 'f_line2d'),
+                MajVj.loadShader('frame', name, path, 'v_line3d'),
+                MajVj.loadShader('frame', name, path, 'f_line3d')
+        ]).then(function (results) {
+            MajVj.frame.laser._vLine2dShader = results[0];
+            MajVj.frame.laser._fLine2dShader = results[1];
+            MajVj.frame.laser._vLine3dShader = results[2];
+            MajVj.frame.laser._fLine3dShader = results[3];
+            resolve();
+        }, function () { reject('laser.load fails'); });
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.frame.laser.prototype.onresize = function (aspect) {
+    this._aspect = aspect;
+    this._zoom = [1.0, 1.0, 1.0];
+    var size = this._mv.size();
+    this._width = size.width;
+    this._height = size.height;
+    // Ajust to keep 1:1 aspect and to overfill the screen.
+    if (this._aspect > 1.0)
+        this._zoom[1] = this._aspect;
+    else
+        this._zoom[0] = 1 / this._aspect;
+    mat3.identity(this._zoomMatrix);
+    mat3.scale(this._zoomMatrix, this._zoomMatrix, this._zoom);
+
+    this._api3d.onresize(aspect);
+};
+
+/**
+ * Draws a frame.
+ * @param delta delta time from the last rendering
+ */
+MajVj.frame.laser.prototype.draw = function (delta) {
+    this._api.delta = delta;
+    this._api3d_handle = this._api3d.beginDraw();
+    this._draw(this._api);
+    this._api3d.endDraw();
+};
+
+/**
+ * Draws a line.
+ * @param src source position in [x, y] (0 <= x, y <= 1)
+ * @param dst destination position in [x, y] (0 <= x, y <= 1)
+ * @param width line width
+ */
+MajVj.frame.laser.prototype._line2d = function (src, dst, width) {
+    var vector = vec2.create();
+    vec2.subtract(vector, src, dst);
+    var distance = vec2.length(vector);
+    var position = vec2.create();
+    vec2.lerp(position, src, dst, 0.5);
+
+    this._line2dProgram.setAttributeArray(
+        'aCoord', this._coords, 0, this._coords.dimension, 0);
+    this._line2dProgram.setUniformMatrix('uZoomMatrix', this._zoomMatrix);
+    this._line2dProgram.setUniformVector('uColor', this._api.color);
+    this._line2dProgram.setUniformVector('uWidth', [width]);
+
+    var matrix = mat2d.identity(mat2d.create());
+    mat2d.translate(matrix, matrix, position);
+    mat2d.rotate(matrix, matrix, Math.atan2(vector[1], vector[0]));
+    mat2d.scale(matrix, matrix, [distance / 2, width / 2]);
+    var matrix3 = mat3.fromMat2d(mat3.create(), matrix);
+    this._line2dProgram.setUniformMatrix('uMatrix', matrix3);
+    this._line2dProgram.drawElements(Tma3DScreen.MODE_TRIANGLE_STRIP,
+                                     this._indices,
+                                     this._centerSquareIndicesOffset,
+                                     this._squareIndicesLength);
+    mat2d.identity(matrix);
+    mat2d.translate(matrix, matrix, dst);
+    mat2d.rotate(matrix, matrix, Math.atan2(vector[1], vector[0]));
+    mat2d.scale(matrix, matrix, [width / 2, width / 2]);
+    mat3.fromMat2d(matrix3, matrix);
+    this._line2dProgram.setUniformMatrix('uMatrix', matrix3);
+    this._line2dProgram.drawElements(Tma3DScreen.MODE_TRIANGLE_STRIP,
+                                     this._indices,
+                                     this._leftSquareIndicesOffset,
+                                     this._squareIndicesLength);
+
+    mat2d.identity(matrix);
+    mat2d.translate(matrix, matrix, src);
+    mat2d.rotate(matrix, matrix, Math.atan2(vector[1], vector[0]));
+    mat2d.scale(matrix, matrix, [width / 2, width / 2]);
+    mat3.fromMat2d(matrix3, matrix);
+    this._line2dProgram.setUniformMatrix('uMatrix', matrix3);
+    this._line2dProgram.drawElements(Tma3DScreen.MODE_TRIANGLE_STRIP,
+                                     this._indices,
+                                     this._rightSquareIndicesOffset,
+                                     this._squareIndicesLength);
+};
+
+/**
+ * Draws a line to all displays.
+ * @param src source position in [x, y] (0 <= x, y <= 1)
+ * @param dst destination position in [x, y] (0 <= x, y <= 1)
+ * @param width line width
+ */
+MajVj.frame.laser.prototype._line3d = function (src, dst, width) {
+    this._api3d_handle.color = this._api.color;
+    this._api3d_handle.drawModeShader.setUniformVector('uWidth', [width]);
+    var hw = width / 2;
+    var hv = [
+        (dst[0] - src[0]) / 2,
+        (dst[1] - src[1]) / 2,
+        (dst[2] - src[2]) / 2
+    ];
+    var hyz2 = hv[1] * hv[1] + hv[2] * hv[2];
+    var hd = Math.sqrt(hv[0] * hv[0] + hyz2);
+    var hyz = Math.sqrt(hyz2);
+    var rotate = [
+        -Math.atan2(hv[1], hv[2]),
+        Math.atan2(hv[0], hyz),
+        0
+    ];
+
+    this._model.offset = this._centerSquareIndicesOffset;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hd,
+            [ src[0] + hv[0], src[1] + hv[1], src[2] + hv[2] ],
+            [rotate]);
+    rotate[2] = Math.PI / 2;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hd,
+            [ src[0] + hv[0], src[1] + hv[1], src[2] + hv[2] ],
+            [rotate]);
+
+    this._model.offset = this._leftSquareIndicesOffset;
+    rotate[2] = 0;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hw,
+            [ src[0], src[1], src[2] ],
+            [rotate]);
+    rotate[2] = Math.PI / 2;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hw,
+            [ src[0], src[1], src[2] ],
+            [rotate]);
+
+    this._model.offset = this._rightSquareIndicesOffset;
+    rotate[2] = 0;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hw,
+            [ dst[0], dst[1], dst[2] ],
+            [rotate]);
+    rotate[2] = Math.PI / 2;
+    this._api3d_handle.drawPrimitive(
+            this._model,
+            hw, hw, hw,
+            [ dst[0], dst[1], dst[2] ],
+            [rotate]);
+};
+
+/**
+ * Convers an API X position in [-1, 1] to a screen X position in [0, width].
+ * @param x an API X position in [-1, 1]
+ * @return a screen X position in [0, width]
+ */
+MajVj.frame.laser.prototype._toScreenX = function (x) {
+    return (this._width + x * this._width * this._zoom[0]) / 2;
+};
+
+/**
+ * Convers an API Y position in [-1, 1] to a screen Y position in [0, width].
+ * @param x an API Y position in [-1, 1]
+ * @return a screen Y position in [0, width]
+ */
+MajVj.frame.laser.prototype._toScreenY = function (y) {
+    return (this._height + y * this._height * this._zoom[1]) / 2;
 };
 /**
  * T'MediaArt library for JavaScript
@@ -2569,7 +3081,7 @@ MajVj.frame.sandbox.prototype.setShader = function (name) {
 };
 
 /**
- * T'MediaArt library for Javascript
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - shadertoy -
  * @param options options (See MajVj.prototype.create)
  */
@@ -2581,7 +3093,8 @@ MajVj.frame.shadertoy = function (options) {
     this.properties = {
         volume: 0.0,
         wave: new Float32Array(2048),
-        fft: new Float32Array(1024)
+        fft: new Uint8Array(1024),
+        fftDb: new Float32Array(1024)
     };
     this._textures = options.textures;
     this._time = 0.0;
@@ -2604,7 +3117,8 @@ MajVj.frame.shadertoy = function (options) {
     this._mouse = { x: 0.0, y: 0.0, cx: 0.0, cy: 0.0 };
     this._fbo = [
             this._screen.createFrameBuffer(this._width, this._height),
-            this._screen.createFrameBuffer(this._width, this._height)];
+            this._screen.createFrameBuffer(this._width, this._height)
+    ];
 };
 
 // Shader programs.
@@ -2639,9 +3153,16 @@ MajVj.frame.shadertoy.load = function () {
 /**
  * Handles screen resize.
  * @param aspect screen aspect ratio
+ * @param size offscreen size { width, height }
  */
-MajVj.frame.shadertoy.prototype.onresize = function (aspect) {
+MajVj.frame.shadertoy.prototype.onresize = function (aspect, size) {
     this._aspect = aspect;
+    this._width = size ? size.width : this._screen.canvas.width;
+    this._height = size ? size.height : this._screen.canvas.height;
+    this._fbo = [
+            this._screen.createFrameBuffer(this._width, this._height),
+            this._screen.createFrameBuffer(this._width, this._height)
+    ];
 };
 
 /**
@@ -2851,7 +3372,7 @@ MajVj.frame.nicofarre3d = function (options) {
       clear: this._clear.bind(this),
       color: [1.0, 1.0, 1.0, 1.0],
       createFont: this._createFont.bind(this),
-      createTexture: this._screen.createTexture,
+      createTexture: this._screen.createTexture.bind(this._screen),
       delta: 0.0,
       drawBox: this._drawBox.bind(this),
       drawCharacter: this._drawCharacter.bind(this),
@@ -2929,24 +3450,35 @@ MajVj.frame.nicofarre3d = function (options) {
     this._fboLeft = this._screen.createFrameBuffer(1480 * scale, height);
     this._fboBack = this._screen.createFrameBuffer(840 * scale, height);
 
-    var theta0 = Math.atan(1480 / 840) * 180 / Math.PI;
-    var theta1 = 180 - theta0 * 2;
-    var theta2 = 180 - theta1;
+    var theta0 = Math.atan(1480 / 840);
+    var theta1 = Math.PI - theta0 * 2;
+    var theta2 = Math.PI - theta1;
     var scale1 = [840 / 280, 840 / 280, 1];
     var scale2 = [1480 / 280, 1480 / 280, 1];
+    this._iMatrix = mat4.identity(mat4.create());
     this._pMatrixRight = mat4.scale(
-            mat4.perspective(theta2, 1480 / 280, 420, 100000), scale2);
+            mat4.create(),
+            mat4.perspective(mat4.create(), theta2, 1480 / 280, 420, 100000),
+            scale2);
     this._pMatrixStage = mat4.scale(
-            mat4.perspective(theta1, 840 / 280, 740, 100000), scale1);
+            mat4.create(),
+            mat4.perspective(mat4.create(), theta1, 840 / 280, 740, 100000),
+            scale1);
     this._pMatrixLeft = mat4.scale(
-            mat4.perspective(theta2, 1480 / 280, 420, 100000), scale2);
+            mat4.create(),
+            mat4.perspective(mat4.create(), theta2, 1480 / 280, 420, 100000),
+            scale2);
     this._pMatrixBack = mat4.scale(
-            mat4.perspective(theta1, 840 / 280, 740, 100000), scale1);
-    this._mvMatrixRight = mat4.rotateY(mat4.identity(), Math.PI / 2);
-    this._mvMatrixStage = mat4.identity();
-    this._mvMatrixLeft = mat4.rotateY(mat4.identity(), -Math.PI / 2);
-    this._mvMatrixBack = mat4.rotateY(mat4.identity(), -Math.PI);
-    this._iMatrix = mat4.identity();
+            mat4.create(),
+            mat4.perspective(mat4.create(), theta1, 840 / 280, 740, 100000),
+            scale1);
+    this._mvMatrixRight =
+            mat4.rotateY(mat4.create(), this._iMatrix, Math.PI / 2);
+    this._mvMatrixStage = mat4.clone(this._iMatrix);
+    this._mvMatrixLeft =
+            mat4.rotateY(mat4.create(), this._iMatrix, -Math.PI / 2);
+    this._mvMatrixBack =
+            mat4.rotateY(mat4.create(), this._iMatrix, -Math.PI);
     this._matrix = mat4.create();
 
     this._buffer2 = this._screen.createBuffer(new Array(2 * 3));
@@ -3189,23 +3721,23 @@ MajVj.frame.nicofarre3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
         program.setUniformVector('uColor', this._api.color);
     }
 
-    mat4.translate(this._iMatrix, p, this._matrix);
+    mat4.translate(this._matrix, this._iMatrix, p);
     if (r) {
         if (typeof r[0] === 'number') {
             // TODO: Remove this useless mod. Exist just for compat.
-            mat4.rotateX(this._matrix, r[0]);
-            mat4.rotateY(this._matrix, r[1]);
-            mat4.rotateZ(this._matrix, r[2]);
+            mat4.rotateX(this._matrix, this._matrix, r[0]);
+            mat4.rotateY(this._matrix, this._matrix, r[1]);
+            mat4.rotateZ(this._matrix, this._matrix, r[2]);
         } else {
             for (var i = r.length - 1; i >= 0; --i) {
                 var rotate = r[i];
-                mat4.rotateX(this._matrix, rotate[0]);
-                mat4.rotateY(this._matrix, rotate[1]);
-                mat4.rotateZ(this._matrix, rotate[2]);
+                mat4.rotateX(this._matrix, this._matrix, rotate[0]);
+                mat4.rotateY(this._matrix, this._matrix, rotate[1]);
+                mat4.rotateZ(this._matrix, this._matrix, rotate[2]);
             }
         }
     }
-    mat4.scale(this._matrix, [w, h, d]);
+    mat4.scale(this._matrix, this._matrix, [w, h, d]);
     program.setUniformMatrix('uMatrix', this._matrix);
 
     this._fboRight.bind();
@@ -3267,58 +3799,82 @@ MajVj.frame.nicofarre3d.prototype._createFont = function (font, text) {
     return result;
 };
 /**
- * T'MediaArt library for JavaScript
- *  - MajVj extension - frame plugin - mixer -
+ * T'MediaArt library for Javascript
+ *  - MajVj extension - frame plugin - vertexshaderart -
  * @param options options (See MajVj.prototype.create)
  */
-MajVj.frame.mixer = function (options) {
+MajVj.frame.vertexshaderart = function (options) {
     this._screen = options.screen;
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this.properties = { volume: [0.0, 0.0, 0.0] };
-    this._channel = options.channel || 1;
-    var fragmentShader =
-            (this._channel == 1) ?  MajVj.frame.mixer._fragment1Shader :
-            (this._channel == 2) ?  MajVj.frame.mixer._fragment2Shader :
-                                    MajVj.frame.mixer._fragment3Shader;
+    this._vshader = options.vshader || MajVj.frame.vertexshaderart._vshader;
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.frame.mixer._vertexShader),
+                    MajVj.frame.vertexshaderart._vheader + this._vshader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
-                    fragmentShader));
-    this._coords = this._screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
-
-    this._fbo = [];
-    for (var ch = 0; ch < this._channel; ++ch) {
-        this._fbo[ch] = this._screen.createFrameBuffer(
-                this._width, this._height);
-    }
+                    MajVj.frame.vertexshaderart._fshader));
+    this._vertexCount = 0;
+    this._vertices = null;
+    this.properties = {
+        vertexCount: options.vertexCount || 1024,
+        resolution: options.resolution || [ this._width, this._height ],
+        mouse: options.mouse || [ 0, 0 ],
+        background: options.background || [ 0.0, 0.0, 0.0, 1.0 ],
+        mode: options.mode || Tma3DScreen.MODE_POINTS,
+        time: 0.0,
+        sound: options.sound || new Uint8Array(1024),
+        soundHistory: options.soundHistory || new Uint8Array(1024 * 240),
+        floatSound: options.floatSound || new Float32Array(1024),
+        floatSoundHistory:
+                options.floatSoundHistory || new Float32Array(1024 * 240),
+        soundRes: [ 1024, 240 ],
+        update : {
+            mouse: options.updateMouse !== false,
+            time: options.updateTime !== false,
+            soundHistory: options.soundHistory === undefined,
+            floatSoundHistory: options.floatSoundHistory === undefined,
+        }
+    };
+    this._touch = this._screen.createFloatTexture(
+            new Float32Array(32 * 240), 32, 240, false);
+    this._sound = this._screen.createAlphaTexture(
+            this.properties.soundHistory, 1024, 240, false);
+    this._floatSound = this._screen.createAlphaFloatTexture(
+            this.properties.floatSoundHistory, 1024, 240, false);
 };
 
-// Shader programs.
-MajVj.frame.mixer._vertexShader = null;
-MajVj.frame.mixer._fragment1Shader = null;
-MajVj.frame.mixer._fragment2Shader = null;
-MajVj.frame.mixer._fragment3Shader = null;
+MajVj.frame.vertexshaderart._vheader = ' \
+        attribute float vertexId; \
+        uniform float vertexCount; \
+        uniform vec2 resolution; \
+        uniform vec2 mouse; \
+        uniform float time; \
+        uniform sampler2D sound; \
+        uniform sampler2D floatSound; \
+        uniform vec4 background; \
+        varying vec4 v_color;';
+
+MajVj.frame.vertexshaderart._vshader = ' \
+        void main() { \
+            gl_Position = vec4(vec3(0.), 1.); \
+            v_color = vec4(1.); \
+        }';
+
+MajVj.frame.vertexshaderart._fshader = ' \
+        precision mediump float; \
+        varying vec4 v_color; \
+        void main() { \
+            gl_FragColor = v_color; \
+        }';
 
 /**
- * Loads resources asynchronously.
+ * Loads resource asynchronously.
+ * @return a Promise object
  */
-MajVj.frame.mixer.load = function () {
+MajVj.frame.vertexshaderart.load = function () {
     return new Promise(function (resolve, reject) {
-        Promise.all([
-            MajVj.loadShader('frame', 'mixer', 'shaders.html', 'vertex'),
-            MajVj.loadShader('frame', 'mixer', 'shaders.html', 'fragment1'),
-            MajVj.loadShader('frame', 'mixer', 'shaders.html', 'fragment2'),
-            MajVj.loadShader('frame', 'mixer', 'shaders.html', 'fragment3')
-        ]).then(function (shaders) {
-            MajVj.frame.mixer._vertexShader = shaders[0];
-            MajVj.frame.mixer._fragment1Shader = shaders[1];
-            MajVj.frame.mixer._fragment2Shader = shaders[2];
-            MajVj.frame.mixer._fragment3Shader = shaders[3];
-            resolve();
-        }, function () { reject('mixer.load fails'); });
+        resolve();
     });
 };
 
@@ -3326,41 +3882,117 @@ MajVj.frame.mixer.load = function () {
  * Handles screen resize.
  * @param aspect screen aspect ratio
  */
-MajVj.frame.mixer.prototype.onresize = function (aspect) {
+MajVj.frame.vertexshaderart.prototype.onresize = function (aspect) {
+    this._aspect = aspect;
 };
 
 /**
  * Draws a frame.
  * @param delta delta time from the last rendering
  */
-MajVj.frame.mixer.prototype.draw =
-        function (delta, texture0, texture1, texture2) {
-    this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
-    this._program.setTexture('uTexture0', this._fbo[0].texture);
-    this._program.setUniformVector('uVolume0', [this.properties.volume[0]]);
-    if (this._channel >= 2) {
-        this._program.setTexture('uTexture1', this._fbo[1].texture);
-        this._program.setUniformVector(
-                'uVolume1', [this.properties.volume[1]]);
-        if (this._channel >= 3) {
-            this._program.setTexture('uTexture2', this._fbo[2].texture);
-            this._program.setUniformVector(
-                    'uVolume2', [this.properties.volume[2]]);
+MajVj.frame.vertexshaderart.prototype.draw = function (delta) {
+    // **************************************************************
+    // * Spec from the help at https://www.vertexshaderart.com/new/ *
+    // **************************************************************
+    // Inputs
+    // -------------------------------------------------------------
+    // vertexId    : float     : number of the vertex 0, 1, 2
+    // vertexCount : float     : total number of vertices
+    // resoluton   : vec2      : resolution of the art
+    // mouse       : vec2      : mouse position normalized (-1 to 1)
+    // touch       : sampler2D : touch history 32x240 (4sec @60fps)
+    //             :           : x = x, y = y, z = pressure, w = time
+    //             :           : column 0 is mouse or first finger.
+    //             :           : column 1 is second finger ...
+    // time        : float     : time in seconds
+    // sound       : sampler2D : data from the music Nx240, alpha only
+    //             :           : 240 rows of history (4secs @60fps)
+    // floatSound  : sampler2D : data from the music Nx240, alpha only
+    //             :           : 240 rows of history (4secs @60fps)
+    //             :           : see spec for difference between
+    //             :           : getFloatFrequencyData and
+    //             :           : getByteFrenquencyData.
+    // soundRes    : vec2      : resolution of sound
+    // background  : vec4      : background color
+    // 
+    // Outputs:
+    // -------------------------------------------------------------
+    // gl_Position : vec4    : standard GLSL vertex shader output
+    // v_color     : vec4    : color to output from fragment shader
+    // 
+    // BLEND is enabled, function is ONE,ONE_MINUS_SRC_ALPHA,
+    // DEPTH_TEST is enabled.
+
+    if (this.properties.update.mouse) {
+        var mouse = this._screen.mouse();
+        if (!mouse.over) {
+            mouse.x = mouse.width / 2;
+            mouse.y = mouse.height / 2;
         }
+        this.properties.mouse[0] = -1 + mouse.x * 2 / mouse.width;
+        this.properties.mouse[1] = -1 + mouse.y * 2 / mouse.height;
     }
-    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+
+    // TODO: Update touch information.
+
+    if (this.properties.update.time)
+        this.properties.time += delta;
+
+    var i;
+    if (this.properties.update.soundHistory) {
+        var sound = this.properties.soundHistory;
+        for (i = 1024 * 240 - 1; i >= 1024; --i)
+            sound[i] = sound[i - 1024];
+        for (; i >= 0; --i)
+            sound[i] = this.properties.sound[i];
+    }
+    this._sound.update(this.properties.soundHistory);
+    if (this.properties.update.floatSoundHistory) {
+        var floatSound = this.properties.floatSoundHistory;
+        for (i = 1024 * 240 - 1; i >= 1024; --i)
+            floatSound[i] = floatSound[i - 1024];
+        for (; i >= 0; --i)
+            floatSound[i] = this.properties.floatSound[i];
+    }
+    this._floatSound.update(this.properties.floatSoundHistory);
+
+    if (this.properties.vertexCount != this._vertexCount)
+        this._prepareVertices();
+
+    this._screen.fillColor(this.properties.background[0],
+                           this.properties.background[1],
+                           this.properties.background[2],
+                           this.properties.background[3]);
+
+    this._screen.pushAlphaMode();
+    this._screen.setAlphaMode(true,
+                              this._screen.gl.ONE,
+                              this._screen.gl.ONE_MINUS_SRC_ALPHA,
+                              true);
+
+    this._program.setAttributeArray('vertexId', this._vertices, 0, 1, 0);
+    this._program.setUniformVector('vertexCount', [ this._vertexCount ]);
+    this._program.setUniformVector('resolution', [ this._width, this._height ]);
+    this._program.setUniformVector('mouse', this.properties.mouse);
+    this._program.setTexture('touch', this._touch);
+    this._program.setUniformVector('time', [ this.properties.time / 1000 ]);
+    this._program.setTexture('sound', this._sound);
+    this._program.setTexture('floatSound', this._floatSound);
+    this._program.setUniformVector('soundRes', this.properties.soundRes);
+    this._program.setUniformVector('background', this.properties.background);
+
+    this._program.drawArrays(this.properties.mode, 0, this._vertexCount);
+
+    this._screen.popAlphaMode();
 };
 
-/**
- * Bind an offscreen buffer.
- * @param channel a channel to bind
- * @return a previous fbo bount to the context
- */
-MajVj.frame.mixer.prototype.bind = function (channel) {
-    return this._fbo[channel].bind();
-};
-
-/**
+MajVj.frame.vertexshaderart.prototype._prepareVertices = function () {
+    this._vertexCount = this.properties.vertexCount;
+    var vertices = new Array(this._vertexCount);
+    for (var i = 0; i < this._vertexCount; ++i)
+        vertices[i] = i;
+    this._vertices = this._screen.createBuffer(vertices);
+};/**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - frame plugin - api3d -
  * @param options options (See MajVj.prototype.create)
@@ -3371,25 +4003,36 @@ MajVj.frame.api3d = function (options) {
     this._height = options.height;
     this.properties = {
         vr: false,
-        orientation: [ 0.0, 0.0, -90.0 ]
+        parallax_overlap: 0.0,
+        parallax_distance: 100,
+        orientation: [ 0.0, 0.0, -90.0 ],
+        position: [ 0.0, 0.0, 0.0 ],
+        rotation: [ 0.0, 0.0, 0.0 ],
+        use_orientation: true,
+        use_rotation: false
     };
     this.onresize(options.aspect);
 
     this._drawProgram = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    options.drawModeVertexShader ||
                     MajVj.frame.api3d._vDrawShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    options.drawModeFragmentShader ||
                     MajVj.frame.api3d._fDrawShader));
     this._textureProgram = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    options.textureModeVertexShader ||
                     MajVj.frame.api3d._vTextureShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     options.textureModeFragmentShader ||
                     MajVj.frame.api3d._fTextureShader));
     this._pointProgram = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    options.pointModeVertexShader ||
                     MajVj.frame.api3d._vPointShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    options.pointModeFragmentShader ||
                     MajVj.frame.api3d._fPointShader));
 
     this._api = {
@@ -3407,15 +4050,17 @@ MajVj.frame.api3d = function (options) {
       gl: this._screen.gl,
       screen: this._screen,
       setAlphaMode: this._screen.setAlphaMode,
+      drawModeShader: this._drawProgram,
       textureModeShader: this._textureProgram,
+      pointModeShader: this._pointProgram,
       vr: false,
       properties: this.properties
     };
 
-    this._pMatrix = mat4.identity();
-    this._mvMatrixL = mat4.identity();
-    this._mvMatrixR = mat4.identity();
-    this._iMatrix = mat4.identity();
+    this._pMatrix = mat4.identity(mat4.create());
+    this._mvMatrixL = mat4.identity(mat4.create());
+    this._mvMatrixR = mat4.identity(mat4.create());
+    this._iMatrix = mat4.identity(mat4.create());
     this._matrix = mat4.create();
 
     this._buffer2 = this._screen.createBuffer(new Array(2 * 3));
@@ -3427,6 +4072,7 @@ MajVj.frame.api3d = function (options) {
     var opt = options.options || {};
     opt.screen = this._screen;
     opt.api = this._api;
+    opt.properties = this.properties;
     this._module = options.module ? new options.module(opt) : {
         draw: options.draw || function (api) {},
         clear: options.clear || function (api) {}
@@ -3481,35 +4127,60 @@ MajVj.frame.api3d.prototype.onresize = function (aspect) {
  * @param delta delta time from the last rendering
  */
 MajVj.frame.api3d.prototype.draw = function (delta) {
+    var api = this.beginDraw(delta);
+    this._module.clear(api);
+    this._module.draw(api);
+    this.endDraw();
+};
+
+/**
+ * Sets up to call APIs and returns an API handle.
+ * @param delta delta time from the last rendering
+ * @return an API handle
+ */
+MajVj.frame.api3d.prototype.beginDraw = function (delta) {
     this._screen.pushAlphaMode();
 
     var aspect = this._aspect;
 
-    // TODO: Something is wrong on looking at sides.
-    var orientation = this.properties.orientation;
-    var rx = (90 + orientation[2]) / 360 * Math.PI * 2;
-    var ry = -orientation[0] / 360 * Math.PI * 2;
-    var rz = orientation[1] / 360 * Math.PI * 2;
-    var mat = mat4.identity();
-    mat = mat4.rotateZ(mat, rz);
-    mat = mat4.rotateY(mat, ry);
-    mat = mat4.rotateX(mat, rx);
-    this._mvMatrixL = mat;
+    var rx, ry, rz;
+    if (this.properties.use_rotation) {
+        var rotation = this.properties.rotation;
+        rx = rotation[0];
+        ry = rotation[1];
+        rz = rotation[2];
+    } else if (this.properties.use_orientation) {
+        // TODO: Something is wrong on looking at sides.
+        var orientation = this.properties.orientation;
+        rx = (90 + orientation[2]) / 360 * Math.PI * 2;
+        ry = -orientation[0] / 360 * Math.PI * 2;
+        rz = orientation[1] / 360 * Math.PI * 2;
+    }
+    mat4.identity(this._mvMatrixL);
+    mat4.rotateZ(this._mvMatrixL, this._mvMatrixL, rz);
+    mat4.rotateY(this._mvMatrixL, this._mvMatrixL, ry);
+    mat4.rotateX(this._mvMatrixL, this._mvMatrixL, rx);
 
     this._api.vr = this.properties.vr;
 
     if (this._api.vr) {
-        aspect /= 2;
-        mat4.translate(this._mvMatrixL, [-100, 0, 0], this._mvMatrixR);
-        mat4.translate(this._mvMatrixL, [100, 0, 0], this._mvMatrixL);
+        // TODO: Parallax calculation is also wrong.
+        aspect *= (1 + this.properties.parallax_overlap) / 2;
+        var distance = this.properties.parallax_distance;
+        mat4.translate(this._mvMatrixR, this._mvMatrixL, [-distance, 0, 0]);
+        mat4.translate(this._mvMatrixL, this._mvMatrixL, [distance, 0, 0]);
     }
-    this._pMatrix = mat4.perspective(60, aspect, 0.1, 10000.0, mat4.create());
+    mat4.perspective(this._pMatrix, Math.PI / 3, aspect, 0.1, 10000.0);
     this._viewport(this._api.vr ? 1 : 0);
 
     this._api.delta = delta;
-    this._module.clear(this._api);
-    this._module.draw(this._api);
+    return this._api;
+};
 
+/**
+ * Cleans up to call APIs. Should be called for each beginDraw().
+ */
+MajVj.frame.api3d.prototype.endDraw = function () {
     this._screen.popAlphaMode();
 };
 
@@ -3519,13 +4190,14 @@ MajVj.frame.api3d.prototype.draw = function (delta) {
  */
 MajVj.frame.api3d.prototype._viewport = function (view) {
     var c = this._screen.canvas.width / 2;
-    var x = view == 2 ? c : 0;
-    var w = view == 0 ? this._screen.canvas.width : c;
+    var d = c * this.properties.parallax_overlap;
+    var x = view == 2 ? (c - d) : 0;
+    var w = view == 0 ? this._screen.canvas.width : (c + d);
     this._screen.gl.viewport(x, 0, w, this._screen.canvas.height);
 };
 
 /**
- * Clears all displays.
+ * Clears the display.
  * @param flag flag, e.g., gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
  */
 MajVj.frame.api3d.prototype._clear = function (flag) {
@@ -3540,7 +4212,7 @@ MajVj.frame.api3d.prototype._clear = function (flag) {
 };
 
 /**
- * Draws a box to all displays.
+ * Draws a box.
  * @param w width
  * @param h height
  * @param p position in [x, y, z]
@@ -3553,7 +4225,7 @@ MajVj.frame.api3d.prototype._drawBox = function (w, h, p, r, texture) {
 };
 
 /**
- * Draws a character to all displays.
+ * Draws a character.
  * @param font a font set that is created by createFont API
  * @param c a character to show
  * @param w width scale (actual size depends on font size)
@@ -3571,7 +4243,7 @@ MajVj.frame.api3d.prototype._drawCharacter =
 };
 
 /**
- * Draws a cube to all displays.
+ * Draws a cube.
  * @param w width
  * @param h height
  * @param d depth
@@ -3583,14 +4255,18 @@ MajVj.frame.api3d.prototype._drawCube = function (w, h, d, p, r) {
 };
 
 /**
- * Draws a line to all displays.
+ * Draws a line.
  * @param src source position in [x, y, z]
  * @param dst destination position in [x, y, z]
  */
 MajVj.frame.api3d.prototype._drawLine = function (src, dst) {
     var buffer = this._buffer2.buffer();
-    buffer[0] = src[0]; buffer[1] = src[1]; buffer[2] = src[2];
-    buffer[3] = dst[0]; buffer[4] = dst[1]; buffer[5] = dst[2];
+    buffer[0] = src[0] - this.properties.position[0];
+    buffer[1] = src[1] - this.properties.position[1];
+    buffer[2] = src[2] - this.properties.position[2];
+    buffer[3] = dst[0] - this.properties.position[0];
+    buffer[4] = dst[1] - this.properties.position[1];
+    buffer[5] = dst[2] - this.properties.position[2];
     this._buffer2.update();
     this._drawProgram.setAttributeArray('aCoord', this._buffer2, 0, 3, 0);
     this._drawProgram.setUniformVector('uColor', this._api.color);
@@ -3609,7 +4285,7 @@ MajVj.frame.api3d.prototype._drawLine = function (src, dst) {
 };
 
 /**
- * Draws a primitive to all displays.
+ * Draws a primitive.
  * @param o primitive
  * @param w width
  * @param h height
@@ -3630,31 +4306,58 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
                'aTexCoord', o.getCoordsBuffer(this._screen), 0, 2, 0);
         program.setTexture('uTexture', texture);
     } else if (point) {
+        program.setUniformVector('uSize', [(w + h + d) / 3]);
         program.setAttributeArray(
                 'aColor', o.getColorsBuffer(this._screen), 0, 4, 0);
     } else {
         program.setUniformVector('uColor', this._api.color);
     }
 
-    mat4.translate(this._iMatrix, p, this._matrix);
+    var rp = [
+        p[0] - this.properties.position[0],
+        p[1] - this.properties.position[1],
+        p[2] - this.properties.position[2]
+    ];
+    mat4.translate(this._matrix, this._iMatrix, rp);
     if (r) {
         for (var i = r.length - 1; i >= 0; --i) {
             var rotate = r[i];
-            mat4.rotateX(this._matrix, rotate[0]);
-            mat4.rotateY(this._matrix, rotate[1]);
-            mat4.rotateZ(this._matrix, rotate[2]);
+            mat4.rotateX(this._matrix, this._matrix, rotate[0]);
+            mat4.rotateY(this._matrix, this._matrix, rotate[1]);
+            mat4.rotateZ(this._matrix, this._matrix, rotate[2]);
         }
     }
-    mat4.scale(this._matrix, [w, h, d]);
+    mat4.scale(this._matrix, this._matrix, [w, h, d]);
     program.setUniformMatrix('uMatrix', this._matrix);
 
     program.setUniformMatrix('uPMatrix', this._pMatrix);
     program.setUniformMatrix('uMVMatrix', this._mvMatrixL);
-    program.drawElements(mode, o.getIndicesBuffer(this._screen), 0, o.items());
+    if (mode != Tma3DScreen.MODE_LINE_TRIANGLES) {
+        program.drawElements(
+                mode, o.getIndicesBuffer(this._screen), o.getIndicesOffset(),
+                o.getIndicesLength());
+    } else {
+        for (var i = o.getIndicesOffset(); i < o.getIndicesLength(); i += 3) {
+            program.drawElements(
+                    Tma3DScreen.MODE_LINE_LOOP,
+                    o.getIndicesBuffer(this._screen), i * 2, 3);
+        }
+    }
     if (this._api.vr) {
         this._viewport(2);
         program.setUniformMatrix('uMVMatrix', this._mvMatrixR);
-        program.drawElements(mode, o.getIndicesBuffer(this._screen), 0, o.items());
+        if (mode != Tma3DScreen.MODE_LINE_TRIANGLES) {
+            program.drawElements(
+                    mode, o.getIndicesBuffer(this._screen),
+                    o.getIndicesOffset(), o.getIndicesLength());
+        } else {
+            for (var i = o.getIndicesOffset(); i < o.getIndicesLength();
+                    i += 3) {
+                program.drawElements(
+                        Tma3DScreen.MODE_LINE_LOOP,
+                        o.getIndicesBuffer(this._screen), i * 2, 3);
+            }
+        }
         this._viewport(1);
     }
 };
@@ -4302,7 +5005,7 @@ MajVj.scene.saiyaan = function (options) {
   this._mixerController = { volume: [0.0, 0.0, 0.0] };
   this._tuningController = { volume: [0.0] };
 
-  this._mixer = this._mv.create('frame', 'mixer', {
+  this._mixer = this._mv.create('misc', 'mixer', {
     channel: 3,
     controller: this._mixerController
   });
@@ -4549,12 +5252,10 @@ MajVj.scene.roll._script = [
  */
 MajVj.scene.waypoints = function (options) {
   this._mv = options.mv;
-  // TODO: Fix to use properties.
-  this._controller = options.controller;
-
-  this._tuningController = { volume: [0.0] };
-  this._rgbController = { volume: [0.01] };
-
+  this.properties = {
+    tuning: 0.0,
+    rgb: 0.01
+  };
   var nico3d = { name: 'nicofarre3d', options: {
     modules: [ {
       name: 'waypoints',
@@ -4567,18 +5268,14 @@ MajVj.scene.waypoints = function (options) {
       }
     } ]
   } };
-  var tuning = {
-    name: 'tuning',
-    options: { controller: this._tuningController }
-  };
-  var rgb = {
-    name: 'rgb',
-    options: { controller: this._rgbController }
-  };
+  var tuning = { name: 'tuning' };
+  var rgb = { name: 'rgb' };
   this._frame = this._mv.create('frame', 'effect', {
       frames: [nico3d],
       effects: [tuning, rgb]
   });
+  this._frame.getEffect(0).properties.volume = this.properties.tuning;
+  this._frame.getEffect(1).properties.volume = this.properties.rgb;
 };
 
 /**
@@ -4586,8 +5283,8 @@ MajVj.scene.waypoints = function (options) {
  * @param delta delta time from the last rendering
  */
 MajVj.scene.waypoints.prototype.draw = function (delta) {
-  this._tuningController.volume[0] = this._controller.volume[2];
-  this._rgbController.volume[0] = this._controller.volume[3];
+  this._frame.getEffect(0).properties.volume = this.properties.tuning;
+  this._frame.getEffect(1).properties.volume = this.properties.rgb;
   this._frame.draw(delta);
 };
 /**
@@ -5325,6 +6022,357 @@ MajVj.misc.sound.prototype.getFloatWaveTable = function (left, right) {
 };
 /**
  * T'MediaArt library for JavaScript
+ *  - MajVj extension - misc plugin - automator -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.misc.automator = function (options) {
+    this._options = options;
+    this._mv = options.mv;
+    this._t = 0.0;
+    this._delta = 0.0;
+    this._v = [0.0];
+    this._o = [];
+    this._random = Math.random;
+    this._sin = Math.sin;
+    this._last = 0.0;
+    switch (this._options.type) {
+    case 'randomly_gated_random':
+        this._generate = this._randomlyGatedRandom.bind(this);
+        break;
+    case 'sine':
+        this._generate = this._sine.bind(this);
+        break;
+    case 'vibration':
+        this._generate = this._vibration.bind(this);
+        break;
+    case 'nested':
+        for (var i = 0; i < this._options.options; ++i) {
+            var opt = this._options.options[i];
+            opt.mv = opt.mv || this._mv;
+            this._o[i] = this._mv.create('misc', 'automator', opt);
+        }
+        this._generate = this._nested.bind(this);
+        break;
+    default:
+        this._generate = function() { return 0; };
+        break;
+    }
+};
+
+/**
+ * Loads resources asynchronously.
+ * @return a Promise object
+ */
+MajVj.misc.automator.load = function () {
+    return new Promise(function (resolve, reject) {
+        resolve();
+    });
+};
+
+/**
+ * Generates automated value.
+ * @param delta delta time from the last call (in msec)
+ * @return generated value from 0 to 1
+ */
+MajVj.misc.automator.prototype.generate = function (delta) {
+    this._t += delta;
+    this._delta = delta;
+    return this._generate();
+};
+
+/**
+ * Generates automated value for type 'randomly_gated_random'.
+ * options.rate: how often should it be updated (0: never - 1: always)
+ * options.offset: offset value that would be applied in |gate_rate| rate
+ * options.volume: offset + volume * Math.random() is applied if it isn't gated
+ * options.gate_rate: how often offset should be applied (0: never - 1: always)
+ */
+MajVj.misc.automator.prototype._randomlyGatedRandom = function () {
+    var opt = this._options;
+    var rnd = this._random;
+
+    if (rnd() > opt.rate)
+        return this._last;
+    if (rnd() < opt.gate_rate)
+        this._last = opt.offset;
+    else
+        this._last = opt.offset + opt.volume * rnd();
+    return this._last;
+};
+
+/**
+ * Generates automated value for type 'sine'.
+ * options.rate: how often should it be updated (0: never -)
+ * options.offset: offset value
+ * options.volume: offset + volume * Math.sin() is applied
+ */
+MajVj.misc.automator.prototype._sine = function () {
+    var opt = this._options;
+    return opt.offset + this._sin(this._t * opt.rate) * opt.volume;
+};
+
+/**
+ * Generates automated value for type 'vibration'.
+ * options.rate: how often should it be updated (0: never -)
+ * options.input[options.index]: input value
+ * options.threshold: ignore if value is less than threshold
+ * options.offset: offset value
+ * options.volume: sine is mutiplied by volume-ish value
+ * options.tension: how quicktly value affects input (0: never - 1: immediately)
+ */
+MajVj.misc.automator.prototype._vibration = function () {
+    var opt = this._options;
+    var v = opt.input[opt.index];
+    if (v < opt.threshold)
+        v = 0;
+    var diff = v - this._v[0];
+    this._v[0] += diff * opt.tension;
+    var t = this._t * opt.rate;
+    return opt.offset + this._sin(t) * opt.volume * this._v[0];
+};
+
+/**
+ * Generates automated value for type 'nested'.
+ * Everything depend on nested automators.
+ */
+MajVj.misc.automator.prototype._nested = function () {
+    var v = 0;
+    for (var i = 0; i < this._o.length; ++i)
+        v += this._o[i].generate(this._delta);
+    return v;
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - misc plugin - camera -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.misc.camera = function (options) {
+    this._psrc = options.position || [ 0.0, 0.0, 0.0 ];
+    this._pdst = options.position || [ 0.0, 0.0, 0.0 ];
+    this._pv = [ 0.0, 0.0, 0.0 ];
+    this._p = options.position || [ 0.0, 0.0, 0.0 ];
+    this._ptime = 0;
+    this._pduration = 0;
+    this._pmode = options.mode || 'ease-in-out';
+
+    this._rsrc = options.rotation || [ 0.0, 0.0, 0.0 ];
+    this._rdst = options.rotation || [ 0.0, 0.0, 0.0 ];
+    this._rv = [ 0.0, 0.0, 0.0 ];
+    this._r = options.rotation || [ 0.0, 0.0, 0.0 ];
+    this._rtime = 0;
+    this._rduration = 0;
+    this._rmode = options.mode || 'ease-in-out';
+
+    this._PI = Math.PI;
+    this._PIx2 = Math.PI * 2;
+    this._atan2 = Math.atan2;
+    this._sqrt = Math.sqrt;
+    this._toDegree = 180 / Math.PI;
+};
+
+/**
+ * Loads resources asynchronously.
+ * @return a Promise object
+ */
+MajVj.misc.camera.load = function () {
+    return new Promise(function (resolve, reject) {
+        resolve();
+    });
+};
+
+/**
+ * Moves camera position.
+ * @param duration time duration to move to the destination (in msec)
+ * @param destination absolute destination camera position
+ */
+MajVj.misc.camera.prototype.moveTo = function (duration, destination) {
+    if (duration == 0) {
+        this._p[0] = destination[0];
+        this._p[1] = destination[1];
+        this._p[2] = destination[2];
+    }
+    this._psrc[0] = this._p[0];
+    this._psrc[1] = this._p[1];
+    this._psrc[2] = this._p[2];
+    this._pdst[0] = destination[0];
+    this._pdst[1] = destination[1];
+    this._pdst[2] = destination[2];
+    this._pv[0] = this._pdst[0] - this._psrc[0];
+    this._pv[1] = this._pdst[1] - this._psrc[1];
+    this._pv[2] = this._pdst[2] - this._psrc[2];
+    this._ptime = 0;
+    this._pduration = duration;
+};
+
+/**
+ * Moves camera position.
+ * @param duration time duration to move to the destination (in msec)
+ * @param destination relative destination camera position
+ */
+MajVj.misc.camera.prototype.moveBy = function (duration, destination) {
+    this.moveTo(duration, [
+        this._p[0] + destination[0],
+        this._p[1] + destination[1],
+        this._p[2] + destination[2]
+    ]);
+};
+
+/**
+ * Rotates camera position.
+ * @param duration time duration to rotate to the destination (in msec)
+ * @param destination absolute destination camera rotation
+ */
+MajVj.misc.camera.prototype.rotateTo = function (duration, destination) {
+    var dst = [
+        destination[0] % this._PIx2,
+        destination[1] % this._PIx2,
+        destination[2] % this._PIx2
+    ];
+    if (duration == 0) {
+        this._r[0] = dst[0];
+        this._r[1] = dst[1];
+        this._r[2] = dst[2];
+    }
+    for (var i = 0; i < 3; ++i) {
+        var diff = dst[i] - this._r[i];
+        if (diff > this._PI)
+            dst[i] -= this._PIx2;
+        else if (diff < -this._PI)
+            dst[i] += this._PIx2;
+        if (i == 0) {
+            if (dst[0] >= this._PI) {
+                dst[0] -= this._PI;
+                dst[1] = (this._PI - dst[1]) % this._PIx2;
+            } else if (dst[0] <= -this._PI) {
+                dst[0] += this._PI;
+                dst[1] = (-this._PI - dst[1]) % this._PIx2;
+            }
+        }
+    }
+    this._rsrc[0] = this._r[0];
+    this._rsrc[1] = this._r[1];
+    this._rsrc[2] = this._r[2];
+    this._rdst[0] = dst[0];
+    this._rdst[1] = dst[1];
+    this._rdst[2] = dst[2];
+    this._rv[0] = this._rdst[0] - this._rsrc[0];
+    this._rv[1] = this._rdst[1] - this._rsrc[1];
+    this._rv[2] = this._rdst[2] - this._rsrc[2];
+    this._rtime = 0;
+    this._rduration = duration;
+};
+
+/**
+ * Rotates camera position.
+ * @param duration time duration to rotate to the destination (in msec)
+ * @param destination relative destination camera rotation
+ */
+MajVj.misc.camera.prototype.rotateBy = function (duration, destination) {
+    this.rotateTo(duration, [
+        this._r[0] + destination[0],
+        this._r[1] + destination[1],
+        this._r[2] + destination[2]
+    ]);
+};
+
+/**
+ * Looks to the destination.
+ * @param duration time duration to rotate to the destination (in msec)
+ * @param destination absolute direction camera faces to
+ */
+MajVj.misc.camera.prototype.lookTo = function (duration, destination) {
+    var d = destination;
+    var yz = this._sqrt(d[1] * d[1] + d[2] * d[2]);
+    this.rotateTo(duration, [
+        -this._atan2(d[1], -d[2]),
+        this._atan2(d[0], yz),
+        0
+    ]);
+};
+
+/**
+ * Looks at the destination.
+ * @param duration time duration to rotate to the destination (in msec)
+ * @param destination absolute position camera looks at
+ */
+MajVj.misc.camera.prototype.lookAt = function (duration, destination) {
+    this.lookTo(duration, [
+        destination[0] - this._p[0],
+        destination[1] - this._p[1],
+        destination[2] - this._p[2]
+    ]);
+};
+
+/**
+ * Updates camera position.
+ * @param delta delta time from the last rendering (in msec)
+ */
+MajVj.misc.camera.prototype.update = function (delta) {
+    if (this._pduration != 0) {
+        this._ptime += delta;
+        var t = this._ptime / this._pduration;
+        if (this._ptime > this._pduration) {
+            this._pduration = 0;
+            this._p[0] = this._pdst[0];
+            this._p[1] = this._pdst[1];
+            this._p[2] = this._pdst[2];
+        } else {
+            var tl = TmaTimeline.convert(this._pmode, t);
+            this._p = [
+                this._psrc[0] + this._pv[0] * tl,
+                this._psrc[1] + this._pv[1] * tl,
+                this._psrc[2] + this._pv[2] * tl
+            ];
+        }
+    }
+    if (this._rduration != 0) {
+        this._rtime += delta;
+        var t = this._rtime / this._rduration;
+        if (this._rtime > this._rduration) {
+            this._rduration = 0;
+            this._r[0] = this._rdst[0] % this._PIx2;
+            this._r[1] = this._rdst[1] % this._PIx2;
+            this._r[2] = this._rdst[2] % this._PIx2;
+        } else {
+            var tl = TmaTimeline.convert(this._rmode, t);
+            this._r = [
+                (this._rsrc[0] + this._rv[0] * tl) % this._PIx2,
+                (this._rsrc[1] + this._rv[1] * tl) % this._PIx2,
+                (this._rsrc[2] + this._rv[2] * tl) % this._PIx2
+            ];
+        }
+    }
+};
+
+/**
+ * Obtains current camera position.
+ * @return current camera position in [x, y, z]
+ */
+MajVj.misc.camera.prototype.position = function () {
+    return this._p;
+};
+
+/**
+ * Obtains current camera rotation.
+ * @return current camera rotation in [x, y, z]
+ */
+MajVj.misc.camera.prototype.rotation = function () {
+    return this._r;
+};
+
+/**
+ * Obtains current camera orientation.
+ * @return current camera orientation in [alpha, beta, gamma]
+ */
+MajVj.misc.camera.prototype.orientation = function () {
+    return [
+        -this._r[1] * this._toDegree,
+        this._r[2] * this._toDegree,
+        this._r[0] * this._toDegree - 90
+    ];
+};
+/**
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - misc plugin - midi -
  * @param options options (See MajVj.prototype.create)
  */
@@ -5357,10 +6405,12 @@ MajVj.misc.midi.load = function () {
                 MajVj.misc.midi.keymap[i] = 0;
             MajVj.misc.midi._access.onstatechange =
                     MajVj.misc.midi._onStateChange;
-            for (var input of a.inputs)
-                MajVj.misc.midi._addInputDevice(input[1]);
-            for (var output of a.outputs)
-                MajVj.misc.midi._output = output[1];
+            var ii = a.inputs.values();
+            for (var input = ii.next(); !input.done; input = ii.next())
+                MajVj.misc.midi._addInputDevice(input.value);
+            var oi = a.outputs.values();
+            for (var output = oi.next(); !output.done; output = oi.next())
+                MajVj.misc.midi._output = output.value;
             resolve();
         }, function (e) {
             reject(e);
@@ -5471,6 +6521,239 @@ MajVj.misc.midi._onMidiMessage = function (e) {
 
 /**
  * T'MediaArt library for JavaScript
+ *  - MajVj extension - misc plugin - perlin -
+ * based on Ken Perlin's reference implementation of improved noise in Java.
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.misc.perlin = function (options) {
+    this._options = options;
+    this._p = MajVj.misc.perlin._permutation;
+};
+
+MajVj.misc.perlin._permutation = [
+    151, 160, 137,  91,  90,  15, 131,  13,
+    201,  95,  96,  53, 194, 233,   7, 225,
+    140,  36, 103,  30,  69, 142,   8,  99,
+     37, 240,  21,  10,  23, 190,   6, 148,
+    247, 120, 234,  75,   0,  26, 197,  62,
+     94, 252, 219, 203, 117,  35,  11,  32,
+     57, 177,  33,  88, 237, 149,  56,  87,
+    174,  20, 125, 136, 171, 168,  68, 175,
+     74, 165,  71, 134, 139,  48,  27, 166,
+     77, 146, 158, 231,  83, 111, 229, 122,
+     60, 211, 133, 230, 220, 105,  92,  41,
+     55,  46, 245,  40, 244, 102, 143,  54,
+     65,  25,  63, 161,   1, 216,  80,  73,
+    209,  76, 132, 187, 208,  89,  18, 169,
+    200, 196, 135, 130, 116, 188, 159,  86,
+    164, 100, 109, 198, 173, 186,   3,  64,
+     52, 217, 226, 250, 124, 123,   5, 202,
+     38, 147, 118, 126, 255,  82,  85, 212,
+    207, 206,  59, 227,  47,  16,  58,  17,
+    182, 189,  28,  42, 223, 183, 170, 213,
+    119, 248, 152,   2,  44, 154, 163,  70,
+    221, 153, 101, 155, 167,  43, 172,   9,
+    129,  22,  39, 253,  19,  98, 108, 110,
+     79, 113, 224, 232, 178, 185, 112, 104,
+    218, 246,  97, 228, 251,  34, 242, 193,
+    238, 210, 144,  12, 191, 179, 162, 241,
+     81,  51, 145, 235, 249,  14, 239 ,107,
+     49, 192, 214,  31, 181, 199, 106, 157,
+    184,  84, 204, 176, 115, 121,  50,  45,
+    127,   4, 150, 254, 138, 236, 205,  93,
+    222, 114,  67,  29,  24,  72, 243, 141,
+    128, 195,  78,  66, 215,  61, 156, 180
+];
+
+/**
+ * Loads resources asynchronously.
+ * @return a Promise object
+ */
+MajVj.misc.perlin.load = function () {
+    return new Promise(function (resolve, reject) {
+        resolve();
+    });
+};
+
+/**
+ * Returns a corresponding perlin noise value to the location.
+ * @param x X location
+ * @param y Y location
+ * @param z Z location
+ * @return a perlin noise value
+ */
+MajVj.misc.perlin.prototype.noise = function (x, y, z) {
+    var X = Math.floor(x) & 255;
+    var Y = Math.floor(y) & 255;
+    var Z = Math.floor(z) & 255;
+    x -= Math.floor(x);
+    y -= Math.floor(y);
+    z -= Math.floor(z);
+    var u = this._fade(x);
+    var v = this._fade(y);
+    var w = this._fade(z);
+    var A = this._p[X] + Y;
+    var AA = this._p[A % 256] + Z;
+    var AB = this._p[(A + 1) % 256] + Z;
+    var B = this._p[(X + 1) % 256] + Y;
+    var BA = this._p[B % 256] + Z;
+    var BB = this._p[(B + 1) % 256] + Z;
+
+    return this._lerp(w,
+                      this._lerp(v,
+                                 this._lerp(u,
+                                            this._grad(this._p[AA % 256],
+                                                       x,
+                                                       y,
+                                                       z),
+                                            this._grad(this._p[BA % 256],
+                                                       x - 1,
+                                                       y,
+                                                       z)),
+                                 this._lerp(u,
+                                            this._grad(this._p[AB % 256],
+                                                       x,
+                                                       y - 1,
+                                                       z),
+                                            this._grad(this._p[BB % 256],
+                                                       x - 1,
+                                                       y - 1,
+                                                       z))),
+                      this._lerp(v,
+                                 this._lerp(u,
+                                            this._grad(this._p[(AA + 1) % 256],
+                                                       x,
+                                                       y,
+                                                       z - 1),
+                                            this._grad(this._p[(BA + 1) % 256],
+                                                       x - 1,
+                                                       y,
+                                                       z - 1)),
+                                 this._lerp(u,
+                                            this._grad(this._p[(AB + 1) % 256],
+                                                       x,
+                                                       y - 1,
+                                                       z - 1),
+                                            this._grad(this._p[(BB + 1) % 256],
+                                                       x - 1,
+                                                       y - 1,
+                                                       z - 1))));
+}
+
+MajVj.misc.perlin.prototype._fade = function (t) {
+    return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+MajVj.misc.perlin.prototype._lerp = function (t, a, b) {
+    return a + t * (b - a);
+}
+
+MajVj.misc.perlin.prototype._grad = function (hash, x, y, z) {
+    var h = hash & 15;
+    var u = h < 8 ? x : y;
+    var v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+    return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+}/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - misc plugin - mixer -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.misc.mixer = function (options) {
+    this._screen = options.screen;
+    this._mv = options.mv;
+    this.properties = { volume: [0.0, 0.0, 0.0] };
+    this._channel = options.channel || 1;
+    this._fbo = [];
+    this._resize(options.width, options.height);
+    var fragmentShader =
+            (this._channel == 1) ?  MajVj.misc.mixer._fragment1Shader :
+            (this._channel == 2) ?  MajVj.misc.mixer._fragment2Shader :
+                                    MajVj.misc.mixer._fragment3Shader;
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.misc.mixer._vertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    fragmentShader));
+    this._coords = this._screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
+};
+
+// Shader programs.
+MajVj.misc.mixer._vertexShader = null;
+MajVj.misc.mixer._fragment1Shader = null;
+MajVj.misc.mixer._fragment2Shader = null;
+MajVj.misc.mixer._fragment3Shader = null;
+
+/**
+ * Loads resources asynchronously.
+ */
+MajVj.misc.mixer.load = function () {
+    return new Promise(function (resolve, reject) {
+        Promise.all([
+            MajVj.loadShader('misc', 'mixer', 'shaders.html', 'vertex'),
+            MajVj.loadShader('misc', 'mixer', 'shaders.html', 'fragment1'),
+            MajVj.loadShader('misc', 'mixer', 'shaders.html', 'fragment2'),
+            MajVj.loadShader('misc', 'mixer', 'shaders.html', 'fragment3')
+        ]).then(function (shaders) {
+            MajVj.misc.mixer._vertexShader = shaders[0];
+            MajVj.misc.mixer._fragment1Shader = shaders[1];
+            MajVj.misc.mixer._fragment2Shader = shaders[2];
+            MajVj.misc.mixer._fragment3Shader = shaders[3];
+            resolve();
+        }, function () { reject('mixer.load fails'); });
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.misc.mixer.prototype.onresize = function (aspect) {
+    var size = this._mv.size();
+    this._resize(size.width, size.height);
+};
+
+/**
+ * Draws a mixed image.
+ * @param delta delta time from the last rendering
+ */
+MajVj.misc.mixer.prototype.draw =
+        function (delta, texture0, texture1, texture2) {
+    this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
+    this._program.setTexture('uTexture0', this._fbo[0].texture);
+    this._program.setUniformVector('uVolume0', [this.properties.volume[0]]);
+    if (this._channel >= 2) {
+        this._program.setTexture('uTexture1', this._fbo[1].texture);
+        this._program.setUniformVector(
+                'uVolume1', [this.properties.volume[1]]);
+        if (this._channel >= 3) {
+            this._program.setTexture('uTexture2', this._fbo[2].texture);
+            this._program.setUniformVector(
+                    'uVolume2', [this.properties.volume[2]]);
+        }
+    }
+    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+};
+
+/**
+ * Bind an offscreen buffer.
+ * @param channel a channel to bind
+ * @return a previous fbo bount to the context
+ */
+MajVj.misc.mixer.prototype.bind = function (channel) {
+    return this._fbo[channel].bind();
+};
+
+/**
+ * Adjust frame buffer object size.
+ * @param width offscreen width
+ * @param height offscreen height
+ */
+MajVj.misc.mixer.prototype._resize = function (width, height) {
+    for (var ch = 0; ch < this._channel; ++ch)
+        this._fbo[ch] = this._screen.createFrameBuffer(width, height);
+};
+/**
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - misc plugin - api2d -
  * @param options options (See MajVj.prototype.create)
  */
@@ -5483,8 +6766,8 @@ MajVj.misc.api2d = function (options) {
     this._options = options;
     this._screen = options.screen;
 
-    this._divX = (this.width - 1) / 2;
-    this._divY = (this.height - 1) / 2;
+    this._divX = this.width / 2;
+    this._divY = this.height / 2;
     this._strokeWeight = 1.0;
     this._subX = 1.0;
     this._subY = 1.0;
@@ -5860,10 +7143,9 @@ MajVj.effect.nicofarre = function (options) {
                     MajVj.effect.nicofarre._fragmentShaderForCeiling));
     this._pMatrix = mat4.create();
     this.onresize(this._aspect);
-    this._mvMatrix = mat4.create();
-    mat4.identity(this._mvMatrix);
+    this._mvMatrix = mat4.identity(mat4.create());
     var position = options.position || [0, 0, -500];
-    mat4.translate(this._mvMatrix, position);
+    mat4.translate(this._mvMatrix, this._mvMatrix, position);
     this._coords = this._screen.createBuffer([
             // A (right): 1480x280, x=420
             420, -140, -740,
@@ -5982,7 +7264,7 @@ MajVj.effect.nicofarre.load = function () {
  */
 MajVj.effect.nicofarre.prototype.onresize = function (aspect) {
     this._aspect = aspect;
-    mat4.perspective(45, aspect, 0.1, 10000.0, this._pMatrix);
+    mat4.perspective(this._pMatrix, Math.PI / 4, aspect, 0.1, 10000.0);
 };
 
 /**
@@ -5991,9 +7273,9 @@ MajVj.effect.nicofarre.prototype.onresize = function (aspect) {
  * @param texture texture data
  */
 MajVj.effect.nicofarre.prototype.draw = function (delta, texture) {
-    var mvMatrix = mat4.create(this._mvMatrix);
-    mat4.translate(mvMatrix, [0, 0, 1000 * this.properties.volume[0]]);
-    mat4.rotate(mvMatrix, Math.PI * this.properties.volume[1], [0, 1, 0]);
+    var mvMatrix = mat4.clone(this._mvMatrix);
+    mat4.translate(mvMatrix, mvMatrix, [0, 0, 1000 * this.properties.volume[0]]);
+    mat4.rotate(mvMatrix, mvMatrix, Math.PI * this.properties.volume[1], [0, 1, 0]);
     this._screen.pushAlphaMode();
     this._screen.setAlphaMode(false);
     this._screen.pushCullingMode();
@@ -6082,6 +7364,117 @@ MajVj.effect.rgb.prototype.draw = function (delta, texture) {
 };
 /**
  * T'MediaArt library for JavaScript
+ *  - MajVj extension - effect plugin - mirror -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.effect.mirror = function (options) {
+    this._screen = options.screen;
+    this.onresize(options.aspect);
+    this.properties = {
+        division: options.division || 4,
+        zoom: 1.5
+    };
+    this._coords = null;
+    this._indices = null;
+    this._division = 0;
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.effect.mirror._vertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.effect.mirror._fragmentShader));
+};
+
+// Shader programs.
+MajVj.effect.mirror._vertexShader = null;
+MajVj.effect.mirror._fragmentShader = null;
+
+/**
+ * Loads resources asynchronously.
+ */
+MajVj.effect.mirror.load = function () {
+    return new Promise(function (resolve, reject) {
+        Promise.all([
+            MajVj.loadShader('effect', 'mirror', 'shaders.html', 'vertex'),
+            MajVj.loadShader('effect', 'mirror', 'shaders.html', 'fragment')
+        ]).then(function (shaders) {
+            MajVj.effect.mirror._vertexShader = shaders[0];
+            MajVj.effect.mirror._fragmentShader = shaders[1];
+            resolve();
+        }, function () { reject('mirror.load fails'); });
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.effect.mirror.prototype.onresize = function (aspect) {
+    this._aspect = aspect;
+    this._zoom = [ 1.0, 1.0 ];
+    if (this._aspect > 1)
+        this._zoom[1] = this._aspect;
+    else
+        this._zoom[0] = 1 / this._aspect;
+};
+
+/**
+ * Draws a frame.
+ * @param delta delta time from the last rendering
+ * @param texture texture data
+ */
+MajVj.effect.mirror.prototype.draw = function (delta, texture) {
+    if (this._division != this.properties.division)
+        this._prepareCoords();
+
+    this._program.setAttributeArray('aCoord', this._coords, 0, 4, 0);
+    var zoom = [
+        this._zoom[0] * this.properties.zoom,
+        this._zoom[1] * this.properties.zoom
+    ];
+    this._program.setUniformVector('uZoom', zoom);
+    this._program.setTexture('uTexture', texture);
+    var length = this._division * 6;
+    this._program.drawElements(
+            Tma3DScreen.MODE_TRIANGLES, this._indices, 0, length);
+};
+
+MajVj.effect.mirror.prototype._prepareCoords = function () {
+    var n = this.properties.division;
+    var coords = [];
+    var delta = Math.PI * 2 / n;
+    var theta = 0;
+    var p0 = [ 0, 0 ];
+    var p1 = [ Math.cos(theta), Math.sin(theta) ];
+    var p2 = [ Math.cos(delta), Math.sin(delta) ];
+    var p3 = [ p1[0] + p2[0], p1[1] + p2[1] ];
+    var index = 0;
+    var indices = [];
+    for (var i = 0; i < n; ++i) {
+        var t1 = theta;
+        theta += delta;
+        var t2 = theta;
+        var qa = [ Math.cos(t1), Math.sin(t1) ];
+        var qb = [ Math.cos(t2), Math.sin(t2) ];
+        var q1 = (i % 2) ? qb : qa;
+        var q2 = (i % 2) ? qa : qb;
+        var q3 = [ q1[0] + q2[0], q1[1] + q2[1] ];
+        [].push.apply(coords, [ 0, 0, p0[0], p0[1] ]);
+        [].push.apply(coords, [ q1[0], q1[1], p1[0], p1[1] ]);
+        [].push.apply(coords, [ q2[0], q2[1], p2[0], p2[1] ]);
+        indices.push(index + 0);
+        indices.push(index + 1);
+        indices.push(index + 2);
+        [].push.apply(coords, [ q3[0], q3[1], p3[0], p3[1] ]);
+        indices.push(index + 1);
+        indices.push(index + 2);
+        indices.push(index + 3);
+        index += 4;
+    }
+    this._coords = this._screen.createBuffer(coords);
+    this._indices = this._screen.createElementBuffer(indices);
+    this._division = n;
+};/**
+ * T'MediaArt library for JavaScript
  *  - MajVj extension - effect plugin - tuning -
  * @param options options (See MajVj.prototype.create)
  */
@@ -6151,7 +7544,9 @@ MajVj.effect.rollpanel = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this.properties = {};
+    this.properties = {
+        restart: false
+    };
     this._panels = options.panels || 3;
     this._delay = options.delay || 0.25;
     this._delay *= 2 * Math.PI;
@@ -6171,7 +7566,7 @@ MajVj.effect.rollpanel = function (options) {
     this._coords =
             this._screen.createBuffer(Array.prototype.concat.apply([], coords));
     this._matrix = mat4.create();
-    mat4.perspective(this._matrix, 90, 1, 0.1, 2.0);
+    mat4.perspective(this._matrix, Math.PI / 2, 1, 0.1, 2.0);
     mat4.translate(this._matrix, this._matrix, [0.0, 0.0, -1.0]);
     mat4.scale(this._matrix, this._matrix, [2, 2, 2]);
     this._scaleTimeline = new TmaTimeline({
@@ -6217,6 +7612,11 @@ MajVj.effect.rollpanel.prototype.onresize = function (aspect) {
  * @param texture texture data
  */
 MajVj.effect.rollpanel.prototype.draw = function (delta, texture) {
+    if (this.properties.restart) {
+        this.properties.restart = false;
+        this._scaleTimeline.reset();
+        this._oneshotTimeline.reset();
+    }
     this._scaleTimeline.update(delta);
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setUniformMatrix('uMatrix', this._matrix);
@@ -6232,13 +7632,6 @@ MajVj.effect.rollpanel.prototype.draw = function (delta, texture) {
         this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 4 * i, 4);
     }
 };
-
-/**
- * Restart timeline.
- */
-MajVj.effect.rollpanel.prototype.restart = function (controller) {
-    this._time = 0;
-};
 /**
  * T'MediaArt library for JavaScript
  *  - MajVj extension - effect plugin - cathode -
@@ -6248,7 +7641,10 @@ MajVj.effect.cathode = function (options) {
     this._screen = options.screen;
     this._width = options.width;
     this._height = options.height;
-    this.properties = {};
+    this.properties = {
+        volume: 1.0,
+        bend: 0.1,
+    };
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.effect.cathode._vertexShader),
@@ -6292,7 +7688,89 @@ MajVj.effect.cathode.prototype.onresize = function (aspect) {
 MajVj.effect.cathode.prototype.draw = function (delta, texture) {
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setTexture('uTexture', texture);
-    this._program.setUniformVector('uVolume', [1.0]);
+    this._program.setUniformVector('uVolume', [this.properties.volume]);
+    this._program.setUniformVector('uBend', [this.properties.bend]);
+    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - effect plugin - mask -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.effect.mask = function (options) {
+    this._screen = options.screen;
+    this.properties = {
+        resolution: [ options.width / 8, options.height / 8 ],
+        texture: null
+    };
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.effect.mask._vertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.effect.mask._fragmentShader));
+    this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1]);
+    var patch = null;
+    if (options.patch) {
+        patch = {
+            rgb: MajVj.effect.mask._patchRgb,
+            led: MajVj.effect.mask._patchLed,
+            panel: MajVj.effect.mask._patchPanel,
+            custom: options.image
+        }[options.patch];
+    }
+    if (!patch)
+        patch = MajVj.effect.mask._patchRgb;
+    this._patch = this._screen.createTexture(
+            patch, true, Tma3DScreen.FILTER_NEAREST);
+    this.properties.texture = this._patch;
+};
+
+// Shader programs.
+MajVj.effect.mask._vertexShader = null;
+MajVj.effect.mask._fragmentShader = null;
+MajVj.effect.mask._patchRgb = null;
+MajVj.effect.mask._patchLed = null;
+MajVj.effect.mask._patchPanel = null;
+
+/**
+ * Loads resources asynchronously.
+ */
+MajVj.effect.mask.load = function () {
+    return new Promise(function (resolve, reject) {
+        Promise.all([
+            MajVj.loadShader('effect', 'mask', 'shaders.html', 'vertex'),
+            MajVj.loadShader('effect', 'mask', 'shaders.html', 'fragment'),
+            MajVj.loadImage('effect', 'mask', 'rgb.png'),
+            MajVj.loadImage('effect', 'mask', 'led.png'),
+            MajVj.loadImage('effect', 'mask', 'panel.png')
+        ]).then(function (data) {
+            MajVj.effect.mask._vertexShader = data[0];
+            MajVj.effect.mask._fragmentShader = data[1];
+            MajVj.effect.mask._patchRgb = data[2];
+            MajVj.effect.mask._patchLed = data[3];
+            MajVj.effect.mask._patchPanel = data[4];
+            resolve();
+        }, function () { reject('mask.load fails'); });
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.effect.mask.prototype.onresize = function (aspect) {
+};
+
+/**
+ * Draws a frame.
+ * @param delta delta time from the last rendering
+ * @param texture texture data
+ */
+MajVj.effect.mask.prototype.draw = function (delta, texture) {
+    this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
+    this._program.setTexture('uTexture', texture);
+    this._program.setTexture('uPatch', this._patch);
+    this._program.setUniformVector('uResolution', this.properties.resolution);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
 /**
@@ -6359,6 +7837,327 @@ MajVj.effect.flashpanel.prototype.draw = function (delta, texture) {
     this._program.setUniformVector('uOrigin', this.properties.origin);
     this._program.setUniformVector('uColor', this._color);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - effect plugin - acrylic -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.effect.acrylic = function (options) {
+    this._screen = options.screen;
+    this._width = options.width;
+    this._height = options.height;
+    this._aspect = options.aspect;
+    this.properties = {
+        color: [0.0, 0.0, 1.0, 1.0]
+    };
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.effect.acrylic._vertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.effect.acrylic._fragmentShader));
+    this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1]);
+};
+
+// Shader programs.
+MajVj.effect.acrylic._vertexShader = null;
+MajVj.effect.acrylic._fragmentShader = null;
+
+/**
+ * Loads resources asynchronously.
+ */
+MajVj.effect.acrylic.load = function () {
+    return new Promise(function (resolve, reject) {
+        Promise.all([
+            MajVj.loadShader('effect', 'acrylic', 'shaders.html', 'vertex'),
+            MajVj.loadShader('effect', 'acrylic', 'shaders.html', 'fragment')
+        ]).then(function (shaders) {
+            MajVj.effect.acrylic._vertexShader = shaders[0];
+            MajVj.effect.acrylic._fragmentShader = shaders[1];
+            resolve();
+        }, function () { reject('acrylic.load fails'); });
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.effect.acrylic.prototype.onresize = function (aspect) {
+};
+
+/**
+ * Draws a frame.
+ * @param delta delta time from the last rendering
+ * @param texture texture data
+ */
+MajVj.effect.acrylic.prototype.draw = function (delta, texture) {
+    this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
+    this._program.setTexture('uTexture', texture);
+    this._program.setUniformVector('uColor', this.properties.color);
+    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - effect plugin - noise -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.effect.noise = function (options) {
+    this._screen = options.screen;
+    this._mv = options.mv;
+    this._width = options.width;
+    this._height = options.height;
+    var prop = function (name) {
+        if (options.enable)
+            return options.enable.indexOf(name) >= 0;
+        if (options.disable)
+            return options.disable.indexOf(name) < 0;
+        if (options[name] !== undefined)
+            return options[name];
+        return true;
+    };
+    this.properties = {
+        // for scanline, analog, and raster that needs updating a line texture.
+        update: prop('update'),
+
+        scanline: prop('scanline'),
+        scanline_frequency: this._height / 4,
+        scanline_velocity: 0.5,
+
+        analog: prop('analog'),
+        analog_frequency: 8,
+        analog_speed: 0.0001,
+        analog_color_distribution: [0.5, 0.7, 0.3],
+
+        raster: prop('raster'),
+        raster_velocity: 7,
+        raster_speed: 0.005,
+        raster_level: 0.6,
+
+        color: prop('color'),
+        color_shift: [-0.005, 0.0, 0.005],
+        color_level: [0.1, 0.1, 0.1],
+        color_weight: [1.0, 0.7, 0.4],  // sepia
+
+        noise: prop('noise'),
+        noise_level: [0.05, 0.2, 0.01],  // white, pink, perlin
+        noise_color: [1, 1, 1],
+
+        slitscan: prop('slitscan'),
+        slitscan_size: 4,
+
+        adjust: prop('adjust'),
+        adjust_repeat: [1, 1],
+        adjust_offset: [0, 0],
+
+        tube: prop('tube'),
+        tube_adjust: [0.1, 48],
+
+        film: prop('film'),
+        film_lines: 3,  // 0-5
+        film_flash: 0.4
+    };
+
+    this._noise = this._mv.create('misc', 'perlin');
+    this._delta = 0;
+
+    this._effectProgram = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.effect.noise._effectVertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.effect.noise._effectFragmentShader));
+    this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1]);
+
+    this._lineProgram = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.effect.noise._lineVertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.effect.noise._lineFragmentShader));
+    this._lineCoords = this._screen.createBuffer([
+        0.0, -1, 0.0, 1,
+        0.1, -1, 0.1, 1,
+        0.2, -1, 0.2, 1,
+        0.3, -1, 0.3, 1,
+        0.4, -1, 0.4, 1
+    ]);
+
+    this._lineImage = this._screen.createImage(1, this._height);
+    this._updateLineImage();
+    this._lineTexture = this._screen.createTexture(
+            this._lineImage, false, Tma3DScreen.FILTER_LINEAR);
+
+    this._noiseImage = this._screen.createImage(this._width, this._height);
+    var nhist = 100;
+    for (var y = 0; y < this._height; ++y) {
+        var rhist = [];
+        for (var i = 0; i < (nhist - 1); ++i)
+            rhist[i] = Math.random();
+        for (var x = 0; x < this._width; ++x) {
+            var white = ((Math.random() * 256)|0) % 256;
+            var parlin1 = (this._noise.noise(x / 3, y / 3, 0.3) + 1) * 127;
+            var parlin2 = (this._noise.noise(x / 3, y / 3, 0.6) + 1) * 127;
+            rhist[nhist - 1 + x] = Math.random();
+            var pink = 0;
+            for (i = nhist; i > 0; --i)
+                pink += rhist[x + nhist - i] / i / 2;
+            pink = ((pink + 1) * 128) % 256;
+            this._noiseImage.setPixel(x, y, white, pink, parlin1, parlin2);
+        }
+    }
+    this._noiseTexture = this._screen.createTexture(
+            this._noiseImage, false, Tma3DScreen.FILTER_NEAREST);
+};
+
+// Shader programs.
+MajVj.effect.noise._lineVertexShader = null;
+MajVj.effect.noise._lineFragmentShader = null;
+MajVj.effect.noise._effectVertexShader = null;
+MajVj.effect.noise._effectFragmentShader = null;
+
+/**
+ * Loads resources asynchronously.
+ */
+MajVj.effect.noise.load = function () {
+    return new Promise(function (resolve, reject) {
+        Promise.all([
+            MajVj.loadShader('effect', 'noise', 'shaders.html', 'lineVertex'),
+            MajVj.loadShader('effect', 'noise', 'shaders.html', 'lineFragment'),
+            MajVj.loadShader('effect', 'noise', 'shaders.html', 'effectVertex'),
+            MajVj.loadShader(
+                    'effect', 'noise', 'shaders.html', 'effectFragment')
+        ]).then(function (data) {
+            MajVj.effect.noise._lineVertexShader = data[0];
+            MajVj.effect.noise._lineFragmentShader = data[1];
+            MajVj.effect.noise._effectVertexShader = data[2];
+            MajVj.effect.noise._effectFragmentShader = data[3];
+            resolve();
+        }, function () { reject('noise.load fails'); });
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.effect.noise.prototype.onresize = function (aspect) {
+};
+
+/**
+ * Draws a frame.
+ * @param delta delta time from the last rendering
+ * @param texture texture data
+ */
+MajVj.effect.noise.prototype.draw = function (delta, texture) {
+    this._delta += delta;
+
+    if (this.properties.update) {
+        this._updateLineImage();
+        this._lineTexture.update(this._lineImage);
+    }
+
+    this._effectProgram.setAttributeArray('aCoord', this._coords, 0, 2, 0);
+    this._effectProgram.setTexture('uTexture', texture);
+    this._effectProgram.setTexture('uLineTexture', this._lineTexture);
+    this._effectProgram.setTexture('uNoiseTexture', this._noiseTexture);
+    this._effectProgram.setUniformVector('uColorShift',
+            this.properties.color ? this.properties.color_shift : [0, 0, 0]);
+    this._effectProgram.setUniformVector('uColorLevel',
+            this.properties.color ? this.properties.color_level : [1, 1, 1]);
+    this._effectProgram.setUniformVector('uColorWeight',
+            this.properties.color ? this.properties.color_weight : [1, 1, 1]);
+    this._effectProgram.setUniformVector('uNoiseShift',
+            this.properties.noise ? [Math.random(), Math.random()] : [0, 0]);
+    this._effectProgram.setUniformVector('uNoiseLevel',
+            this.properties.noise ? this.properties.noise_level : [0, 0]);
+    this._effectProgram.setUniformVector('uNoiseColor',
+            this.properties.noise ? this.properties.noise_color : [0, 0, 0]);
+    this._effectProgram.setUniformVector('uSlitscanResolution',
+            this.properties.slitscan
+                    ? [this._width / this.properties.slitscan_size]
+                    : [this._width]);
+    this._effectProgram.setUniformVector('uTime', [this._delta / 10]);
+    this._effectProgram.setUniformVector('uAdjustRepeat',
+            this.properties.adjust ? this.properties.adjust_repeat : [1, 1]);
+    this._effectProgram.setUniformVector('uAdjustOffset',
+            this.properties.adjust ? this.properties.adjust_offset : [0, 0]);
+    var adjust = [
+        this.properties.tube_adjust[0],
+        this.properties.tube_adjust[1]
+    ];
+    if (this.properties.film)
+        adjust[1] = adjust[1] * (1 +
+                this._noise.noise(0.1, 0.1, this._delta / 10) *
+                this.properties.film_flash);
+    this._effectProgram.setUniformVector('uTubeAdjust',
+            this.properties.tube ? adjust : [1, 0]);
+    this._effectProgram.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+
+    if (this.properties.film && this.properties.film_lines != 0) {
+        this._screen.pushAlphaMode();
+        this._screen.setAlphaMode(
+                true, this._screen.gl.ONE, this._screen.gl.SRC_ALPHA);
+        var buffer = this._lineCoords.buffer();
+        for (var i = 0; i < this.properties.film_lines; ++i) {
+            buffer[i * 4 + 0] = buffer[i * 4 + 2] = 2 *
+                    (this._noise.noise(this._delta / 1000, i * 3.33, i * 7.77) +
+                     this._noise.noise(this._delta / 10, i * 4, i * 8) * 0.01);
+        }
+        this._lineCoords.update();
+        this._lineProgram.setAttributeArray(
+                'aCoord', this._lineCoords, 0, 2, 0);
+        this._lineProgram.drawArrays(
+                Tma3DScreen.MODE_LINES, 0, this.properties.film_lines * 2);
+        this._screen.popAlphaMode();
+    }
+};
+
+MajVj.effect.noise.prototype._updateLineImage = function () {
+    var scanlineEnabled = this.properties.scanline;
+    var scanlineTheta = 0;
+    var scanlineMaxTheta = 2 * Math.PI * this.properties.scanline_frequency;
+    var scanlineNoiseVelocity = this.properties.scanline_velocity;
+    var scanlineBaseVelocity = (1 - scanlineNoiseVelocity);
+    var analogEnabled = this.properties.analog;
+    var analogFrequency = this.properties.analog_frequency;
+    var analogTime = this._delta * this.properties.analog_speed;
+    var analogZ = this.properties.analog_color_distribution;
+    var rasterEnabled = this.properties.raster;
+    var rasterVelocity = this.properties.raster_velocity;
+    var rasterTime = this._delta * this.properties.raster_speed;
+    var rasterLevel = 1.0 - this.properties.raster_level;
+    var sin = Math.sin;
+    for (var y = 0; y < this._height; ++y) {
+        var fy = y / (this._height - 1);
+        var r = 255;
+        var g = 255;
+        var b = 255;
+        var a = 0;
+        if (scanlineEnabled) {
+            var normal_sin = (sin(scanlineMaxTheta * fy) + 1) / 2
+            var l = scanlineBaseVelocity + normal_sin * scanlineNoiseVelocity;
+            r *= l;
+            g *= l;
+            b *= l;
+        }
+        if (analogEnabled) {
+            var ay = fy * analogFrequency;
+            var rn = (1 + this._noise.noise(ay, analogTime, analogZ[0])) / 2;
+            var gn = (1 + this._noise.noise(ay, analogTime, analogZ[1])) / 2;
+            var bn = (1 + this._noise.noise(ay, analogTime, analogZ[2])) / 2;
+            r *= rn;
+            g *= gn;
+            b *= bn;
+        }
+        if (rasterEnabled) {
+            var ry1 = fy * 256;
+            var ry2 = fy * 32;
+            var n1 = this._noise.noise(ry1, rasterTime, 2.27);
+            var n2 = this._noise.noise(ry2, rasterTime, 6.23);
+            a = (((n2 > rasterLevel) ? (1 + n1) : 0) + (1 + n2) * 0.1) *
+                    rasterVelocity;
+        }
+        this._lineImage.setPixel(0, y, r|0, g|0, b|0, a|0);
+    }
 };
 /**
  * T'MediaArt library for JavaScript
@@ -6434,6 +8233,182 @@ MajVj.effect.glow.prototype.draw = function (delta, texture) {
         this._noEffect.setTexture('uTexture', texture);
         this._noEffect.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
     }
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - effect plugin - led -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.effect.led = function (options) {
+    this._screen = options.screen;
+    this._width = options.width;
+    this._height = options.height;
+    this._aspect = options.aspect;
+    this.properties = {
+        resolution: [ this._width / 8, this._height / 8 ],
+        rotation: { count: 0, speed: 0 }
+    };
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.effect.led._vertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    MajVj.effect.led._fragmentShader));
+    this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1]);
+};
+
+// Shader programs.
+MajVj.effect.led._vertexShader = null;
+MajVj.effect.led._fragmentShader = null;
+
+/**
+ * Loads resources asynchronously.
+ */
+MajVj.effect.led.load = function () {
+    return new Promise(function (resolve, reject) {
+        Promise.all([
+            MajVj.loadShader('effect', 'led', 'shaders.html', 'vertex'),
+            MajVj.loadShader('effect', 'led', 'shaders.html', 'fragment')
+        ]).then(function (shaders) {
+            MajVj.effect.led._vertexShader = shaders[0];
+            MajVj.effect.led._fragmentShader = shaders[1];
+            resolve();
+        }, function () { reject('led.load fails'); });
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.effect.led.prototype.onresize = function (aspect) {
+};
+
+/**
+ * Draws a frame.
+ * @param delta delta time from the last rendering
+ * @param texture texture data
+ */
+MajVj.effect.led.prototype.draw = function (delta, texture) {
+    this._screen.pushAlphaMode();
+    this._screen.setAlphaMode(true,
+                              this._screen.gl.SRC_ALPHA,
+                              this._screen.gl.ONE_MINUS_SRC_ALPHA);
+    this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
+    this._program.setTexture('uTexture', texture);
+    var time = [Date.now() / 1000];
+    this._program.setUniformVector('uTime', time);
+    this._program.setUniformVector('uResolution', this.properties.resolution);
+    this._program.setUniformVector('uRotation', [
+        this.properties.rotation.count,
+        this.properties.rotation.speed
+    ]);
+    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
+    this._screen.popAlphaMode();
+};
+/**
+ * T'MediaArt library for JavaScript
+ *  - MajVj extension - effect plugin - crt -
+ * @param options options (See MajVj.prototype.create)
+ */
+MajVj.effect.crt = function (options) {
+    this._screen = options.screen;
+    this._aspect = options.aspect;
+    this._ex = options.ex;
+    this.properties = {
+        resolution: [ options.width / 8, options.height / 8 ],
+        wave: new Float32Array(2048),
+        wave_zoom: 1.0,
+        zoom: 1.0
+    };
+    this._program = this._screen.createProgram(
+            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+                    MajVj.effect.crt._vertexShader),
+            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+                    this._ex ? MajVj.effect.crt._fragmentExShader
+                             : MajVj.effect.crt._fragmentShader));
+    this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1]);
+    var patch = null;
+    if (options.patch) {
+        patch = {
+            rgb: MajVj.effect.crt._patchRgb,
+            led: MajVj.effect.crt._patchLed,
+            panel: MajVj.effect.crt._patchPanel
+        }[options.patch];
+    }
+    if (!patch)
+        patch = MajVj.effect.crt._patchRgb;
+    this._patch = this._screen.createTexture(
+            patch, true, Tma3DScreen.FILTER_LINEAR);
+
+    if (this._ex) {
+        this._waveData = new Float32Array(2048 * 4);
+        this._waveTexture = this._screen.createFloatTexture(
+            this._waveData, 2048, 1, true);
+    }
+};
+
+// Shader programs.
+MajVj.effect.crt._vertexShader = null;
+MajVj.effect.crt._fragmentShader = null;
+MajVj.effect.crt._fragmentExShader = null;
+MajVj.effect.crt._patchRgb = null;
+MajVj.effect.crt._patchLed = null;
+MajVj.effect.crt._patchPanel = null;
+
+/**
+ * Loads resources asynchronously.
+ */
+MajVj.effect.crt.load = function () {
+    return new Promise(function (resolve, reject) {
+        Promise.all([
+            MajVj.loadShader('effect', 'crt', 'shaders.html', 'vertex'),
+            MajVj.loadShader('effect', 'crt', 'shaders.html', 'fragment'),
+            MajVj.loadShader('effect', 'crt', 'shaders.html', 'fragment_ex'),
+            MajVj.loadImage('effect', 'crt', 'rgb.png'),
+            MajVj.loadImage('effect', 'crt', 'led.png'),
+            MajVj.loadImage('effect', 'crt', 'panel.png')
+        ]).then(function (data) {
+            MajVj.effect.crt._vertexShader = data[0];
+            MajVj.effect.crt._fragmentShader = data[1];
+            MajVj.effect.crt._fragmentExShader = data[2];
+            MajVj.effect.crt._patchRgb = data[3];
+            MajVj.effect.crt._patchLed = data[4];
+            MajVj.effect.crt._patchPanel = data[5];
+            resolve();
+        }, function () { reject('crt.load fails'); });
+    });
+};
+
+/**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.effect.crt.prototype.onresize = function (aspect) {
+    this._aspect = aspect;
+};
+
+/**
+ * Draws a frame.
+ * @param delta delta time from the last rendering
+ * @param texture texture data
+ */
+MajVj.effect.crt.prototype.draw = function (delta, texture) {
+    if (this._ex) {
+        for (var i = 0; i < 2048; ++i)
+            this._waveData[i * 4] = this.properties.wave[i];
+        this._waveTexture.update(this._waveData);
+        this._program.setTexture('uWave', this._waveTexture);
+        this._program.setUniformVector('uWaveZoom',
+                                       [this.properties.wave_zoom]);
+        this._program.setUniformVector('uWaveAspect', [this._aspect]);
+    }
+    this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
+    var zoom = 1 / this.properties.zoom;
+    this._program.setUniformVector('uZoom', [zoom, zoom]);
+    this._program.setUniformVector('uResolution', this.properties.resolution);
+    this._program.setTexture('uTexture', texture);
+    this._program.setTexture('uPatch', this._patch);
+    this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
 /**
  * T'MediaArt library for JavaScript

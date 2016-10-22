@@ -5,12 +5,10 @@
  */
 MajVj.scene.waypoints = function (options) {
   this._mv = options.mv;
-  // TODO: Fix to use properties.
-  this._controller = options.controller;
-
-  this._tuningController = { volume: [0.0] };
-  this._rgbController = { volume: [0.01] };
-
+  this.properties = {
+    tuning: 0.0,
+    rgb: 0.01
+  };
   var nico3d = { name: 'nicofarre3d', options: {
     modules: [ {
       name: 'waypoints',
@@ -23,18 +21,14 @@ MajVj.scene.waypoints = function (options) {
       }
     } ]
   } };
-  var tuning = {
-    name: 'tuning',
-    options: { controller: this._tuningController }
-  };
-  var rgb = {
-    name: 'rgb',
-    options: { controller: this._rgbController }
-  };
+  var tuning = { name: 'tuning' };
+  var rgb = { name: 'rgb' };
   this._frame = this._mv.create('frame', 'effect', {
       frames: [nico3d],
       effects: [tuning, rgb]
   });
+  this._frame.getEffect(0).properties.volume = this.properties.tuning;
+  this._frame.getEffect(1).properties.volume = this.properties.rgb;
 };
 
 /**
@@ -42,7 +36,7 @@ MajVj.scene.waypoints = function (options) {
  * @param delta delta time from the last rendering
  */
 MajVj.scene.waypoints.prototype.draw = function (delta) {
-  this._tuningController.volume[0] = this._controller.volume[2];
-  this._rgbController.volume[0] = this._controller.volume[3];
+  this._frame.getEffect(0).properties.volume = this.properties.tuning;
+  this._frame.getEffect(1).properties.volume = this.properties.rgb;
   this._frame.draw(delta);
 };

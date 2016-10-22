@@ -11,7 +11,7 @@ MajVj.scene.saiyaan = function (options) {
   this._mixerController = { volume: [0.0, 0.0, 0.0] };
   this._tuningController = { volume: [0.0] };
 
-  this._mixer = this._mv.create('frame', 'mixer', {
+  this._mixer = this._mv.create('misc', 'mixer', {
     channel: 3,
     controller: this._mixerController
   });

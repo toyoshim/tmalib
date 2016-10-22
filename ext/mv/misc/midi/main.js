@@ -32,10 +32,12 @@ MajVj.misc.midi.load = function () {
                 MajVj.misc.midi.keymap[i] = 0;
             MajVj.misc.midi._access.onstatechange =
                     MajVj.misc.midi._onStateChange;
-            for (var input of a.inputs)
-                MajVj.misc.midi._addInputDevice(input[1]);
-            for (var output of a.outputs)
-                MajVj.misc.midi._output = output[1];
+            var ii = a.inputs.values();
+            for (var input = ii.next(); !input.done; input = ii.next())
+                MajVj.misc.midi._addInputDevice(input.value);
+            var oi = a.outputs.values();
+            for (var output = oi.next(); !output.done; output = oi.next())
+                MajVj.misc.midi._output = output.value;
             resolve();
         }, function (e) {
             reject(e);

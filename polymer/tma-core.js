@@ -186,6 +186,12 @@ tma._boot = function () {
     Promise.all(tma.extlibs.map(function (src) {
       return tma.load(tma.base + src);
     })).then(function () {
+      if (tma.global && module.exports.constructor.name !== 'Window') {
+        for (var key in module.exports) {
+          if (module.exports[key])
+            window[key] = module.exports[key];
+        }
+      }
       if (tma.onload)
         tma.onload();
     }, tma.ebc);
@@ -841,8 +847,8 @@ function Tma3DScreen (width, height) {
     this._mouseY = 0;
     this._mouseClickX = 0;
     this._mouseClickY = 0;
-    this._mouseWidth = 0;
-    this._mouseHeight = 0;
+    this._mouseWidth = this.width;
+    this._mouseHeight = this.height;
 
     // Logging GL capabilities.
     tma.log('WebGL max vertex uniform vectors: ' +
@@ -881,6 +887,7 @@ Tma3DScreen.MODE_POINTS = 0;
 Tma3DScreen.MODE_LINES = 1;
 Tma3DScreen.MODE_LINE_LOOP = 2;
 Tma3DScreen.MODE_LINE_STRIP = 3;
+Tma3DScreen.MODE_LINE_TRIANGLES = "line_triangles";  // pseudo mode
 Tma3DScreen.MODE_TRIANGLES = 4;
 Tma3DScreen.MODE_TRIANGLE_STRIP = 5;
 Tma3DScreen.MODE_TRIANGLE_FAN = 6;
@@ -983,36 +990,41 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
     programObject._attributes = {};
     programObject._uniforms = {};
     programObject.attributeIndex = function (name) {
-        if (!this._attributes[name]) {
+        if (this._attributes[name] === undefined) {
             this._attributes[name] =
                     this._owner.gl.getAttribLocation(this, name);
         }
         return this._attributes[name];
     };
     programObject.uniformIndex = function (name) {
-        if (!this._uniforms[name]) {
+        if (this._uniforms[name] === undefined) {
             this._uniforms[name] =
                     this._owner.gl.getUniformLocation(this, name);
         }
         return this._uniforms[name];
     };
     programObject.setAttribute = function (name, array) {
-        var index = this._attributeIndex(name);
-        this._owner.setAttribute(this, index, array);
+        var index = this.attributeIndex(name);
+        if (index != -1)
+            this._owner.setAttribute(this, index, array);
     };
     programObject.setAttributeArray =
             function (name, buffer, offset, dimension, stride) {
         var index = this.attributeIndex(name);
+        if (index == -1)
+            return;
         buffer.bind();
         this._owner.setAttributeArray(this, index, offset, dimension, stride);
     };
     programObject.setUniformVector = function (name, array) {
         var index = this.uniformIndex(name);
-        this._owner.setUniformVector(this, index, array);
+        if (index != -1)
+            this._owner.setUniformVector(this, index, array);
     };
     programObject.setUniformMatrix = function (name, array) {
         var index = this.uniformIndex(name);
-        this._owner.setUniformMatrix(this, index, array);
+        if (index != -1)
+            this._owner.setUniformMatrix(this, index, array);
     };
     programObject.setTexture = function (name, texture) {
         var index = this.uniformIndex(name);
@@ -1082,14 +1094,14 @@ Tma3DScreen.prototype.createElementBuffer = function (array) {
 
 /**
  * Create an frame buffer for offscreen rendering.
- * @width offscreen width
- * @height offscreen height
+ * @width offscreen width (optional)
+ * @height offscreen height (optional)
  * @return created frame buffer object
  */
 Tma3DScreen.prototype.createFrameBuffer = function (width, height) {
     var buffer = this.gl.createFramebuffer();
-    buffer.width = width;
-    buffer.height = height;
+    buffer.width = width || this.canvas.width;
+    buffer.height = height || this.canvas.height;
     buffer._owner = this;
     buffer.texture = null;
     buffer.renderbuffer = null;
@@ -1195,6 +1207,82 @@ Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
 };
 
 /**
+ * Create specified type texture buffer.
+ * @param data Float32Array|Uint8Array object (should be alighed with type)
+ * @param width texture width
+ * @param height texture height
+ * @param flip image flip flag
+ * @param filter texture mag filter
+ * @param type data type like gl.FLOAT, gl.UNSIGNED_BYTE
+ * @param image souce is image source
+ */
+Tma3DScreen.prototype._createTexture =
+        function (data, width, height, flip, filter, format, type, image) {
+    var texture = this.gl.createTexture();
+    texture.width = width;
+    texture.height = height;
+    texture.format = format;
+    texture.type = type;
+    texture.data = data;
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
+    if (image) {
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, format, format, type, data);
+    } else {
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, format, width, height, 0,
+                format, type, data);
+    }
+    this.gl.texParameteri(
+            this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, filter);
+    this.gl.texParameteri(
+            this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, filter);
+    this.gl.texParameteri(
+            this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(
+            this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+    texture._flip = flip;
+    texture._owner = this;
+    texture.update = image ? function (data) {
+        var gl = this._owner.gl;
+        gl.bindTexture(gl.TEXTURE_2D, this);
+        gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type,
+                data);
+    } : function (data) {
+        var gl = this._owner.gl;
+        gl.bindTexture(gl.TEXTURE_2D, this);
+        gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.width, this.height,
+                0, this.format, this.type, data);
+    }
+    return texture;
+};
+
+/**
+ * Create alpha texture buffer from Float32Array object.
+ * @param data Float32Array object
+ * @param width texture width
+ * @param height texture height
+ * @param flip image flip flag
+ */
+Tma3DScreen.prototype.createAlphaFloatTexture =
+        function (data, width, height, flip) {
+    return this._createTexture(data, width, height, flip, this.gl.NEAREST,
+            this.gl.ALPHA, this.gl.FLOAT, false);
+};
+
+/**
+ * Create alpha texture buffer from Uint8Array object.
+ * @param data Uint8Array object
+ * @param width texture width
+ * @param height texture height
+ * @param flip image flip flag
+ */
+Tma3DScreen.prototype.createAlphaTexture =
+        function (data, width, height, flip) {
+    return this._createTexture(data, width, height, flip, this.gl.NEAREST,
+            this.gl.ALPHA, this.gl.UNSIGNED_BYTE, false);
+};
+
+/**
  * Create texture buffer from Float32Array object.
  * @param data Float32Array object
  * @param width texture width
@@ -1203,66 +1291,20 @@ Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
  */
 Tma3DScreen.prototype.createFloatTexture =
         function (data, width, height, flip) {
-    var texture = this.gl.createTexture();
-    texture.width = width;
-    texture.height = height;
-    texture.data = data;
-    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, width, height, 0,
-            this.gl.RGBA, this.gl.FLOAT, data);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    texture._flip = flip;
-    texture._owner = this;
-    texture.update = function (data) {
-        var gl = this._owner.gl;
-        gl.bindTexture(gl.TEXTURE_2D, this);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0,
-                gl.RGBA, gl.FLOAT, data);
-    };
-    return texture;
+    return this._createTexture(data, width, height, flip, this.gl.NEAREST,
+            this.gl.RGBA, this.gl.FLOAT, false);
 };
 
 /**
  * Create texture buffer from Image object.
  * @param image Image object or ImageData object
  * @param flip image flip flag
- * @param filter texture mag filter
+ * @param filter texture mag filter (optional)
  */
 Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
-    var texture = this.gl.createTexture();
-    texture.width = image.width;
-    texture.height = image.height;
-    texture.image = image;
-    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, flip);
-    // TODO: Handles level of detail
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA,
-            this.gl.UNSIGNED_BYTE, image);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, filter);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, filter);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(
-        this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    texture._flip = flip;
-    texture._owner = this;
-    texture.update = function (image) {
-        var gl = this._owner.gl;
-        gl.bindTexture(gl.TEXTURE_2D, this);
-        gl.texImage2D(
-                gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    };
-    return texture;
+    return this._createTexture(image, image.width, image.height, flip,
+            filter ? filter : Tma3DScreen.FILTER_LINEAR,
+            this.gl.RGBA, this.gl.UNSIGNED_BYTE, true);
 };
 
 /**
@@ -1400,19 +1442,26 @@ Tma3DScreen.prototype.fillColor = function (r, g, b, a) {
 /**
  * Sets alpha blending mode.
  * @param on enable alpha blending
- * @param src source drawing mode
- * @param dst destination drawing mode
+ * @param src source drawing mode (optional for !on)
+ * @param dst destination drawing mode (optional for !on)
+ * @param depth enable depth test (optional)
  */
-Tma3DScreen.prototype.setAlphaMode = function (on, src, dst) {
-    this._currentAlphaMode = { on: on, src: src, dst: dst };
+Tma3DScreen.prototype.setAlphaMode = function (on, src, dst, depth) {
+    src = (src !== undefined) ? src : this.gl.ONE;
+    dst = (dst !== undefined) ? dst : this.gl.ONE;
+    depth = (depth !== undefined) ? depth : !on;
+    this._currentAlphaMode = { on: on, src: src, dst: dst, depth: depth };
     if (on) {
-        this.gl.disable(this.gl.DEPTH_TEST);
         this.gl.enable(this.gl.BLEND);
         this.gl.blendFunc(src, dst);
     } else {
         this.gl.disable(this.gl.BLEND);
+    }
+    if (depth) {
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
+    } else {
+        this.gl.disable(this.gl.DEPTH_TEST);
     }
 };
 
@@ -1428,7 +1477,7 @@ Tma3DScreen.prototype.pushAlphaMode = function () {
  */
 Tma3DScreen.prototype.popAlphaMode = function () {
     var mode = this._alphaModeStack.pop();
-    this.setAlphaMode(mode.on, mode.src, mode.dst);
+    this.setAlphaMode(mode.on, mode.src, mode.dst, mode.depth);
 };
 
 /**
@@ -1492,13 +1541,13 @@ Tma3DScreen.prototype.mouse = function () {
             click: {
                 on: false,
                 x: 0,
-                y: 0,
+                y: 0
             },
-            width: 0,
-            height: 0,
+            width: this._mouseWidth,
+            height: this._mouseHeight
         };
     return {
-        over: this._mouse,
+        over: true,
         x: this._mouseX,
         y: this._mouseY,
         click: {
@@ -1507,7 +1556,7 @@ Tma3DScreen.prototype.mouse = function () {
             y: this._mouseClickY
         },
         width: this._mouseWidth,
-        height: this._mouseHeight,
+        height: this._mouseHeight
     };
 };
 
@@ -1600,8 +1649,8 @@ TmaModelPrimitives.prototype.scale = function (scale) {
 };
 
 /**
- * Gets number of vertices.
- * @return number of vertices.
+ * Gets number of total vertices.
+ * @return number of total vertices.
  */
 TmaModelPrimitives.prototype.items = function () {
     return this._indices.length;
@@ -1629,6 +1678,22 @@ TmaModelPrimitives.prototype.getCoords = function () {
  */
 TmaModelPrimitives.prototype.getIndices = function () {
     return this._indices;
+};
+
+/**
+ * Gets model's active vertex indices offset.
+ * @return model's vertex indices offset (in bytes)
+ */
+TmaModelPrimitives.prototype.getIndicesOffset = function () {
+    return 0;
+};
+
+/**
+ * Gets model's active vertex indices length.
+ * @return model's vertex indices length (in count)
+ */
+TmaModelPrimitives.prototype.getIndicesLength = function () {
+    return this._indices.length;
 };
 
 /**
@@ -1754,10 +1819,40 @@ TmaModelPrimitives.prototype._createCube = function () {
 };
 
 /**
+ * Creates a flat ring model.
+ * @param resolution resolution
+ * @param ir inner radius
+ * @param or outer radius
+ */
+TmaModelPrimitives.prototype._createFlatRing = function (resolution, ir, or) {
+    var max = resolution - 1;
+    var delta = 2 * Math.PI / max;
+    for (var i = 0; i < resolution; ++i) {
+        var t = delta * i;
+        var x = Math.cos(t);
+        var y = Math.sin(t);
+        this._vertices.push(or * x);
+        this._vertices.push(or * y);
+        this._vertices.push(0);
+        this._vertices.push(ir * x);
+        this._vertices.push(ir * y);
+        this._vertices.push(0);
+        this._coords.push(i / max);
+        this._coords.push(1);
+        this._coords.push(i / max);
+        this._coords.push(0);
+        this._indices.push(i * 2 + 0);
+        this._indices.push(i * 2 + 1);
+    }
+    this._mode = Tma3DScreen.MODE_TRIANGLE_STRIP;
+};
+
+/**
  * Creates a model containing points.
  * @param points an Array containing points, e.g. [x0, y0, z0, x1, y1, z1, ...]
+ * @param colors an Array containing colors, as [r0, g0, b0, a0, ...] (optional)
  */
-TmaModelPrimitives.prototype._createPoints = function (points) {
+TmaModelPrimitives.prototype._createPoints = function (points, colors) {
     this._vertices = points;
     var count = points.length / 3;
     this._indices = new Array(count);
@@ -1765,10 +1860,10 @@ TmaModelPrimitives.prototype._createPoints = function (points) {
     this._coords = null;
     for (var i = 0; i < count; ++i) {
         this._indices[i] = i;
-        this._colors[i * 4 + 0] = 1.0;
-        this._colors[i * 4 + 1] = 1.0;
-        this._colors[i * 4 + 2] = 1.0;
-        this._colors[i * 4 + 3] = 1.0;
+        this._colors[i * 4 + 0] = colors ? colors[i * 4 + 0] : 1.0;
+        this._colors[i * 4 + 1] = colors ? colors[i * 4 + 1] : 1.0;
+        this._colors[i * 4 + 2] = colors ? colors[i * 4 + 2] : 1.0;
+        this._colors[i * 4 + 3] = colors ? colors[i * 4 + 3] : 1.0;
     }
     this._mode = Tma3DScreen.MODE_POINTS;
 };
@@ -1776,28 +1871,28 @@ TmaModelPrimitives.prototype._createPoints = function (points) {
 /**
  * Creates a sphere model with evenly divided triangles.
  * @param resolution divition depth
+ * @param flag SPHERE_FLAG_NO_TEXTURE (optional)
  */
-TmaModelPrimitives.prototype._createSphereEven = function (resolution) {
+TmaModelPrimitives.prototype._createSphereEven = function (resolution, flag) {
     // Maybe there are smarter ways to use quotanion or something.
+    var no_texture = flag && (flag & TmaModelPrimitives.SPHERE_FLAG_NO_TEXTURE);
     var square = [ [ 1, 0, 0 ], [ 0, 1, 0 ], [ -1, 0, 0 ], [ 0, -1, 0 ] ];
     var pushVertex = function (v, p) {
         var length = this._vertices.length / 3;
-        var r = Math.sqrt(v[0] * v[0] + v[1] * v[1]);
-        var x = 0.5;
-        if (r != 0)
-            x = Math.acos(v[0] / r) / Math.PI / 2;
-        if (v[1] < 0.0)
-            x = 1 - x;
-        if (x == 0.0 && !p)
+        var x = 0.5 + Math.atan2(v[1], v[0]) / Math.PI / 2;
+        if (x == 0.0 && p)
             x = 1.0;
+        if (x == 1.0 && !p)
+            x = 0.0;
         var y = 1 - Math.acos(v[2]) / Math.PI;
         for (var i = 0; i < length; ++i) {
             // TODO: Make following checks use hash if it costs.
             if (this._vertices[i * 3 + 0] != v[0] ||
                 this._vertices[i * 3 + 1] != v[1] ||
                 this._vertices[i * 3 + 2] != v[2] ||
-                this._coords[i * 2 + 0] != x ||
-                this._coords[i * 2 + 1] != y)
+                (!no_texture && (
+                    this._coords[i * 2 + 0] != x ||
+                    this._coords[i * 2 + 1] != y)))
                 continue;
             this._indices.push(i);
             return;
@@ -1839,10 +1934,13 @@ TmaModelPrimitives.prototype._createSphereEven = function (resolution) {
         create(resolution, square[i], square[next], [ 0, 0, 1]);
         create(resolution, square[i], square[next], [ 0, 0, -1]);
     }
+    if (no_texture)
+        this._mode = Tma3DScreen.MODE_LINE_TRIANGLES;
 };
 
 TmaModelPrimitives.SPHERE_METHOD_THEODOLITE = 0;
 TmaModelPrimitives.SPHERE_METHOD_EVEN = 1;
+TmaModelPrimitives.SPHERE_FLAG_NO_TEXTURE = 1;
 
 /**
  * Creates a box model.
@@ -1865,13 +1963,56 @@ TmaModelPrimitives.createCube = function () {
 };
 
 /**
+ * Creates a flat ring model.
+ * @param resolution resolution
+ * @param ir inner radius
+ * @param or outer radius
+ * @return A TmaModelPromitives object containing a flat ring model
+ */
+TmaModelPrimitives.createFlagRing = function (resolution, ir, or) {
+    var ring = new TmaModelPrimitives();
+    ring._createFlatRing(resolution, ir, or);
+    return ring;
+};
+
+/**
  * Creates a model containing points.
  * @param points an Array containing points, e.g. [x0, y0, z0, x1, y1, z1, ...]
- * @return A TmaModelPrimitives object containing a points
+ * @param colors an Array containing colors, as [r0, g0, b0, a0, ...] (optional)
+ * @return A TmaModelPrimitives object containing points
  */
-TmaModelPrimitives.createPoints = function (points) {
+TmaModelPrimitives.createPoints = function (points, colors) {
     var model = new TmaModelPrimitives();
-    model._createPoints(points);
+    model._createPoints(points, colors);
+    return model;
+};
+
+/**
+ * Creates a model containing stars.
+ * @param stars total number of starts
+ * @param range space size in float for x, y, z being between -space and space
+ * @return A TmaModelPrimitives object containing stars
+ */
+TmaModelPrimitives.createStars = function (stars, space) {
+    var model = new TmaModelPrimitives();
+    var points = new Array(stars * 3);
+    var colors = new Array(stars * 4);
+    for (var i = 0; i < stars; ++i) {
+        points[i * 3 + 0] = space * (Math.random() * 2 - 1);
+        points[i * 3 + 1] = space * (Math.random() * 2 - 1);
+        points[i * 3 + 2] = space * (Math.random() * 2 - 1);
+        // Avoid green-ish colors thouse H is in 60-240.
+        var h = (240 + Math.random() * 180) % 360;
+        var s = Math.random() * Math.random() * Math.random();
+        if (250 < h && h < 280)
+            s = Math.random * 0.1;
+        var rgb = TmaScreen.HSV2RGB(h, s, Math.random());
+        colors[i * 4 + 0] = rgb.r / 255;
+        colors[i * 4 + 1] = rgb.g / 255;
+        colors[i * 4 + 2] = rgb.b / 255;
+        colors[i * 4 + 3] = 1;  // Always set max value as a alpha
+    }
+    model._createPoints(points, colors);
     return model;
 };
 
@@ -1879,12 +2020,13 @@ TmaModelPrimitives.createPoints = function (points) {
  * Creates a sphere model.
  * @param resolution mesh resolution
  * @param method SPHERE_METHOD_THEODOLITE or SPHERE_METHOD_EVEN
+ * @param flag SPHERE_FLAG_NO_TEXTURE (optional)
  * @return A TmaModelPrimitives object containing a sphere model
  */
-TmaModelPrimitives.createSphere = function (resolution, method) {
+TmaModelPrimitives.createSphere = function (resolution, method, flag) {
     var sphere = new TmaModelPrimitives();
     // TODO: implement theodolite method.
-    sphere._createSphereEven(resolution);
+    sphere._createSphereEven(resolution, flag);
     return sphere;
 };
 
@@ -2008,6 +2150,635 @@ TmaParticle.Container.prototype.update = function () {
 
 // node.js compatible export.
 exports.TmaParticle = TmaParticle;
+/**
+ * T'MediaArt library for JavaScript.
+ */
+
+/**
+ * TmaSequencer prototype.
+ *
+ * This prototype provides a sequencer that schedule tasks.
+ * @author Takashi Toyoshima <toyoshim@gmail.com>
+ */
+function TmaSequencer () {
+    this._elapsed = 0.0;
+    this._queue = [];
+    this._active = [];
+    this._finished = [];
+}
+
+/**
+ * Starts tasks.
+ * @param time start time in msec
+ */
+TmaSequencer.prototype.start = function (time) {
+    this.stop();
+    this._elapsed = 0;
+};
+
+/**
+ * Stops tasks.
+ */
+TmaSequencer.prototype.stop = function () {
+    for (var i = 0; i < this._active.length; ++i)
+        this._active[i].task.stop();
+    this._queue = this._finished.concat(this._active, this._queue);
+    this._active = [];
+    this._finished = [];
+};
+
+/**
+ * Runs tasks.
+ * @param delta delta time in msec from the last call
+ */
+TmaSequencer.prototype.run = function (delta) {
+    this._elapsed += delta;
+
+    var active = [];
+    for (var i = 0; i < this._active.length; ++i) {
+        var result = this._active[i].task.run(delta, this._elapsed);
+        if (result == 0) {
+            active.push(this._active[i]);
+        } else {
+            this._active[i].task.stop();
+            this._finished.push(this._active[i]);
+        }
+    }
+    this._active = active;
+
+    while (this._queue.length > 0 && this._queue[0].when < this._elapsed) {
+        var item = this._queue.shift();
+        item.task.start();
+        var result = item.task.run(this._elapsed - item.when, this._elapsed);
+        if (result == 0) {
+            active.push(item);
+        } else {
+            item.task.stop();
+            this._finished.push(item);
+        }
+    }
+};
+
+/**
+ * Register a task.
+ * @param when time to start a task in msec
+ * @param task a task to run
+ */
+TmaSequencer.prototype.register = function (when, task) {
+    var entry = { when: when, task: task };
+    for (var i = 0; i < this._queue.length; ++i) {
+        if (this._queue[i].when <= when)
+            continue;
+        if (i == 0) {
+            this._queue = this._unshift(entry);
+        } else {
+            this._queue = this._queue.slice(0, i).concat(
+                    [entry], this._queue.slice(i, this._queue.length));
+        }
+        return;
+    }
+    this._queue.push(entry);
+};
+
+/**
+ * Gets elapsed time.
+ * @return elapsed time in msec
+ */
+TmaSequencer.prototype.elapsed = function () {
+    return this._elapsed;
+};
+
+/**
+ * Checks if an active or queued task still exist.
+ * @return true if exists
+ */
+TmaSequencer.prototype.active = function () {
+    return this._active.length != 0 || this._queue.length != 0;
+};
+
+/**
+ * TmaSequencer.Task prototype.
+ *
+ * This prototype provides a simple task that runs in a sequencer.
+ * @param duration duration time
+ * @param callback a callback to run inside Task.run().
+ */
+TmaSequencer.Task = function (duration, callback) {
+    this.reset(duration);
+    this._callback = callback;
+};
+
+// Constant to specify a never ending task.
+TmaSequencer.Task.INFINITE = -1;
+
+/**
+ * Resets.
+ * @param duration a task duration
+ */
+TmaSequencer.Task.prototype.reset = function (duration) {
+    this._duration = duration;
+    this._elapsed = 0;
+};
+
+/**
+ * Starts a task
+ */
+TmaSequencer.Task.prototype.start = function () {
+    this.stop();
+    this._elapsed = 0;
+};
+
+/**
+ * Stops a task
+ */
+TmaSequencer.Task.prototype.stop = function () {
+};
+
+/**
+ * Checks if the task ends.
+ * @return true if task ends
+ * @param delta delta time in msec from the last call
+ */
+TmaSequencer.Task.prototype.atEnd = function () {
+    return this._duration != TmaSequencer.Task.INFINITE &&
+            this._elapsed >= this._duration;
+};
+
+/**
+ * Helper function to calculate return value for run().
+ * @param delta delta time in msec from the last call
+ */
+TmaSequencer.Task.prototype.spend = function (delta) {
+    this._elapsed += delta;
+    if (this._duration == TmaSequencer.Task.INFINITE)
+        return 0;
+    if (this._elapsed <= this._duration)
+        return 0;
+    return this._elapsed - this._duration;
+};
+
+/**
+ * Runs a task.
+ * @param delta delta time in msec from the last call
+ * @param time elapsed time in a parent task
+ * @return 0 if not finished, otherwise a positive time that is not consumed
+ */
+TmaSequencer.Task.prototype.run = function (delta, time) {
+    if (this._callback)
+      this._callback(delta, time);
+    return this.spend(delta);
+};
+
+/**
+ * Gets a duration time on this task.
+ * @return a duration time
+ */
+TmaSequencer.Task.prototype.duration = function () {
+    return this._duration;
+};
+
+/**
+ * TmaSequencer.SerialTask prototype.
+ *
+ * This prototype provides a task that runs registered task in serial.
+ */
+TmaSequencer.SerialTask = function () {
+    this.superclass(0);
+    this._queue = [];
+    this._active = null;
+    this._finished = [];
+    this._start = 0;
+};
+
+// Inherits TmaSequencer.Task.
+TmaSequencer.SerialTask.prototype = new TmaSequencer.Task();
+TmaSequencer.SerialTask.prototype.superclass = TmaSequencer.Task;
+TmaSequencer.SerialTask.prototype.constructor = TmaSequencer.SerialTask;
+
+/**
+ * Appends a task.
+ * @param task a task to run
+ */
+TmaSequencer.SerialTask.prototype.append = function (task) {
+    var duration = task.duration();
+    if (duration == TmaSequencer.Task.INFINITE)
+        this._duration = TmaSequencer.Task.INFINITE;
+    else
+        this._duration += duration;
+    this._queue.push(task);
+};
+
+/**
+ * Starts a task
+ */
+TmaSequencer.SerialTask.prototype.start = function () {
+    this.stop();
+    this._elapsed = 0;
+    this._timeBase = -1;
+    this._active = this._queue.shift();
+    this._active.start();
+};
+
+/**
+ * Stops a task
+ */
+TmaSequencer.SerialTask.prototype.stop = function () {
+    if (this._active) {
+        this._active.stop();
+        this._finished.push(this._active);
+        this._active = null;
+    }
+    this._queue = this._finished.concat(this._queue);
+    this._finished = [];
+};
+
+/**
+ * Runs a task.
+ * @param delta delta time in msec from the last call
+ * @param time elapsed time from a task starts
+ * @return 0 if not finished, otherwise a positive time that is not consumed
+ */
+TmaSequencer.SerialTask.prototype.run = function (delta, time) {
+    if (this._timeBase < 0)
+        this._timeBase = time - delta;
+    var rest = delta;
+    var localTime = time - this._timeBase;
+    while (this._active) {
+        var result = this._active.run(rest, localTime);
+        if (result == 0)
+            return this.spend(rest);
+        var consume = rest - result;
+        rest = result;
+        this._active.stop();
+        this._finished.push(this._active);
+        this._active = this._queue.shift();
+        if (this._active)
+            this._active.start();
+    }
+    return this.spend(delta);
+};
+
+/**
+ * TmaSequencer.ParallelTask prototype.
+ *
+ * This prototype provides a task that runs registered tasks in parallel.
+ */
+TmaSequencer.ParallelTask = function () {
+    this.superclass(0);
+    this._active = [];
+    this._finished = [];
+    this._timeBase = -1;
+};
+
+// Inherits TmaSequencer.Task.
+TmaSequencer.ParallelTask.prototype = new TmaSequencer.Task();
+TmaSequencer.ParallelTask.prototype.superclass = TmaSequencer.Task;
+TmaSequencer.ParallelTask.prototype.constructor = TmaSequencer.ParallelTask;
+
+/**
+ * Appends a task.
+ * @param task a task to run
+ */
+TmaSequencer.ParallelTask.prototype.append = function (task) {
+    var duration = task.duration();
+    if (duration == TmaSequencer.Task.INFINITE)
+        this._duration = TmaSequencer.Task.INFINITE;
+    else if (this._duration != TmaSequencer.Task.INFINITE)
+        this._duration = Math.max(this._duration, duration);
+    this._active.push(task);
+};
+
+/**
+ * Starts a task
+ */
+TmaSequencer.ParallelTask.prototype.start = function () {
+    this.stop();
+    this._elapsed = 0;
+    this._timeBase = -1;
+    for (var i = 0; i < this._active.length; ++i)
+        this._active[i].start();
+};
+
+/**
+ * Stops a task
+ */
+TmaSequencer.ParallelTask.prototype.stop = function () {
+    for (var i = 0; i < this._active.length; ++i) {
+        this._active[i].stop();
+        this._finished.push(this._active[i]);
+    }
+    this._active = this._finished;
+    this._finished = [];
+};
+
+/**
+ * Runs a task.
+ * @param delta delta time in msec from the last call
+ * @param time elapsed time from a task starts
+ * @return 0 if not finished, otherwise a positive time that is not consumed
+ */
+TmaSequencer.ParallelTask.prototype.run = function (delta, time) {
+    if (this._timeBase < 0)
+        this._timeBase = time - delta;
+    var active = [];
+    var localTime = time - this._timeBase;
+    for (var i = 0; i < this._active.length; ++i) {
+        var result = this._active[i].run(delta, localTime);
+        if (this._active[i].atEnd()) {
+            this._active[i].stop();
+            this._finished.push(this._active[i]);
+        } else {
+            active.push(this._active[i]);
+        }
+    }
+    this._active = active;
+    return this.spend(delta);
+};
+
+/**
+ * TmaSequencer.RepeatTask prototype.
+ *
+ * This prototype provides a task that runs a registered task in a loop.
+ * @param task a task to run in a loop
+ * @param iteration an iteration count to repeat
+ */
+TmaSequencer.RepeatTask = function (task, iteration) {
+    var duration = TmaSequencer.Task.INFINITE;
+    if (typeof iteration === 'undefined')
+      iteration = TmaSequencer.RepeatTask.INFINITE;
+    if (iteration != TmaSequencer.RepeatTask.INFINITE)
+        duration = task.duration() * iteration;
+    this.superclass(duration);
+    this._task = task;
+    this._iteration = iteration;
+    this._count = 0;
+    this._timeBase = -1;
+};
+
+// Constant to specify a never ending task.
+TmaSequencer.RepeatTask.INFINITE = -1;
+
+// Inherits TmaSequencer.Task.
+TmaSequencer.RepeatTask.prototype = new TmaSequencer.Task();
+TmaSequencer.RepeatTask.prototype.superclass = TmaSequencer.Task;
+TmaSequencer.RepeatTask.prototype.constructor = TmaSequencer.RepeatTask;
+
+/**
+ * Starts a task
+ */
+TmaSequencer.RepeatTask.prototype.start = function () {
+    this.stop();
+    this._elapsed = 0;
+    this._timeBase = -1;
+    this._count = 0;
+    this._task.start();
+};
+
+/**
+ * Stops a task
+ */
+TmaSequencer.RepeatTask.prototype.stop = function () {
+    this._task.stop();
+};
+
+/**
+ * Runs a task.
+ * @param delta delta time in msec from the last call
+ * @param time elapsed time from a task starts
+ * @return 0 if not finished, otherwise a positive time that is not consumed
+ */
+TmaSequencer.RepeatTask.prototype.run = function (delta, time) {
+    if (this._count == this._iteration)
+        return delta;
+    if (this._timeBase < 0)
+        this._timeBase = time - delta;
+    var localTime = time - this._timeBase;
+    var rest = delta;
+    while (rest > 0) {
+        var result = this._task.run(rest, localTime);
+        this.spend(rest - result);
+        if (this._task.atEnd()) {
+            this._task.stop();
+            this._count++;
+            if (this._count == this._iteration)
+              return result;
+            this._task.start();
+        }
+        rest = result;
+    }
+    return 0;
+};
+/**
+ * T'MediaArt library for JavaScript.
+ */
+
+/**
+ * TmaTimeline prototype.
+ *
+ * This prototype provides a Timeline that schedule tasks.
+ * @author Takashi Toyoshima <toyoshim@gmail.com>
+ */
+function TmaTimeline (options) {
+    this._elapsed = 0.0;
+    this._convertedTime = 0.0;
+    this._input_scale = options.input_scale || 1.0;
+    this._output_scale = options.output_scale || 1.0;
+    this._function = options.function || TmaTimeline._functionBypass;
+    this._options = options.options || {};
+    if (options.type)
+        this._function = TmaTimeline._functionFor(options.type, this._options);
+    // TODO: Probably it would be better to pre-calculate a curve for some
+    // sorts of functions, e.g. Bezier may take considerable time to calculate
+    // values on demand.
+}
+
+/**
+ * Convert a value with an internal function.
+ * @param type function type
+ * @param value normalized input value
+ * @param options function specific options
+ * @return converted value
+ */
+TmaTimeline.convert = function (type, value, options) {
+    var f = TmaTimeline._functionFor(type, options);
+    if (!f)
+        return value;
+    return f(value);
+};
+
+TmaTimeline._Math = Math;
+
+/**
+ * Obtain a function for a convertion type.
+ * @param type function type
+ * @param options function specific options
+ * @return a function for the type
+ */
+TmaTimeline._functionFor = function (type, options) {
+    switch (type) {
+    case 'bypass':
+        return TmaTimeline._functionBypass;
+    case 'ease':
+        return TmaTimeline._functionCubicBezier.bind(null, {
+            x1: 0.25,
+            y1: 0.1,
+            x2: 0.25,
+            y2: 1.0
+        });
+    case 'ease-in':
+        return TmaTimeline._functionCubicBezier.bind(null, {
+            x1: 0.42,
+            y1: 0.0,
+            x2: 1.0,
+            y2: 1.0
+        });
+    case 'ease-in-out':
+        return TmaTimeline._functionCubicBezier.bind(null, {
+            x1: 0.42,
+            y1: 0.0,
+            x2: 0.58,
+            y2: 1.0
+        });
+    case 'ease-out':
+        return TmaTimeline._functionCubicBezier.bind(null, {
+            x1: 0.0,
+            y1: 0.0,
+            x2: 0.58,
+            y2: 1.0
+        });
+    case 'linear':
+        return TmaTimeline._functionCubicBezier.bind(null, {
+            x1: 0.0,
+            y1: 0.0,
+            x2: 1.0,
+            y2: 1.0
+        });
+    case 'power':
+        return TmaTimeline._functionPower;
+    case 'saturate':
+        return TmaTimeline._functionSaturate;
+    case 'sin':
+        return TmaTimeline._functionSin;
+    }
+    return null;
+};
+
+/**
+ * Convert function just to bypass.
+ * @param elapsed original elapsed time
+ * @return converted elapsed time
+ */
+TmaTimeline._functionBypass = function (elapsed) {
+    return elapsed;
+};
+
+TmaTimeline._cubicBezierInternal = function (t, v1, v2) {
+    var s = 1.0 - t;
+    var ttt = t * t * t;
+    var ts = t * s;
+    var tts = t * ts;
+    var tss = ts * s;
+    return ttt + 3 * (tts * v2 + tss * v1);
+};
+
+/**
+ * Convert function for cubic bezier.
+ * @param options x1, y1, x2, y2
+ * @param elapsed original elapsed time
+ * @return converted elapsed time
+ */
+TmaTimeline._functionCubicBezier = function (options, elapsed) {
+    var min = 0.0;
+    var max = 1.0;
+    var t = 0.5;
+    var n = 0;
+    var d = options.d || 0.0001;
+    for (;;) {
+        // This is super simple implementation that has room for improvements.
+        var x = TmaTimeline._cubicBezierInternal(t, options.x1, options.x2);
+        if (TmaTimeline._Math.abs(x - elapsed) < d)
+            break;
+        if (x < elapsed)
+            min = t;
+        else
+            max = t;
+        t = (min + max) / 2.0;
+        n++;
+        if (n > 100)
+            break;
+    }
+    return TmaTimeline._cubicBezierInternal(t, options.y1, options.y2);
+};
+
+/**
+ * Convert function in power curve.
+ * @param elapsed original elapsed time
+ * @return converted elapsed time
+ */
+TmaTimeline._functionPower = function (elapsed) {
+    if (elapsed <= 0)
+        return 0.0;
+    return TmaTimeline._Math.pow(10.0, elapsed * 2 - 2);
+};
+
+/**
+ * Convert function in saturated curve.
+ * @param elapsed original elapsed time
+ * @return converted elapsed time
+ */
+TmaTimeline._functionSaturate = function (elapsed) {
+    if (elapsed < 0.0)
+        return 0.0;
+    if (elapsed > 1.0)
+        return 1.0;
+    return elapsed;
+};
+
+/**
+ * Convert function in sin curve.
+ * @param elapsed original elapsed time
+ * @return converted elapsed time
+ */
+TmaTimeline._functionSin = function (elapsed) {
+    return TmaTimeline._Math.sin(2.0 * TmaTimeline._Math.PI * elapsed);
+};
+
+/**
+ * Reset timeline.
+ */
+TmaTimeline.prototype.reset = function () {
+    this._elapsed = 0;
+};
+
+/**
+ * Update timeline.
+ * @param delta delta time in msec from the last call
+ * @return delta in converted timeline
+ */
+TmaTimeline.prototype.update = function (delta) {
+    this._elapsed += delta * this._input_scale;
+    var lastConvertedTime = this._convertedTime;
+    this._convertedTime = this._function(this._elapsed) * this._output_scale;
+    return this._convertedTime - lastConvertedTime;
+};
+
+/**
+ * Convert elapsed timeline.
+ * @param elapsed time in msec
+ * @return elapsed time in converted timeline
+ */
+TmaTimeline.prototype.convert = function (elapsed) {
+    return this._function(elapsed * this._input_scale) *
+            this._output_scale;
+};
+
+/**
+ * Obtain elapsed time in converted timeline.
+ * @return elapsed time in converted timeline
+ */
+TmaTimeline.prototype.elapsed = function () {
+    return this._convertedTime;
+}
 /**
  * T'MediaArt library for JavaScript.
  */

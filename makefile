@@ -1,4 +1,4 @@
-MINIFY=./node_modules/uglify/bin/uglify -o
+MINIFY=./node_modules/uglify-js/bin/uglifyjs
 
 usage:
 	@echo 'Usage: make <target>'
@@ -25,7 +25,7 @@ install-deps:
 	cp ./bower_components/gl-matrix/dist/gl-matrix-min.js ./ext/gl-matrix.js
 
 install-uglify:
-	npm install uglify
+	npm install uglify-js
 
 build:
 	make build-tmalib
@@ -43,28 +43,29 @@ build-tmalib:
 		src/TmaModelPrimitives.js \
 		src/TmaParticle.js \
 		src/TmaSequencer.js \
+		src/TmaTimeline.js \
 		src/TmaMotionBvh.js \
 		src/TmaModelPly.js \
 		src/TmaModelPs2Ico.js \
-	| tee dist/tmalib.js \
-	| ${MINIFY} dist/tmalib.min.js
+	> dist/tmalib.js && \
+	${MINIFY} dist/tmalib.js -o dist/tmalib.min.js
 
 build-tma-core:
 	cat \
 		src/core_head.js \
 		dist/tmalib.js \
 		src/core_tail.js \
-	| tee polymer/tma-core.js \
-	| ${MINIFY} polymer/tma-core.min.js
+	> polymer/tma-core.js && \
+	${MINIFY} polymer/tma-core.js -o polymer/tma-core.min.js
 
 build-tma-majvj:
 	cat \
 		src/majvj_head.js \
-		bower_components/gl-matrix/gl-matrix.js \
+		bower_components/gl-matrix/dist/gl-matrix.js \
 		ext/mv/MajVj.js \
 		src/majvj_tail.js \
-	| tee polymer/tma-majvj.js \
-	| ${MINIFY} polymer/tma-majvj.min.js
+	> polymer/tma-majvj.js && \
+	${MINIFY} polymer/tma-majvj.js -o polymer/tma-majvj.min.js
 
 build-majvj-suite:
 	cat \
@@ -72,5 +73,5 @@ build-majvj-suite:
 		`find ext/mv -name main.js` \
 		`find ext/mv/frame/nicofarre3d -name \*.js | grep -v main.js` \
 		src/suite_tail.js \
-	| tee polymer/majvj-suite.js \
-	| ${MINIFY} polymer/majvj-suite.min.js
+	> polymer/majvj-suite.js && \
+	${MINIFY} polymer/majvj-suite.js -o polymer/majvj-suite.min.js
