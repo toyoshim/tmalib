@@ -10,10 +10,13 @@ MajVj.misc.host = function (options) {
     this._mv = options.mv;
     this._frame = null;
     this.properties = {
-        controls: new Array(128)  // MIDI control change
+        controls: new Array(128),  // MIDI control change
+        fftDb: null
     };
     MajVj.loadPlugin(this._type, this._name).then(() => {
         this._frame = this._mv.create(this._type, this._name);
+        if (this._frame.properties.fftDb !== undefined)
+            this.properties.fftDb = this._frame.properties.fftDb;
     });
 };
 

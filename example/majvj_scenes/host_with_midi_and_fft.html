@@ -1,0 +1,37 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	MajVj.loadAllPlugins().then(function () {
+		var vj = new MajVj();
+		var frame = vj.create('misc', 'host', {
+			type: 'scene',
+			name: 'miku',
+			map: {
+				0: { name: 'volume', offset: 0, scale: 1 / 127 },
+				1: { name: 'glow', offset: 0, scale: 1 / 127 },
+				2: { name: 'rgb', offset: 0, scale: 1 / 127 }
+			}
+		});
+		var sound = vj.create('misc', 'sound');
+		sound.fetch('../data/sample.mp3', true);
+		vj.run(function (delta) {
+			if (frame.properties.fftDb)
+				sound.getFloatFrequencyData(frame.properties.fftDb);
+			frame.draw(delta);
+		});
+		navigator.requestMIDIAccess().then(a => {
+			for (var port of a.inputs.values()) {
+				port.addEventListener('midimessage', e => {
+					if ((e.data[0] & 0xf0) == 0xb0)
+						frame.properties.controls[e.data[1]] = e.data[2];
+				});
+			}
+		});
+	});
+};
+</script>
+</body>
+</html>

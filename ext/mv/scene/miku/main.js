@@ -5,36 +5,34 @@
  */
 MajVj.scene.miku = function (options) {
   this._mv = options.mv;
-  // TODO: Use properties.
-  this._controller = options.controller;
-
-  this._fftController = {
-    sound: { fftDb: this._controller.sound.fftDb }
+  this.properties = {
+    // 0 - 1
+    volume: 0.0,
+    glow: 0,
+    rgb: 0,
+    fftDb: null
   };
-  this._mixerController = { volume: [0.0, 0.0] };
-  this._rgbController = { volume: [0.0] };
-  this._glowController = { volume: [0.02, 0.0] };
 
   var N = MajVj.frame.nicofarre;
   this._stageMixer = this._createFrame(N.LED_STAGE_AND_BACK, 'effect', {
     frames: [ {
       name: 'mixer',
       options: {
-        channel: 2,
-        controller: this._mixerController
+        channel: 2
       }
     } ],
     effects: [
-      { name: 'glow', options: { controller: this._glowController } },
-      { name: 'rgb', options: { controller: this._rgbController } }
+      { name: 'glow' },
+      { name: 'rgb' }
     ]
   });
+  this._stageMixer.getFrame(0).getEffect(1).properties.volume = 0.02;
   this._mixer = this._stageMixer.getFrame(0).getFrame(0);
   this._front = this._createSandboxFrame(N.LED_FRONT_BOTH, '18794.0');
   this._fft = this._createFrame(N.LED_FRONT_BOTH, 'specticle', {
-    controller: this._fftController,
     color: [0.1, 0.5, 0.1, 1.0]
   });
+  this.properties.fftDb = this._fft.getFrame(0).properties.fftDb;
   this._ceil = this._createSandboxFrame(N.LED_CEILING, '18981.0');
 
   this._wallBall = this._createSandboxFrame(N.LED_WALL_BOTH, '18451.0');
@@ -97,8 +95,10 @@ MajVj.scene.miku.prototype._createSandboxFrame = function (led, id) {
  * @param delta delta time from the last rendering
  */
 MajVj.scene.miku.prototype.draw = function (delta) {
-  this._glowController.volume[1] = this._controller.volume[2];
-  this._rgbController.volume[0] = this._controller.volume[3];
+  this._stageMixer.getFrame(0).getEffect(0).properties.t =
+      this.properties.glow;
+  this._stageMixer.getFrame(0).getEffect(1).properties.volume =
+      this.properties.rgb;
 
   this._mv.screen().setAlphaMode(false);
   this._mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
@@ -113,57 +113,59 @@ MajVj.scene.miku.prototype.draw = function (delta) {
   this._mv.screen().setAlphaMode(false);
   this._mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
   this._mv.screen().setAlphaMode(true, gl.ONE, gl.ONE);
-  if (this._controller.volume[1] == 0.0) {
-    this._mixerController.volume[0] = 0.0;
-  } else if (this._controller.volume[1] < 0.1) {
+  var mixer = this._mixer.properties;
+  var volume = this.properties.volume;
+  if (volume == 0.0) {
+    mixer.volume[0] = 0.0;
+  } else if (volume < 0.1) {
     this._stageNeon.draw(delta);
-    this._mixerController.volume[0] = this._controller.volume[1] * 10.0;
-  } else if (this._controller.volume[1] < 0.2) {
+    mixer.volume[0] = volume * 10.0;
+  } else if (volume < 0.2) {
     this._stageNeon.draw(delta);
-    this._mixerController.volume[0] = (0.2 - this._controller.volume[1]) * 10.0;
-  } else if (this._controller.volume[1] < 0.3) {
+    mixer.volume[0] = (0.2 - volume) * 10.0;
+  } else if (volume < 0.3) {
     this._stageWarp.draw(delta);
-    this._mixerController.volume[0] = (this._controller.volume[1] - 0.2) * 10.0;
-  } else if (this._controller.volume[1] < 0.4) {
+    mixer.volume[0] = (volume - 0.2) * 10.0;
+  } else if (volume < 0.4) {
     this._stageWarp.draw(delta);
-    this._mixerController.volume[0] = (0.4 - this._controller.volume[1]) * 10.0;
-  } else if (this._controller.volume[1] < 0.5) {
+    mixer.volume[0] = (0.4 - volume) * 10.0;
+  } else if (volume < 0.5) {
     this._stageTunnel.draw(delta);
-    this._mixerController.volume[0] = (this._controller.volume[1] - 0.4) * 10.0;
-  } else if (this._controller.volume[1] < 0.6) {
+    mixer.volume[0] = (volume - 0.4) * 10.0;
+  } else if (volume < 0.6) {
     this._stageTunnel.draw(delta);
-    this._mixerController.volume[0] = (0.6 - this._controller.volume[1]) * 10.0;
-  } else if (this._controller.volume[1] < 0.7) {
+    mixer.volume[0] = (0.6 - volume) * 10.0;
+  } else if (volume < 0.7) {
     this._stageGate.draw(delta);
-    this._mixerController.volume[0] = (this._controller.volume[1] - 0.6) * 10.0;
-  } else if (this._controller.volume[1] < 0.8) {
+    mixer.volume[0] = (volume - 0.6) * 10.0;
+  } else if (volume < 0.8) {
     this._stageGate.draw(delta);
-    this._mixerController.volume[0] = (0.8 - this._controller.volume[1]) * 10.0;
+    mixer.volume[0] = (0.8 - volume) * 10.0;
   }
   this._mixer.bind(1);
   this._mv.screen().setAlphaMode(false);
   this._mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
   this._mv.screen().setAlphaMode(true, gl.ONE, gl.ONE);
-  if (this._controller.volume[1] < 0.1) {
-    this._mixerController.volume[1] = 0.0;
-  } else if (this._controller.volume[1] < 0.2) {
+  if (volume < 0.1) {
+    mixer.volume[1] = 0.0;
+  } else if (volume < 0.2) {
     this._stageCube.draw(delta);
-    this._mixerController.volume[1] = (this._controller.volume[1] - 0.1) * 10.0;
-  } else if (this._controller.volume[1] < 0.3) {
+    mixer.volume[1] = (volume - 0.1) * 10.0;
+  } else if (volume < 0.3) {
     this._stageCube.draw(delta);
-    this._mixerController.volume[1] = (0.3 - this._controller.volume[1]) * 10.0;
-  } else if (this._controller.volume[1] < 0.4) {
+    mixer.volume[1] = (0.3 - volume) * 10.0;
+  } else if (volume < 0.4) {
     this._stageLight.draw(delta);
-    this._mixerController.volume[1] = (this._controller.volume[1] - 0.3) * 10.0;
-  } else if (this._controller.volume[1] < 0.5) {
+    mixer.volume[1] = (volume - 0.3) * 10.0;
+  } else if (volume < 0.5) {
     this._stageLight.draw(delta);
-    this._mixerController.volume[1] = (0.5 - this._controller.volume[1]) * 10.0;
-  } else if (this._controller.volume[1] < 0.6) {
+    mixer.volume[1] = (0.5 - volume) * 10.0;
+  } else if (volume < 0.6) {
     this._stageHill.draw(delta);
-    this._mixerController.volume[1] = (this._controller.volume[1] - 0.5) * 10.0;
-  } else if (this._controller.volume[1] < 0.7) {
+    mixer.volume[1] = (volume - 0.5) * 10.0;
+  } else if (volume < 0.7) {
     this._stageHill.draw(delta);
-    this._mixerController.volume[1] = (0.7 - this._controller.volume[1]) * 10.0;
+    mixer.volume[1] = (0.7 - volume) * 10.0;
   }
   screen.bind();
   this._mv.screen().setAlphaMode(
