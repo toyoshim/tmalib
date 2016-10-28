@@ -1,9 +1,9 @@
 /**
  * T'MediaArt library for JavaScript
- *  - MajVj extension - misc plugin - mixer -
+ *  - MajVj extension - frame plugin - mixer -
  * @param options options (See MajVj.prototype.create)
  */
-MajVj.misc.mixer = function (options) {
+MajVj.frame.mixer = function (options) {
     this._screen = options.screen;
     this._mv = options.mv;
     this.properties = { volume: [0.0, 0.0, 0.0] };
@@ -11,38 +11,38 @@ MajVj.misc.mixer = function (options) {
     this._fbo = [];
     this._resize(options.width, options.height);
     var fragmentShader =
-            (this._channel == 1) ?  MajVj.misc.mixer._fragment1Shader :
-            (this._channel == 2) ?  MajVj.misc.mixer._fragment2Shader :
-                                    MajVj.misc.mixer._fragment3Shader;
+            (this._channel == 1) ?  MajVj.frame.mixer._fragment1Shader :
+            (this._channel == 2) ?  MajVj.frame.mixer._fragment2Shader :
+                                    MajVj.frame.mixer._fragment3Shader;
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.misc.mixer._vertexShader),
+                    MajVj.frame.mixer._vertexShader),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     fragmentShader));
     this._coords = this._screen.createBuffer([0, 0, 0, 1, 1, 1, 1, 0]);
 };
 
 // Shader programs.
-MajVj.misc.mixer._vertexShader = null;
-MajVj.misc.mixer._fragment1Shader = null;
-MajVj.misc.mixer._fragment2Shader = null;
-MajVj.misc.mixer._fragment3Shader = null;
+MajVj.frame.mixer._vertexShader = null;
+MajVj.frame.mixer._fragment1Shader = null;
+MajVj.frame.mixer._fragment2Shader = null;
+MajVj.frame.mixer._fragment3Shader = null;
 
 /**
  * Loads resources asynchronously.
  */
-MajVj.misc.mixer.load = function () {
+MajVj.frame.mixer.load = function () {
     return new Promise(function (resolve, reject) {
         Promise.all([
-            MajVj.loadShader('misc', 'mixer', 'shaders.html', 'vertex'),
-            MajVj.loadShader('misc', 'mixer', 'shaders.html', 'fragment1'),
-            MajVj.loadShader('misc', 'mixer', 'shaders.html', 'fragment2'),
-            MajVj.loadShader('misc', 'mixer', 'shaders.html', 'fragment3')
+            MajVj.loadShader('frame', 'mixer', 'shaders.html', 'vertex'),
+            MajVj.loadShader('frame', 'mixer', 'shaders.html', 'fragment1'),
+            MajVj.loadShader('frame', 'mixer', 'shaders.html', 'fragment2'),
+            MajVj.loadShader('frame', 'mixer', 'shaders.html', 'fragment3')
         ]).then(function (shaders) {
-            MajVj.misc.mixer._vertexShader = shaders[0];
-            MajVj.misc.mixer._fragment1Shader = shaders[1];
-            MajVj.misc.mixer._fragment2Shader = shaders[2];
-            MajVj.misc.mixer._fragment3Shader = shaders[3];
+            MajVj.frame.mixer._vertexShader = shaders[0];
+            MajVj.frame.mixer._fragment1Shader = shaders[1];
+            MajVj.frame.mixer._fragment2Shader = shaders[2];
+            MajVj.frame.mixer._fragment3Shader = shaders[3];
             resolve();
         }, function () { reject('mixer.load fails'); });
     });
@@ -52,7 +52,7 @@ MajVj.misc.mixer.load = function () {
  * Handles screen resize.
  * @param aspect screen aspect ratio
  */
-MajVj.misc.mixer.prototype.onresize = function (aspect) {
+MajVj.frame.mixer.prototype.onresize = function (aspect) {
     var size = this._mv.size();
     this._resize(size.width, size.height);
 };
@@ -61,8 +61,7 @@ MajVj.misc.mixer.prototype.onresize = function (aspect) {
  * Draws a mixed image.
  * @param delta delta time from the last rendering
  */
-MajVj.misc.mixer.prototype.draw =
-        function (delta, texture0, texture1, texture2) {
+MajVj.frame.mixer.prototype.draw = function (delta) {
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setTexture('uTexture0', this._fbo[0].texture);
     this._program.setUniformVector('uVolume0', [this.properties.volume[0]]);
@@ -84,7 +83,7 @@ MajVj.misc.mixer.prototype.draw =
  * @param channel a channel to bind
  * @return a previous fbo bount to the context
  */
-MajVj.misc.mixer.prototype.bind = function (channel) {
+MajVj.frame.mixer.prototype.bind = function (channel) {
     return this._fbo[channel].bind();
 };
 
@@ -93,7 +92,7 @@ MajVj.misc.mixer.prototype.bind = function (channel) {
  * @param width offscreen width
  * @param height offscreen height
  */
-MajVj.misc.mixer.prototype._resize = function (width, height) {
+MajVj.frame.mixer.prototype._resize = function (width, height) {
     for (var ch = 0; ch < this._channel; ++ch)
         this._fbo[ch] = this._screen.createFrameBuffer(width, height);
 };

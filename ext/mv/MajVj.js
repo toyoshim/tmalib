@@ -237,6 +237,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'grid'),
         MajVj.loadPlugin('frame', 'laser'),
         MajVj.loadPlugin('frame', 'light'),
+        MajVj.loadPlugin('frame', 'mixer'),
         MajVj.loadPlugin('frame', 'morphere'),
         MajVj.loadPlugin('frame', 'movie'),
         MajVj.loadPlugin('frame', 'nico_test'),
@@ -256,7 +257,6 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('misc', 'camera'),
         MajVj.loadPlugin('misc', 'host'),
         MajVj.loadPlugin('misc', 'midi'),
-        MajVj.loadPlugin('misc', 'mixer'),
         MajVj.loadPlugin('misc', 'perlin'),
         MajVj.loadPlugin('misc', 'sound')
     ]);
