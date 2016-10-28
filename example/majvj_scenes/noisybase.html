@@ -1,0 +1,39 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];  /* global tma */
+tma.onload = function () {
+	MajVj.loadAllPlugins().then(function () {  /* global MajVj */
+		var vj = new MajVj();
+		var frame = vj.create('misc', 'host', {
+			type: 'scene',
+			name: 'noisybase',
+			map: {
+				0: { name: 'multi', offset: 0, scale: 1 },
+				1: { name: 'slitter', offset: 0, scale: 1 },
+				2: { name: 'rgb', offset: 0, scale: 1 },
+				3: { name: 'color', offset: 0, scale: 1 },
+				4: { name: 'tube', offset: 0, scale: 1 },
+				5: { name: 'film', offset: 0, scale: 1 },
+				6: { name: 'noise1', offset: 0, scale: 1 },
+				7: { name: 'noise2', offset: 0, scale: 1 }
+			}
+		});
+		vj.run(function (delta) {
+			frame.draw(delta);
+		});
+		navigator.requestMIDIAccess().then(a => {  /* global navigator */
+			for (var port of a.inputs.values()) {
+				port.addEventListener('midimessage', e => {
+					// Capture Control Change messages for any channel
+					if ((e.data[0] & 0xf0) == 0xb0)
+						frame.properties.controls[e.data[1]] = e.data[2];
+				});
+			}
+		});
+	});
+};
+</script>
+</body>
+</html>
