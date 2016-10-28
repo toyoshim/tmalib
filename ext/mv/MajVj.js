@@ -254,6 +254,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('misc', 'api2d'),
         MajVj.loadPlugin('misc', 'automator'),
         MajVj.loadPlugin('misc', 'camera'),
+        MajVj.loadPlugin('misc', 'host'),
         MajVj.loadPlugin('misc', 'midi'),
         MajVj.loadPlugin('misc', 'mixer'),
         MajVj.loadPlugin('misc', 'perlin'),
