@@ -40,5 +40,6 @@ MajVj.scene.lines.draw3d = function (api) {
  * @param delta delta time from the last rendering
  */
 MajVj.scene.lines.prototype.draw = function (delta) {
+  this._mv.screen().fillColor(0, 0, 0, 1);
   this._frame.draw(delta);
 };
