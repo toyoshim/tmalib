@@ -32,6 +32,15 @@ MajVj.misc.host.load = function () {
 };
 
 /**
+ * Handles screen resize.
+ * @param aspect screen aspect ratio
+ */
+MajVj.misc.host.prototype.onresize = function (aspect) {
+    if (this._frame && this._frame.onresize)
+        this._frame.onresize();
+};
+
+/**
  * Draws a frame.
  * @param delta delta time from the last rendering
  */
