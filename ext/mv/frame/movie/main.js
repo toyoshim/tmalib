@@ -8,7 +8,7 @@ MajVj.frame.movie = function(options) {
   this._width = options.width;
   this._height = options.height;
   this._aspect = options.aspect;
-  this._mute = !!options.mute;
+  this._mute = options.mute !== undefined ? options.mute : true;
   this._rate = options.rate ? options.rate : 1.0;
   this.properties = {
     scroll: [0, 0],  // base point in the original image pixel range
