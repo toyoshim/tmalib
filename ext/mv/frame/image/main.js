@@ -9,9 +9,9 @@ MajVj.frame.image = function(options) {
   this._width = options.width;
   this._height = options.height;
   this.properties = {
-    // to left, to up
-    scroll: [0, 0],
-    scale: 1.0
+    scroll: [0, 0],  // base point in the original image pixel range
+    scale: 1.0,
+    volume: 1.0
   };
   this._texture = null;
 
@@ -77,6 +77,7 @@ MajVj.frame.image.prototype.draw = function(delta) {
     this.properties.scroll[0] / this._width,
     this.properties.scroll[1] / this._height
   ]);
+  this._program.setUniformVector('uVolume', [this.properties.volume]);
   this._program.setTexture('uTexture', this._texture);
   this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
