@@ -18,8 +18,7 @@ Select scenes: <select>
 <div>[x]: Nicofarre emulation ON/OFF</div>
 <div>[h] / [l]: Turn Left / Right</div>
 <div>[j] / [k]: Go Back / Forward</div>
-<script src="../tma.js"></script>
-<script src="mv_common.js"></script>
+<script src="../../tma.js"></script>
 <script>
 document.querySelector('select').addEventListener('change', function (e) {
   scene = vj.create('scene', e.target.value);
@@ -35,6 +34,26 @@ var main = function () {
   scene = vj.create('scene', name);
   var fbo = vj.screen().createFrameBuffer(width, height);
   var fx = vj.create('effect', 'nicofarre');
+  var emulate = false;
+  document.body.addEventListener('keydown', function (e) {
+    switch (e.which) {
+      case 72:  // h
+        fx.properties.volume[1] -= 0.01;
+        break;
+      case 74:  // j
+        fx.properties.volume[0] -= 0.01;
+        break;
+      case 75:  // k
+        fx.properties.volume[0] += 0.01;
+        break;
+      case 76:  // l
+        fx.properties.volume[1] += 0.01;
+        break;
+      case 88:  // x
+        emulate = !emulate;
+        break;
+    }
+  }, false);
   vj.run(function (delta) {
     if (emulate)
       fbo.bind();
@@ -65,8 +84,8 @@ tma.onload = function () {
       MajVj.loadPlugin('scene', 'miku'),
       MajVj.loadPlugin('scene', 'computerbrain'),
       MajVj.loadPlugin('scene', 'saiyaan'),
-      MajVj.loadPlugin('scene', 'roll'),
-      MajVj.loadPlugin('scene', 'perfume1mm'),
+      MajVj.loadPlugin('scene', 'roll'),        // FIXME
+      MajVj.loadPlugin('scene', 'perfume1mm'),  // FIXME
       MajVj.loadPlugin('scene', 'noop'),
       MajVj.loadPlugin('scene', 'white')
     ]).then(function () {

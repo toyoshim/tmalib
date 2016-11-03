@@ -5,16 +5,13 @@
  */
 MajVj.scene.saiyaan = function (options) {
   this._mv = options.mv;
-  // TODO: Fix to use properties.
-  this._controller = options.controller;
-  this._fftController = { volume: [0.0] };
-  this._mixerController = { volume: [0.0, 0.0, 0.0] };
-  this._tuningController = { volume: [0.0] };
+  this.properties = {
+    volume: 0.0,
+    rap: 0.0,
+    fftDb: null
+  };
 
-  this._mixer = this._mv.create('misc', 'mixer', {
-    channel: 3,
-    controller: this._mixerController
-  });
+  this._mixer = this._mv.create('frame', 'mixer', { channel: 3 });
 
   this._waypoints = this._mv.create('frame', 'nicofarre3d', {
     modules: [ {
@@ -49,17 +46,14 @@ MajVj.scene.saiyaan = function (options) {
     frames: [ {
       name: 'effect',
       options: {
-        frames: ['wired', {
-           name: 'morphere',
-           options: { controller: this._fftController }
-        } ],
-        effects: [ {
-          name: 'tuning',
-          options: { controller: this._tuningController }
-        } ]
+        frames: ['wired', { name: 'morphere' } ],
+        effects: [ { name: 'tuning' } ]
       }
     } ]
   });
+  this._prop_fft = this._front.getFrame(0).getFrame(1).properties;
+  this._prop_fft.volume = 0.0;
+  this._prop_tuning = this._front.getFrame(0).getEffect(0).properties;
 };
 
 /**
@@ -67,13 +61,15 @@ MajVj.scene.saiyaan = function (options) {
  * @param delta delta time from the last rendering
  */
 MajVj.scene.saiyaan.prototype.draw = function (delta) {
-  var fft = this._controller.sound.fftDb;
-  var fftUnit = (fft.length / 4) | 0;
-  this._fftController.volume[0] = fft[fftUnit * 3] / 512;
-  var tuning = 0;
-  if (fft[fftUnit] > 240)
-    tuning = (fft[fftUnit] - 240) / 16;
-  this._tuningController.volume[1] = tuning;
+  var fft = this.properties.fftDb;
+  if (fft) {
+    var fftUnit = (fft.length / 4) | 0;
+    this._prop_fft.volume = fft[fftUnit * 3] / 512;
+    var tuning = 0;
+    if (fft[fftUnit] > 240)
+      tuning = (fft[fftUnit] - 240) / 16;
+    this._prop_tuning.volume = tuning;
+  }
 
   this._mv.screen().setAlphaMode(false);
   this._mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
@@ -84,54 +80,55 @@ MajVj.scene.saiyaan.prototype.draw = function (delta) {
   var screen = this._mixer.bind(0);
   this._mv.screen().setAlphaMode(false);
   this._mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
-  if (this._controller.volume[2] < 0.1) {
+  var volume = this.properties.volume;
+  if (volume < 0.1) {
     //this._waypoints.draw(delta);
-    this._mixerController.volume[0] = this._controller.volume[2] * 10.0;
-  } else if (this._controller.volume[2] < 0.2) {
+    this._mixer.properties.volume[0] = volume * 10.0;
+  } else if (volume < 0.2) {
     //this._waypoints.draw(delta);
-    this._mixerController.volume[0] = (0.2 - this._controller.volume[2]) * 10.0;
-  } else if (this._controller.volume[2] < 0.3) {
+    this._mixer.properties.volume[0] = (0.2 - volume) * 10.0;
+  } else if (volume < 0.3) {
     this._tunnel.draw(delta);
-    this._mixerController.volume[0] = (this._controller.volume[2] - 0.2) * 10.0;
-  } else if (this._controller.volume[2] < 0.4) {
+    this._mixer.properties.volume[0] = (volume - 0.2) * 10.0;
+  } else if (volume < 0.4) {
     this._tunnel.draw(delta);
-    this._mixerController.volume[0] = (0.4 - this._controller.volume[2]) * 10.0;
-  } else if (this._controller.volume[2] < 0.5) {
+    this._mixer.properties.volume[0] = (0.4 - volume) * 10.0;
+  } else if (volume < 0.5) {
     this._city.draw(delta);
-    this._mixerController.volume[0] = (this._controller.volume[2] - 0.4) * 10.0;
-  } else if (this._controller.volume[2] < 0.6) {
+    this._mixer.properties.volume[0] = (volume - 0.4) * 10.0;
+  } else if (volume < 0.6) {
     this._city.draw(delta);
-    this._mixerController.volume[0] = (0.6 - this._controller.volume[2]) * 10.0;
+    this._mixer.properties.volume[0] = (0.6 - volume) * 10.0;
   }
   this._mixer.bind(1);
   this._mv.screen().setAlphaMode(false);
   this._mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
-  if (this._controller.volume[2] < 0.1) {
-    this._mixerController.volume[1] = 0.0;
-  } else if (this._controller.volume[2] < 0.2) {
+  if (volume < 0.1) {
+    this._mixer.properties.volume[1] = 0.0;
+  } else if (volume < 0.2) {
     this._city.draw(delta);
-    this._mixerController.volume[1] = (this._controller.volume[2] - 0.1) * 10.0;
-  } else if (this._controller.volume[2] < 0.3) {
+    this._mixer.properties.volume[1] = (volume - 0.1) * 10.0;
+  } else if (volume < 0.3) {
     this._city.draw(delta);
-    this._mixerController.volume[1] = (0.3 - this._controller.volume[2]) * 10.0;
-  } else if (this._controller.volume[2] < 0.4) {
+    this._mixer.properties.volume[1] = (0.3 - volume) * 10.0;
+  } else if (volume < 0.4) {
     //this._waypoints.draw(delta);
-    this._mixerController.volume[1] = (this._controller.volume[2] - 0.3) * 10.0;
-  } else if (this._controller.volume[2] < 0.5) {
+    this._mixer.properties.volume[1] = (volume - 0.3) * 10.0;
+  } else if (volume < 0.5) {
     //this._waypoints.draw(delta);
-    this._mixerController.volume[1] = (0.5 - this._controller.volume[2]) * 10.0;
-  } else if (this._controller.volume[2] < 0.6) {
+    this._mixer.properties.volume[1] = (0.5 - volume) * 10.0;
+  } else if (volume < 0.6) {
     this._tunnel.draw(delta);
-    this._mixerController.volume[1] = (this._controller.volume[2] - 0.5) * 10.0;
-  } else if (this._controller.volume[2] < 0.7) {
+    this._mixer.properties.volume[1] = (volume - 0.5) * 10.0;
+  } else if (volume < 0.7) {
     this._tunnel.draw(delta);
-    this._mixerController.volume[1] = (0.7 - this._controller.volume[2]) * 10.0;
+    this._mixer.properties.volume[1] = (0.7 - volume) * 10.0;
   }
-  if (this._controller.volume[3] != 0.0) {
+  this._mixer.properties.volume[2] = this.properties.rap;
+  if (this.properties.rap != 0.0) {
     this._mixer.bind(2);
     this._mv.screen().setAlphaMode(false);
     this._mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
-    this._mixerController.volume[2] = this._controller.volume[3];
     this._spark.draw(delta);
   }
   screen.bind();
