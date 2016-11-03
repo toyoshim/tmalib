@@ -5,6 +5,7 @@
  */
 MajVj.external.sample1 = function (options) {
   this._mv = options.mv;
+  this.properties = {};
   this._frame = this._mv.create('frame', 'wired');
 };
 
@@ -13,5 +14,6 @@ MajVj.external.sample1 = function (options) {
  * @param delta delta time from the last rendering
  */
 MajVj.external.sample1.prototype.draw = function (delta) {
+  this._mv.screen().fillColor(0, 0, 0, 1);
   this._frame.draw(delta);
 };
