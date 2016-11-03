@@ -5,7 +5,9 @@
  */
 MajVj.scene.perfume1mm = function (options) {
   this._mv = options.mv;
-  this.properties = {};
+  this.properties = {
+    fftDb: new Float32Array(1024)
+  };
   this._sound = options.sound;
 
   this._skip = 0;
@@ -18,12 +20,6 @@ MajVj.scene.perfume1mm = function (options) {
   //this._skip = (2300 + 2184 * 81) / 1000;  // C
   //this._skip = (2300 + 2184 * 97) / 1000;  // I1
   //this._skip = (2300 + 2184 * 105) / 1000;  // I2
-
-  // TODO: Fix to use properties.
-  this._fftController = { sound: { fftDb: this._controller.sound.fftDb } };
-  this._glowController = { volume: [ 1.0, 0.0 ] };
-  this._trainController = { volume: [ 0.5, 0.0 ] };
-  this._harrierController = { volume: [ 0.0 ] };
 
   // Setup frames.
   this._signalL = this._mv.create('frame', 'nicofarre', {
@@ -56,9 +52,11 @@ MajVj.scene.perfume1mm = function (options) {
       options: { period: 1092, unit: 10 }
     }, {
       name: 'harrier',
-      options: { color: [0.1, 0.1, 0.2], controller: this._harrierController }
+      options: { color: [0.1, 0.1, 0.2] }
     } ]
   });
+  this._propHarrier = this._beams.properties;
+  this._propHarrier.harrier = 0.0;
   this._beamsOn = false;
   this._screw = this._mv.create('frame', 'nicofarre', {
     led: MajVj.frame.nicofarre.LED_LEFT_STAGE_RIGHT,
@@ -87,13 +85,13 @@ MajVj.scene.perfume1mm = function (options) {
       name: 'effect',
       options: {
         frames: ['wired'],
-        effects: [ {
-          name: 'glow',
-          options: { controller: this._glowController }
-        } ]
+        effects: [ { name: 'glow' } ]
       }
     } ]
   });
+  var propGlow = this._wired.getFrame(0).getEffect(0).properties;
+  propGlow.volume = 1.0;
+  propGlow.t = 0.0;
   this._wiredOn = false;
   this._train  = this._mv.create('frame', 'effect', {
     frames: [ {
@@ -102,7 +100,7 @@ MajVj.scene.perfume1mm = function (options) {
         draw: this._drawMoon.bind(this),
         modules: [ {
           name: 'train',
-          options: { period: 1092 / 4, controller: this._trainController }
+          options: { period: 1092 / 4 }
         }, {
           name: 'beams',
           options: {
@@ -122,6 +120,12 @@ MajVj.scene.perfume1mm = function (options) {
       options: { controller: this._glowController }
     } ]
   });
+  this._propTrain = this._train.getFrame(0).properties;
+  this._propTrain.train[0] = 5.0;
+  this._propTrain.train[1] = 0.0;
+  propGlow = this._train.getEffect(0).properties;
+  propGlow.volume = 1.0;
+  propGlow.t = 0.0;
   this._trainOn = false;
   this._ceil = this._mv.create('frame', 'nicofarre', {
     led: MajVj.frame.nicofarre.LED_CEILING,
@@ -252,12 +256,12 @@ MajVj.scene.perfume1mm = function (options) {
   part.append(new TmaSequencer.Task(2184 * 8));  // C1
   part.append(new TmaSequencer.Task(0, function () {
     // C2
-    this._trainController.volume[0] = 0.506;
+    this._propTrain.train[0]  = 0.506;
   }.bind(this)));
   part.append(new TmaSequencer.Task(2184 * 8));  // C2
   part.append(new TmaSequencer.Task(0, function () {
     // I1
-    this._trainController.volume[0] = 0.50;
+    this._propTrain.train[0] = 0.50;
   }.bind(this)));
   part.append(new TmaSequencer.Task(2184 * 8));  // I1
   var flyTask = new TmaSequencer.ParallelTask();
@@ -310,11 +314,11 @@ MajVj.scene.perfume1mm.load = function () {
 MajVj.scene.perfume1mm.prototype.draw = function (delta) {
   var fft = 0;
   if (this._sound) {
-    var fftCount = this._fftController.sound.length;
+    var fftCount = this.properties.fftDb.length;
     this._sound.normalizeFrequencyData(
-        this._fftController.sound.fftDb[(fftCount / 10)|0]);
+        this.properties.fftDb[(fftCount / 10)|0]);
   }
-  this._harrierController.volume[0] = fft / 10.0;
+  this._propHarrier.harrier = fft / 10.0;
   this._sequencer.run(delta);
   var screen = this._mv.screen();
   screen.setAlphaMode(false);
@@ -359,12 +363,12 @@ MajVj.scene.perfume1mm.prototype._signalTask = function (delta, time) {
 };
 
 MajVj.scene.perfume1mm.prototype._flyTask = function (delta, time) {
-  this._trainController.volume[1] = time / 15000;
+  this._propTrain.train[1] = time / 15000;
 };
 
 MajVj.scene.perfume1mm.prototype._drawMoon = function (api) {
   api.setAlphaMode(false);
-  var r = this._trainController.volume[1];
+  var r = this._propTrain.train[1];
   var y = (1 - r) * 3000;
   var z = -5000 + 2000 * r;
   api.drawPrimitive(this._moon, 1000, 1000, 1000,

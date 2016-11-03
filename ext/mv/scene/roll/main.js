@@ -5,11 +5,9 @@
  */
 MajVj.scene.roll = function (options) {
   this._mv = options.mv;
-  // TODO: Fix to use properties.
-  this._controller = options.controller;
-  this._fftController = {
-    sound: { fftDb: this._controller.sound.fftDb }
-  };
+  this.properties = {
+    fftDb: new Float32Array(1024)
+  }
 
   this._front = this._mv.create('frame', 'nicofarre', {
     led: MajVj.frame.nicofarre.LED_FRONT_BOTH,
@@ -17,11 +15,11 @@ MajVj.scene.roll = function (options) {
       name: 'specticle',
       options: {
         random: 0.3,
-        color: [0.1, 0.1, 0.3, 1.0],
-        controller: this._fftController
+        color: [0.1, 0.1, 0.3, 1.0]
       }
     } ]
   });
+  this._front.getFrame(0).properties.fftDb = this.properties.fftDb;
   this._frame = this._mv.create('frame', 'nicofarre3d', {
       modules: [ {
         name: 'waypoints',

@@ -8,7 +8,7 @@ MajVj.scene.saiyaan = function (options) {
   this.properties = {
     volume: 0.0,
     rap: 0.0,
-    fftDb: null
+    fftDb: new Float32Array(1024)
   };
 
   this._mixer = this._mv.create('frame', 'mixer', { channel: 3 });
@@ -62,14 +62,12 @@ MajVj.scene.saiyaan = function (options) {
  */
 MajVj.scene.saiyaan.prototype.draw = function (delta) {
   var fft = this.properties.fftDb;
-  if (fft) {
-    var fftUnit = (fft.length / 4) | 0;
-    this._prop_fft.volume = fft[fftUnit * 3] / 512;
-    var tuning = 0;
-    if (fft[fftUnit] > 240)
-      tuning = (fft[fftUnit] - 240) / 16;
-    this._prop_tuning.volume = tuning;
-  }
+  var fftUnit = (fft.length / 4) | 0;
+  this._prop_fft.volume = fft[fftUnit * 3] / 512;
+  var tuning = 0;
+  if (fft[fftUnit] > 240)
+    tuning = (fft[fftUnit] - 240) / 16;
+  this._prop_tuning.volume = tuning;
 
   this._mv.screen().setAlphaMode(false);
   this._mv.screen().fillColor(0.0, 0.0, 0.0, 1.0);
