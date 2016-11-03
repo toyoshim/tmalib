@@ -1,0 +1,38 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = ['ext/gl-matrix.js', 'ext/mv/MajVj.js'];
+tma.onload = function() {
+  MajVj.loadAllPlugins().then(function() {
+    var vj = new MajVj();
+    var frame = vj.create('frame', 'photoframe', { data: [
+      { type: 'image', url: '../data/sample1.jpg',
+        x: [ { type: 'linear', at: 0.0, from: 500, to: -500, duration: 30.0 } ],
+        y: [ { type: 'linear', at: 0.0, from: 100, to: -100, duration: 30.0 } ],
+        scale: [{ type: 'move', at: 0.0, to: 1 } ],
+        volume: [
+          { type: 'power', at: 0.0, from: 0, to: 1, duration: 5.0 },
+          { type: 'power', at: 25.0, from: 1, to: 0, duration: 5.0 },
+        ] },
+      { type: 'image', url: '../data/jupiter.jpg',
+        x: [ { type: 'linear', at: 5.0, from: -500, to: 500, duration: 30.0 } ],
+        y: [ { type: 'linear', at: 5.0, from: -100, to: 100, duration: 30.0 } ],
+        scale: [{ type: 'move', at: 0.0, to: 1 } ],
+        volume: [
+          { type: 'power', at: 5.0, from: 0, to: 1, duration: 5.0 },
+          { type: 'power', at: 30.0, from: 1, to: 0, duration: 5.0 },
+        ] },
+    ] } );
+    window.onresize = e => {
+      frame.onresize(vj.onresize());
+    };
+    vj.run(function(delta) {
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      frame.draw(delta);
+    });
+  });
+};
+</script>
+</body>
+</html>
