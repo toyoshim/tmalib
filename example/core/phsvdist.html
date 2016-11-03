@@ -1,6 +1,6 @@
 <html>
 <head>
-    <script src="../tma.js"></script>
+    <script src="../../tma.js"></script>
     <script>
         tma.onload = function () {
             var screen = new TmaScreen(640, 480);
@@ -91,7 +91,7 @@
                 container.add();
 
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', 'data/phsvdist.mp3');
+            xhr.open('GET', '../data/sample.mp3');
             xhr.responseType = 'arraybuffer';
             xhr.onload = function () {
                 var context = new AudioContext();
