@@ -6,6 +6,7 @@
 MajVj.misc.host = function (options) {
     this._type = options.type;
     this._name = options.name;
+    this._path = options.path;
     this._map = options.map;
     this._mv = options.mv;
     this._frame = null;
@@ -13,7 +14,7 @@ MajVj.misc.host = function (options) {
         controls: new Array(128),  // MIDI control change
         fftDb: null
     };
-    MajVj.loadPlugin(this._type, this._name).then(() => {
+    MajVj.loadPlugin(this._type, this._name, this._path).then(() => {
         this._frame = this._mv.create(this._type, this._name);
         if (this._frame.properties.fftDb !== undefined)
             this.properties.fftDb = this._frame.properties.fftDb;

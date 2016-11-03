@@ -265,18 +265,19 @@ MajVj.loadAllPlugins = function () {
 
 /**
  * Loads a MajVj plugin.
- * @param type 'effect' or 'frame'
+ * @param type 'effect', 'frame', 'misc', and 'external'
  * @param name plugin name
+ * @param path plugin relative path for 'external' type (optional)
  * @return a Promise object
  */
-MajVj.loadPlugin = function (type, name) {
+MajVj.loadPlugin = function (type, name, path) {
     return new Promise(function (resolve, reject) {
         if (MajVj[type][name]) {
             // The specified plugin is already loaded.
             resolve();
             return;
         }
-        MajVj.loadScript(type, name, 'main.js').then(function () {
+        var loaded = function () {
             if (!MajVj[type][name]) {
                 reject('MajVj.' + type + '.' + name + ' is not defined.');
                 return;
@@ -288,7 +289,12 @@ MajVj.loadPlugin = function (type, name) {
             MajVj[type][name].load().then(function () {
                 resolve();
             }, function (e) { reject(e); });
-        }, function () { reject('plugin load error: ' + name); });
+        };
+        var failed = function () { reject('plugin load error: ' + name); };
+        if (type == 'external')
+            tma.load(path).then(loaded, failed);
+        else
+            MajVj.loadScript(type, name, 'main.js').then(loaded, failed);
     });
 };
 
@@ -371,4 +377,5 @@ MajVj.effect = {};
 MajVj.frame = {};
 MajVj.misc = {};
 MajVj.scene = {};
+MajVj.external = {};
 MajVj._settings = {};
