@@ -2,10 +2,5 @@
 *~
 .idea
 bower_components
-example/*_nr.html
-example/data
-example/test
 ext/gl-matrix.js
 node_modules
-test/*_nr.html
-test/data

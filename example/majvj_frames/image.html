@@ -1,0 +1,30 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	MajVj.loadPlugin('frame', 'image').then(function () {
+		var vj = new MajVj();
+		var frame = vj.create('frame', 'image', {
+			url: '../data/sample1.jpg'
+		});
+		var x = 0;
+		var y = 0;
+		var scale = 1;
+		window.onresize = e => { frame.onresize(vj.onresize()); };
+		vj.run(function (delta) {
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			frame.properties.scroll[0] = -200 + x++ % 100;
+			frame.properties.scroll[1] = -200 + y++ % 100;
+			frame.properties.scale = scale;
+			scale += 0.001;
+			if (scale >= 2)
+				scale = 1;
+			frame.draw(delta);
+		});
+	});
+};
+</script>
+</body>
+</html>
