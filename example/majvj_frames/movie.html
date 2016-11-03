@@ -1,0 +1,44 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  Promise.all([
+      MajVj.loadPlugin('frame', 'movie'),
+      MajVj.loadPlugin('misc', 'sequencer')]).then(function () {
+    var vj = new MajVj();
+    var frame = vj.create('frame', 'movie', {
+      url: '../data/nico_test.webm'
+    });
+    var seqx = vj.create('misc', 'sequencer', { sequence: [
+      { type: 'move', at: 0.0, to: -100 },
+      { type: 'linear', at: 0.0, from: -100, to:  100, duration: 1.0 },
+      { type: 'linear', at: 2.0, from:  100, to: -100, duration: 1.0 },
+      { type: 'repeat', at: 4.0, rollback: 4.0 }
+    ]});
+    var seqy = vj.create('misc', 'sequencer', { sequence: [
+      { type: 'move', at: 0.0, to: -100 },
+      { type: 'linear', at: 1.0, from: -100, to:  100, duration: 1.0 },
+      { type: 'linear', at: 3.0, from:  100, to: -100, duration: 1.0 },
+      { type: 'repeat', at: 5.0, rollback: 4.0 }
+    ]});
+    var seqz = vj.create('misc', 'sequencer', { sequence: [
+      { type: 'move', at: 0.0, to: 1 },
+      { type: 'ease-in-out', at: 0.0, from: 1, to: 1.5, duration: 5.0 },
+      { type: 'ease-in-out', at: 5.0, from: 1.5, to: 1, duration: 5.0 },
+      { type: 'repeat', at: 10.0, rollback: 10.0 }
+    ]});
+    window.onresize = e => { frame.onresize(vj.onresize()); };
+    vj.run(function (delta) {
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      frame.properties.scroll[0] = seqx.generate(delta);
+      frame.properties.scroll[1] = seqy.generate(delta);
+      frame.properties.scale = seqz.generate(delta);
+      frame.draw(delta);
+    });
+  });
+};
+</script>
+</body>
+</html>

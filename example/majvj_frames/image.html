@@ -12,15 +12,15 @@ tma.onload = function () {
 			url: '../data/sample1.jpg'
 		});
 		var seqx = vj.create('misc', 'sequencer', { sequence: [
-			{ type: 'move', at: 0.0, to: -200 },
-			{ type: 'linear', at: 0.0, from: -200, to: -100, duration: 1.0 },
-			{ type: 'linear', at: 2.0, from: -100, to: -200, duration: 1.0 },
+			{ type: 'move', at: 0.0, to: -100 },
+			{ type: 'linear', at: 0.0, from: -100, to:  100, duration: 1.0 },
+			{ type: 'linear', at: 2.0, from:  100, to: -100, duration: 1.0 },
 			{ type: 'repeat', at: 4.0, rollback: 4.0 }
 		]});
 		var seqy = vj.create('misc', 'sequencer', { sequence: [
-			{ type: 'move', at: 0.0, to: -200 },
-			{ type: 'linear', at: 1.0, from: -200, to: -100, duration: 1.0 },
-			{ type: 'linear', at: 3.0, from: -100, to: -200, duration: 1.0 },
+			{ type: 'move', at: 0.0, to: -100 },
+			{ type: 'linear', at: 1.0, from: -100, to:  100, duration: 1.0 },
+			{ type: 'linear', at: 3.0, from:  100, to: -100, duration: 1.0 },
 			{ type: 'repeat', at: 5.0, rollback: 4.0 }
 		]});
 		var seqz = vj.create('misc', 'sequencer', { sequence: [

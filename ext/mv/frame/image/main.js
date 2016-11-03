@@ -70,8 +70,8 @@ MajVj.frame.image.prototype.draw = function(delta) {
     return;
   this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
   this._program.setUniformVector('uScale', [
-    this._width / this._texture.width / this.properties.scale,
-    this._height / this._texture.height / this.properties.scale
+    this._texture.width / this._width * this.properties.scale,
+    this._texture.height / this._height * this.properties.scale
   ]);
   this._program.setUniformVector('uOffset', [
     this.properties.scroll[0] / this._width,
