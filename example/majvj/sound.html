@@ -1,7 +1,7 @@
 <html>
 <head><title>Sound Test</title></head>
 <body>
-<script src="../tma.js"></script>
+<script src="../../tma.js"></script>
 <script>
 tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
 tma.onload = function () {
@@ -64,13 +64,13 @@ tma.onload = function () {
     tma.log('loading sound data...');
     var vj = new MajVj(0, 0);
     snd = vj.create('misc', 'sound', { channel: 2 });
-    var site = 'data/0004/';
+    var site = '../data/';
     Promise.all([
-        snd.fetch(site + 'track01.mp3'),
-        snd.fetch(site + 'track03.mp3'),
-        snd.fetch(site + 'track11.mp3'),
-        snd.fetch(site + 'track13.mp3'),
-        snd.fetch(site + 'track16.mp3')
+        snd.fetch(site + 'sample.mp3'),
+        snd.fetch(site + 'sample.mp3'),
+        snd.fetch(site + 'sample.mp3'),
+        snd.fetch(site + 'sample.mp3'),
+        snd.fetch(site + 'sample.mp3')
     ]).then(main, error);
   };
 
