@@ -12,10 +12,14 @@ MajVj.frame.photoframe = function(options) {
     this._data[i] = {
       frame: mv.create(
           'frame', data[i].type, { url: data[i].url, rate: data[i].rate }),
-      x: mv.create('misc', 'sequencer', { sequence: data[i].x }),
-      y: mv.create('misc', 'sequencer', { sequence: data[i].y }),
-      scale: mv.create('misc', 'sequencer', { sequence: data[i].scale }),
-      volume: mv.create('misc', 'sequencer', { sequence: data[i].volume })
+      x: data[i].x ?
+          mv.create('misc', 'sequencer', { sequence: data[i].x }) : null,
+      y: data[i].y ?
+          mv.create('misc', 'sequencer', { sequence: data[i].y }) : null,
+      scale: data[i].scale ?
+          mv.create('misc', 'sequencer', { sequence: data[i].scale }) : null,
+      volume: data[i].volume ?
+          mv.create('misc', 'sequencer', { sequence: data[i].volume }) : null
     };
   }
 };
@@ -44,10 +48,14 @@ MajVj.frame.photoframe.prototype.onresize = function(aspect) {
 MajVj.frame.photoframe.prototype.draw = function(delta) {
   for (var i = 0; i < this._data.length; ++i) {
     var data = this._data[i];
-    data.frame.properties.scroll[0] = data.x.generate(delta);
-    data.frame.properties.scroll[1] = data.y.generate(delta);
-    data.frame.properties.scale = data.scale.generate(delta);
-    data.frame.properties.volume = data.volume.generate(delta);
+    data.frame.properties.scroll[0] =
+        data.x ? data.x.generate(delta) : 0;
+    data.frame.properties.scroll[1] =
+        data.y ? data.y.generate(delta) : 0;
+    data.frame.properties.scale =
+        data.scale ? data.scale.generate(delta) : 1;
+    data.frame.properties.volume =
+        data.volume ? data.volume.generate(delta) : 1;
     if (data.frame.properties.volume)
       data.frame.draw(delta);
   }
