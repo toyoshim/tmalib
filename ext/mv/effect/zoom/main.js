@@ -6,7 +6,8 @@
 MajVj.effect.zoom = function(options) {
   this.properties = {
     multi: [1, 1],
-    scale: [1, 1]
+    scale: [1, 1],
+    volume: 1
   };
 
   this._program = options.screen.createProgram(
@@ -55,5 +56,6 @@ MajVj.effect.zoom.prototype.draw = function(delta, texture) {
   this._program.setTexture('uTexture', texture);
   this._program.setUniformVector('uMulti', this.properties.multi);
   this._program.setUniformVector('uScale', this.properties.scale);
+  this._program.setUniformVector('uVolume', [this.properties.volume]);
   this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
