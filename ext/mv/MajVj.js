@@ -225,6 +225,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('effect', 'rgb'),
         MajVj.loadPlugin('effect', 'rollpanel'),
         MajVj.loadPlugin('effect', 'tuning'),
+        MajVj.loadPlugin('effect', 'zoom'),
         MajVj.loadPlugin('frame', 'ab2'),
         MajVj.loadPlugin('frame', 'api3d'),
         MajVj.loadPlugin('frame', 'astalight'),

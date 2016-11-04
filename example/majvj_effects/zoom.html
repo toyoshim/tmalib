@@ -1,0 +1,30 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	var vj = new MajVj();
+	var fbo = vj.screen().createFrameBuffer();
+	var name = 'ab2';
+	Promise.all([MajVj.loadPlugin('frame', name),
+				 MajVj.loadPlugin('effect', 'zoom')]).then(function () {
+		var frame = vj.create('frame', name);
+		var effect = vj.create('effect', 'zoom');
+		effect.properties.multi[0] = 4;
+		effect.properties.multi[1] = 2;
+		effect.properties.scale[0] = 2;
+		vj.run(function (delta) {
+			fbo.bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			frame.draw(delta);
+			vj.screen().bind();
+			vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+			effect.draw(delta, fbo.texture);
+			vj.screen().flush();
+		});
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>
