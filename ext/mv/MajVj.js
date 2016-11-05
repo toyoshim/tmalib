@@ -253,6 +253,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'snow'),
         MajVj.loadPlugin('frame', 'specticle'),
         MajVj.loadPlugin('frame', 'spiline'),
+        MajVj.loadPlugin('frame', 'textroll'),
         MajVj.loadPlugin('frame', 'vertexshaderart'),
         MajVj.loadPlugin('frame', 'wired'),
         MajVj.loadPlugin('misc', 'api2d'),
