@@ -33,6 +33,7 @@ MajVj.frame.shadertoy = function (options) {
     this._waveTexture = this._screen.createFloatTexture(
             this._waveData, waveTableWidth, 2, true);
     this._mouse = { x: 0.0, y: 0.0, cx: 0.0, cy: 0.0 };
+    this._updateMouse = options.updateMouse !== false;
     this._fbo = [
             this._screen.createFrameBuffer(this._width, this._height),
             this._screen.createFrameBuffer(this._width, this._height)
@@ -117,7 +118,7 @@ MajVj.frame.shadertoy.prototype.draw = function (delta) {
     this._program.setUniformVector(
         'iChannelTime', [this._time, this._time, this._time, this._time]);
     var mouse = this._screen.mouse();
-    if (mouse.over) {
+    if (this._updateMouse && mouse.over) {
         var click = mouse.click.on ? 1.0 : -1.0;
         this._mouse = {
             x: (mouse.x / mouse.width) * this._width,
