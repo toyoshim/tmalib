@@ -387,7 +387,8 @@ Tma3DScreen.prototype.convertImage = function (image) {
  * @param texture output texture restrictions
  */
 Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
-    var fontname = font.size + 'px ' + font.name;
+    var weight = font.weight ? (font.weight + ' ') : ''
+    var fontname = weight + font.size + 'px ' + font.name;
     this.context.font = fontname;
     var w = this.context.measureText(text).width;
     var h = font.size * devicePixelRatio * 1.5; // FIXME: just in case.
