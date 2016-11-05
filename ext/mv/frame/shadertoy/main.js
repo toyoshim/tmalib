@@ -115,6 +115,7 @@ MajVj.frame.shadertoy.prototype.draw = function (delta) {
     this._program.setUniformVector(
         'iResolution', [this._width, this._height, 1.0]);
     this._program.setUniformVector('iGlobalTime', [this._time]);
+    this._program.setUniformVector('iTimeDelta', [delta / 1000.0]);
     this._program.setUniformVector(
         'iChannelTime', [this._time, this._time, this._time, this._time]);
     var mouse = this._screen.mouse();
