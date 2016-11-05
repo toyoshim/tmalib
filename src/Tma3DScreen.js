@@ -72,6 +72,8 @@ function Tma3DScreen (width, height) {
         Tma3DScreen.MODE_TRIANGLE_FAN = this.gl.TRIANGLE_FAN;
         Tma3DScreen.FILTER_NEAREST = this.gl.NEAREST;
         Tma3DScreen.FILTER_LINEAR = this.gl.LINEAR;
+        Tma3DScreen.WRAP_CLAMP_TO_EDGE = this.gl.CLAMP_TO_EDGE;
+        Tma3DScreen.WRAP_REPEAT = this.gl.REPEAT;
         Tma3DScreen._MODE_INITIALIZED = true;
     }
 }
@@ -95,6 +97,8 @@ Tma3DScreen.MODE_TRIANGLE_STRIP = 5;
 Tma3DScreen.MODE_TRIANGLE_FAN = 6;
 Tma3DScreen.FILTER_NEAREST = 0x2600;
 Tma3DScreen.FILTER_LINEAR = 0x2601;
+Tma3DScreen.WRAP_CLAMP_TO_EDGE = 0x812f;
+Tma3DScreen.WRAP_REPEAT = 0x2901;
 
 /**
  * Attaches to a DOMElement. TmaScreen.BODY is useful predefined DOMElement
@@ -415,11 +419,13 @@ Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
  * @param height texture height
  * @param flip image flip flag
  * @param filter texture mag filter
+ * @param wrap texture wrap flag
  * @param type data type like gl.FLOAT, gl.UNSIGNED_BYTE
  * @param image souce is image source
  */
 Tma3DScreen.prototype._createTexture =
-        function (data, width, height, flip, filter, format, type, image) {
+        function (data, width, height, flip, filter, wrap, format, type, image)
+{
     var texture = this.gl.createTexture();
     texture.width = width;
     texture.height = height;
@@ -438,10 +444,8 @@ Tma3DScreen.prototype._createTexture =
             this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, filter);
     this.gl.texParameteri(
             this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, filter);
-    this.gl.texParameteri(
-            this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(
-            this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, wrap);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, wrap);
     texture._flip = flip;
     texture._owner = this;
     texture.update = image ? function (data) {
@@ -468,7 +472,8 @@ Tma3DScreen.prototype._createTexture =
 Tma3DScreen.prototype.createAlphaFloatTexture =
         function (data, width, height, flip) {
     return this._createTexture(data, width, height, flip, this.gl.NEAREST,
-            this.gl.ALPHA, this.gl.FLOAT, false);
+            Tma3DScreen.WRAP_CLAMP_TO_EDGE, this.gl.ALPHA, this.gl.FLOAT,
+            false);
 };
 
 /**
@@ -481,7 +486,8 @@ Tma3DScreen.prototype.createAlphaFloatTexture =
 Tma3DScreen.prototype.createAlphaTexture =
         function (data, width, height, flip) {
     return this._createTexture(data, width, height, flip, this.gl.NEAREST,
-            this.gl.ALPHA, this.gl.UNSIGNED_BYTE, false);
+            Tma3DScreen.WRAP_CLAMP_TO_EDGE, this.gl.ALPHA,
+            this.gl.UNSIGNED_BYTE, false);
 };
 
 /**
@@ -494,7 +500,7 @@ Tma3DScreen.prototype.createAlphaTexture =
 Tma3DScreen.prototype.createFloatTexture =
         function (data, width, height, flip) {
     return this._createTexture(data, width, height, flip, this.gl.NEAREST,
-            this.gl.RGBA, this.gl.FLOAT, false);
+            Tma3DScreen.WRAP_CLAMP_TO_EDGE, this.gl.RGBA, this.gl.FLOAT, false);
 };
 
 /**
@@ -502,10 +508,12 @@ Tma3DScreen.prototype.createFloatTexture =
  * @param image Image object or ImageData object
  * @param flip image flip flag
  * @param filter texture mag filter (optional)
+ * @param wrap texture wrap flag (optional)
  */
-Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
+Tma3DScreen.prototype.createTexture = function (image, flip, filter, wrap) {
     return this._createTexture(image, image.width, image.height, flip,
             filter ? filter : Tma3DScreen.FILTER_LINEAR,
+            wrap ? wrap : Tma3DScreen.WRAP_CLAMP_TO_EDGE,
             this.gl.RGBA, this.gl.UNSIGNED_BYTE, true);
 };
 
