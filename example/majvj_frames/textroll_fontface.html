@@ -1,0 +1,70 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = ['ext/gl-matrix.js', 'ext/mv/MajVj.js'];
+tma.onload = function() {
+  var font = new FontFace(
+      'TestFont',
+      'url(https://fonts.gstatic.com/s/sharetechmono/v6/' +
+      'RQxK-3RA0Lnf3gnnnNrAsVlgUn8GogvcKKzoM9Dh-4E.woff2)');
+  document.fonts.add(font);
+  Promise.all([
+//      font.load(),
+      document.fonts.ready,
+      MajVj.loadAllPlugins()]).then(function() {
+    var vj = new MajVj();
+    var frame = vj.create('frame', 'textroll', {
+      position: [ 0, 0, -1000 ],
+      scale: 1.5,
+      rotate: 0.1,
+      styles: {
+        bold: {
+          name: 'TestFont',
+          size: 128,
+          weight: 'bold',
+          fg: 'rgb(255, 200, 200)',
+          linespace: 0.8,
+          alignment: 'left',
+          direction: 1
+        },
+        normal: {
+          name: 'TestFont',
+          size: 96,
+          fg: 'rgb(200, 210, 210)',
+          linespace: 0.6,
+          alignment: 'right',
+          direction: -1
+        }
+      },
+      texts: [
+        {
+          style: 'bold',
+          text: 'Hello World'
+        },
+        {
+          style: 'normal',
+          text: 'I am Takashi'
+        },
+        {
+          style: 'normal',
+          text: 'I am Toyoshima'
+        },
+        {
+          style: 'normal',
+          text: 'WE ❤ the WEB'
+        }
+      ]
+    });
+    window.onresize = e => {
+      frame.onresize(vj.onresize());
+    };
+    vj.run(function(delta) {
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      frame.draw(delta);
+    });
+  });
+};
+</script>
+</body>
+</html>
