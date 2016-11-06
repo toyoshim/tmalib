@@ -384,11 +384,20 @@ Tma3DScreen.prototype.convertImage = function (image) {
  * Creates a texture buffer from string.
  * @param text a text shown in the created texture
  * @param font font information
+ *    {
+ *      name: "'Open Sans', sans-serif", 'Open Sans', 'sans-serif', etc.
+ *      size: 128 (in px)
+ *      weight: 400, 'bold', etc. (optional)
+ *      background: e.g., 'rgba(0, 0, 0, 0)', '#000000', etc.
+ *      foreground: e.g., 'rgb(255, 255,255)', 'white', etc.
+ *    }
  * @param texture output texture restrictions
  */
 Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
-    var weight = font.weight ? (font.weight + ' ') : ''
-    var fontname = weight + font.size + 'px ' + font.name;
+    var weight = font.weight ? (font.weight + ' ') : '';
+    var name = (font.name.indexOf(' ') < 0 || font.name[0] == '\'') ?
+            font.name : ('\'' + font.name + '\'');
+    var fontname = weight + font.size + 'px ' + name;
     this.context.font = fontname;
     var w = this.context.measureText(text).width;
     var h = font.size * devicePixelRatio * 1.5; // FIXME: just in case.
