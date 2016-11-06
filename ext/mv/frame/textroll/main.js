@@ -13,9 +13,9 @@ MajVj.frame.textroll = function(options) {
   };
   this._box = TmaModelPrimitives.createBox();
   this._data = [];
-  this._position = options.position;
-  this._scale = options.scale;
-  this._rotateBase = options.rotate;
+  this._position = options.position || [ 0, 0, 0 ];
+  this._scale = options.scale !== undefined ? options.scale : 1;
+  this._rotateBase = options.rotate || 0;
 
   var height = 0;
   var width = 0;
