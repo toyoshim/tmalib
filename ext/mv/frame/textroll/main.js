@@ -47,7 +47,9 @@ MajVj.frame.textroll = function(options) {
     var h = data.linespace;
     data.y = base - h / 2;
     base -= h;
-    if (data.alignment == 'left')
+    if (!data.alignment || data.alignment == 'center')
+      data.x = 0;
+    else if (data.alignment == 'left')
       data.x = (data.texture.width - width) / 2;
     else if (data.alignment == 'right')
       data.x = (width - data.texture.width) / 2;
