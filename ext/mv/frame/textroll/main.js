@@ -16,6 +16,7 @@ MajVj.frame.textroll = function(options) {
   this._position = options.position || [ 0, 0, 0 ];
   this._scale = options.scale !== undefined ? options.scale : 1;
   this._rotateBase = options.rotate || 0;
+  this._camera = options.camera;
 
   var height = 0;
   var width = 0;
@@ -78,6 +79,10 @@ MajVj.frame.textroll.prototype.onresize = function(aspect) {
  * @param delta delta time from the last rendering
  */
 MajVj.frame.textroll.prototype.draw = function(delta) {
+  if (this._camera) {
+    this._api3d.properties.position = this._camera.position();
+    this._api3d.properties.orientation = this._camera.orientation();
+  }
   return this._api3d.draw(delta);
 };
 
