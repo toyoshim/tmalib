@@ -9,7 +9,7 @@ MajVj.frame.textroll = function(options) {
   });
   this.properties = {
     rotate: 0,
-    speed: Math.PI / 100000
+    speed: options.speed !== undefined ? options.speed : Math.PI / 100000
   };
   this._box = TmaModelPrimitives.createBox();
   this._data = [];
