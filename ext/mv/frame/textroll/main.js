@@ -89,15 +89,16 @@ MajVj.frame.textroll.prototype.draw = function(delta) {
 MajVj.frame.textroll.prototype._draw = function(api) {
   var s = this._scale;
   var b = this._position;
-  var rotate = this._rotateBase + this.properties.rotate;
+  var rb = this._rotateBase;
+  var r = this.properties.rotate;
   this.properties.rotate += this.properties.speed * api.delta;
   for (var i = 0; i < this._data.length; ++i) {
     var data = this._data[i];
     var texture = data.texture;
     this._box.setTexture(texture);
     var p = [ data.x * s + b[0], data.y * s + b[1], b[2] ];
-    var r = [ [ 0, rotate * data.direction, 0 ]] ;
+    var rotate = [ [ 0, rb + r * data.direction, 0 ] ];
     api.drawPrimitive(
-        this._box, texture.width * s, texture.height * s, 1, p, r);
+        this._box, texture.width * s, texture.height * s, 1, p, rotate);
   }
 };
