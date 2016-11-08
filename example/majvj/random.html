@@ -1,0 +1,36 @@
+<html>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = [ 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+	MajVj.loadPlugin('misc', 'random').then(function () {
+		function log (n) {
+			var pre = document.createElement('pre');
+			pre.textContent = n;
+			document.body.appendChild(pre);
+		}
+		var r1 = new MajVj.misc.random({});
+		log('random default');
+		for (var i = 0; i < 16; ++i)
+			log(r1.generate());
+		log('random with a seed');
+		var r2 = new MajVj.misc.random({seed: 1});
+		for (var i = 0; i < 16; ++i)
+			log(r2.generate());
+		log('random with [0, 256)');
+		var r3 = new MajVj.misc.random({seed: 1, min: 0, max: 256});
+		for (var i = 0; i < 16; ++i)
+			log(r3.generate());
+		log('random with [1, 11) | 0');
+		var r4 = new MajVj.misc.random({seed: 1, min: 1, max: 11});
+		for (var i = 0; i < 16; ++i)
+			log(r4.generate() | 0);
+		log('random with overwritten [10, 21)');
+		for (var i = 0; i < 16; ++i)
+			log(r4.generate(10, 21));
+	}, function (e) { console.log('plugin load error: ' + e); });
+};
+</script>
+</body>
+</html>

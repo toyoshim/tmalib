@@ -262,6 +262,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('misc', 'host'),
         MajVj.loadPlugin('misc', 'midi'),
         MajVj.loadPlugin('misc', 'perlin'),
+        MajVj.loadPlugin('misc', 'random'),
         MajVj.loadPlugin('misc', 'sequencer'),
         MajVj.loadPlugin('misc', 'sound')
     ]);
