@@ -39,11 +39,12 @@ MajVj.misc.sound.load = function () {
             return;
         }
 
-        navigator.webkitGetUserMedia({audio: true}, function (a) {
+        navigator.mediaDevices.getUserMedia({audio: true}).then(function (a) {
             MajVj.misc.sound._microphone = a;
             resolve();
         }.bind(this), function (e) {
-            reject(e);
+            tma.warn('microphone is not available. continue...');
+            resolve();
         });
     });
 };
