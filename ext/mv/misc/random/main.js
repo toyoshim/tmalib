@@ -5,11 +5,12 @@
  * @param options options (See MajVj.prototype.create)
  */
 MajVj.misc.random = function (options) {
-  // [min, max)
+  // Generates [min, max) or [min, max] if options.inclusive is true
   this._base = options.min || 0.0;
   var max = options.max !== undefined ? options.max : 1.0;
   this._scale = max - this._base;
-  this._n = options.seed || 1976.0227;
+  this._n = options.seed || 19760227;
+  this._divisor = options.inclusive ? 0x7fffffff : 0x80000000;
 };
 
 /**
@@ -23,7 +24,8 @@ MajVj.misc.random.load = function () {
 };
 
 /**
- * Generates a random value in [options.min, options.max). |min| and |max|
+ * Generates a random value in [options.min, options.max), or
+ * [options.min, options.max] if options.inclusive is true. |min| and |max|
  * should be specified together if caller want to overwrite options values.
  * @param min minimum value that overwrites options.min (optional)
  * @param max maximum value that overwrites options.max (optional)
@@ -40,10 +42,7 @@ MajVj.misc.random.prototype.generate = function (min, max) {
   n = n ^ (n << 13);
   n = n ^ (n >> 17);
   n = n ^ (n << 5);
-  // Bit-shift makes the value signed int. Make it back to a float.
-  if (n < 0)
-    n += 0x100000000;
   this._n = n;
-  n = n / 0x100000000;
+  n = (n & 0x7fffffff) / this._divisor;
   return base + n * scale;
 };
