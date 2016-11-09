@@ -97,8 +97,10 @@ MajVj.frame.movie.prototype.onresize = function(aspect) {
 MajVj.frame.movie.prototype.draw = function(delta) {
   if (!this._texture)
     return;
-  if (this._video.paused)
+  if (this._video.paused && this.properties.volume != 0)
     this._video.play();
+  else if (!this._video.paused && this.properties.volume == 0)
+    this._video.pause();
   this._texture.update(this._video);
   this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
   this._program.setUniformVector('uScale', this.properties.scale ? [
