@@ -59,3 +59,12 @@ MajVj.misc.host.prototype.draw = function (delta) {
     }
     this._frame.draw(delta);
 };
+
+/**
+ * Shutdowns the frame.
+ */
+MajVj.misc.host.prototype.shutdown = function () {
+  if (this._frame && this._frame.shutdown)
+    this._frame.shutdown();
+};
+
