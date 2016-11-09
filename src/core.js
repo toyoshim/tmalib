@@ -111,7 +111,7 @@ tma.fetch = function (url, type, cache) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.responseType = type;
-    xhr.onload = function () {
+    xhr.onloadend = function () {
       if (!this.response) {
         reject(this);
       } else {
@@ -125,6 +125,7 @@ tma.fetch = function (url, type, cache) {
         }
       }
       this.onload = null;
+      this.abort();
     }.bind(xhr);
     xhr.send();
   });
