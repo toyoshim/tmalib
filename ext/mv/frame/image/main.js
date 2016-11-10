@@ -25,6 +25,8 @@ MajVj.frame.image = function(options) {
     MajVj.loadImageFrom(options.url).then(image => {
       this._texture = this._screen.createTexture(image, true);
     });
+  } else if (options.image) {
+    this._texture = this._screen.createTexture(options.image, true);
   }
 };
 
