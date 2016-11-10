@@ -8,7 +8,9 @@ MajVj.frame.sandbox = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this.properties = {};
+    this.properties = {
+      mouse: [0.5, 0.5]
+    };
     this._time = 0;
     this._program = null;
     if (options.id)
@@ -123,7 +125,7 @@ MajVj.frame.sandbox.prototype.draw = function (delta) {
     this._time += delta / 1000;
     this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
     this._program.setUniformVector('time', [this._time]);
-    this._program.setUniformVector('mouse', [0.5, 0.5]);
+    this._program.setUniformVector('mouse', this.properties.mouse);
     this._program.setUniformVector('resolution', [this._width, this._height]);
     // TODO: backbuffer
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
