@@ -91,7 +91,7 @@ tma.fetch = function (url, type, cache) {
     if (tma._resources[key].ready) {
       // The same resource is already loaded.
       return new Promise(function (resolve, reject) {
-        resolve(tma_resources[key].resource);
+        resolve(tma._resources[key].resource);
       });
     } else {
       // The same resource is on loading.
