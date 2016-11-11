@@ -8,6 +8,7 @@ MajVj.frame.image = function(options) {
   this._mv = options.mv;
   this._width = options.width;
   this._height = options.height;
+  this._keepAspect = !(options.keepAspect == false);
   this.properties = {
     scroll: [0, 0],  // base point in the original image pixel range
     scale: 1.0,
@@ -71,10 +72,10 @@ MajVj.frame.image.prototype.draw = function(delta) {
   if (!this._texture)
     return;
   this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
-  this._program.setUniformVector('uScale', [
+  this._program.setUniformVector('uScale', this._keepAsoect ? [
     this._texture.width / this._width * this.properties.scale,
     this._texture.height / this._height * this.properties.scale
-  ]);
+  ] : [this.properties.scale, this.properties.scale]);
   this._program.setUniformVector('uOffset', [
     this.properties.scroll[0] / this._width,
     this.properties.scroll[1] / this._height
