@@ -72,7 +72,7 @@ MajVj.frame.image.prototype.draw = function(delta) {
   if (!this._texture)
     return;
   this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
-  this._program.setUniformVector('uScale', this._keepAsoect ? [
+  this._program.setUniformVector('uScale', this._keepAspect ? [
     this._texture.width / this._width * this.properties.scale,
     this._texture.height / this._height * this.properties.scale
   ] : [this.properties.scale, this.properties.scale]);
