@@ -217,6 +217,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('effect', 'crt'),
         MajVj.loadPlugin('effect', 'flashpanel'),
         MajVj.loadPlugin('effect', 'glow'),
+        MajVj.loadPlugin('effect', 'hue'),
         MajVj.loadPlugin('effect', 'led'),
         MajVj.loadPlugin('effect', 'mask'),
         MajVj.loadPlugin('effect', 'mirror'),
