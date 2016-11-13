@@ -17,6 +17,7 @@ MajVj.frame.textroll = function(options) {
   this._scale = options.scale !== undefined ? options.scale : 1;
   this._rotateBase = options.rotate || 0;
   this._camera = options.camera;
+  this._type = options.type;  // "roll" (default), "zoom"
 
   var height = 0;
   var width = 0;
@@ -28,6 +29,8 @@ MajVj.frame.textroll = function(options) {
       name: style.name,
       size: style.size,
       weight: style.weight,
+      fill: style.fill,
+      stroke: style.stroke,
       foreground: style.fg,
       background: 'rgba(0, 0, 0, 0)'
     });
@@ -87,6 +90,13 @@ MajVj.frame.textroll.prototype.draw = function(delta) {
 };
 
 MajVj.frame.textroll.prototype._draw = function(api) {
+  if (!this._type || this._type == "roll")
+    this._drawRoll(api);
+  else if (this._type == "zoom")
+    this._drawZoom(api);
+};
+
+MajVj.frame.textroll.prototype._drawRoll = function(api) {
   var s = this._scale;
   var b = this._position;
   var rb = this._rotateBase;
@@ -100,5 +110,19 @@ MajVj.frame.textroll.prototype._draw = function(api) {
     var rotate = [ [ 0, rb + r * data.direction, 0 ] ];
     api.drawPrimitive(
         this._box, texture.width * s, texture.height * s, 1, p, rotate);
+  }
+};
+
+MajVj.frame.textroll.prototype._drawZoom = function(api) {
+  var s = this._scale;
+  var b = this._position;
+  this._position[2] += this.properties.speed * api.delta;
+  for (var i = 0; i < this._data.length; ++i) {
+    var data = this._data[i];
+    var texture = data.texture;
+    this._box.setTexture(texture);
+    var p = [ data.x * s + b[0], data.y * s + b[1], b[2] ];
+    api.drawPrimitive(
+        this._box, texture.width * s, texture.height * s, 1, p);
   }
 };
