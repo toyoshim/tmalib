@@ -351,7 +351,7 @@ Tma3DScreen.prototype.createFrameBuffer = function (width, height) {
  * Create ImageData for texture.
  * @param width texture width
  * @param height texture height
- * @param data texture data
+ * @param data initial texture data (optional)
  */
 Tma3DScreen.prototype.createImage = function (width, height, data) {
     var image = this.context.createImageData(width, height);
@@ -462,12 +462,12 @@ Tma3DScreen.prototype._createTexture =
         var gl = this._owner.gl;
         gl.bindTexture(gl.TEXTURE_2D, this);
         gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type,
-                data);
+                data ? data : this.data);
     } : function (data) {
         var gl = this._owner.gl;
         gl.bindTexture(gl.TEXTURE_2D, this);
         gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.width, this.height,
-                0, this.format, this.type, data);
+                0, this.format, this.type, data ? data : this.data);
     }
     return texture;
 };
@@ -516,12 +516,13 @@ Tma3DScreen.prototype.createFloatTexture =
 /**
  * Create texture buffer from Image object.
  * @param image Image object or ImageData object
- * @param flip image flip flag
+ * @param flip image flip flag (optional)
  * @param filter texture mag filter (optional)
  * @param wrap texture wrap flag (optional)
  */
 Tma3DScreen.prototype.createTexture = function (image, flip, filter, wrap) {
-    return this._createTexture(image, image.width, image.height, flip,
+    return this._createTexture(image, image.width, image.height,
+            flip ? flip : true,
             filter ? filter : Tma3DScreen.FILTER_LINEAR,
             wrap ? wrap : Tma3DScreen.WRAP_CLAMP_TO_EDGE,
             this.gl.RGBA, this.gl.UNSIGNED_BYTE, true);
