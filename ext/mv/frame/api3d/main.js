@@ -195,11 +195,11 @@ MajVj.frame.api3d.prototype.endDraw = function () {
  * @param mode 0: normal, 1: left, 2: right
  */
 MajVj.frame.api3d.prototype._viewport = function (view) {
-    var c = this._screen.canvas.width / 2;
+    var c = this._width / 2;
     var d = c * this.properties.parallax_overlap;
     var x = view == 2 ? (c - d) : 0;
-    var w = view == 0 ? this._screen.canvas.width : (c + d);
-    this._screen.gl.viewport(x, 0, w, this._screen.canvas.height);
+    var w = view == 0 ? this._width : (c + d);
+    this._screen.gl.viewport(x, 0, w, this._height);
 };
 
 /**
