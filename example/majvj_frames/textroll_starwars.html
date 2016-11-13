@@ -1,0 +1,59 @@
+<html>
+<head>
+<link
+    href="https://fonts.googleapis.com/css?family=Open+Sans:700|Share+Tech+Mono"
+    rel="stylesheet">
+</head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+tma.extlibs = ['ext/gl-matrix.js', 'ext/mv/MajVj.js'];
+tma.onload = function() {
+  Promise.all([
+      document.fonts.ready,
+      MajVj.loadAllPlugins()]).then(function() {
+    var vj = new MajVj();
+    var frame = vj.create('frame', 'textroll', {
+      position: [ 0, -2000, -1000 ],
+      speed: 0.3,
+      type: "starwars",
+      styles: {
+        normal: {
+          name: 'Open Sans',
+          size: 128,
+          fg: 'rgb(243, 213, 26)',
+          linespace: 1,
+          alignment: 'center'
+        }
+      },
+      texts: [
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+        { style: 'normal', text: 'Hello World.' },
+      ]
+    });
+    window.onresize = e => {
+      frame.onresize(vj.onresize());
+    };
+    vj.run(function(delta) {
+      vj.screen().fillColor(0.0, 0.0, 0.0, 1.0);
+      frame.draw(delta);
+    });
+  });
+};
+</script>
+</body>
+</html>
