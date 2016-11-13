@@ -390,8 +390,14 @@ Tma3DScreen.prototype.convertImage = function (image) {
  *      weight: 400, 'bold', etc. (optional)
  *      background: e.g., 'rgba(0, 0, 0, 0)', '#000000', etc.
  *      foreground: e.g., 'rgb(255, 255,255)', 'white', etc.
+ *      fill: true or false. (optional)
  *    }
  * @param texture output texture restrictions
+ *    {
+ *      width: 512
+ *      height: 512
+ *    }
+ }
  */
 Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
     var weight = font.weight ? (font.weight + ' ') : '';
@@ -413,10 +419,15 @@ Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
     this.context.font = fontname;
     this.context.fillStyle = font.background;
     this.context.fillRect(0, 0, w, h);
-    this.context.fillStyle = font.foreground;
     this.context.textAlign = 'center';
     this.context.textBaseline = 'middle';
-    this.context.fillText(text, w / 2, h / 2);
+    if (font.fill === false) {
+        this.context.strokeStyle = font.foreground;
+        this.context.strokeText(text, w / 2, h / 2);
+    } else {
+        this.context.fillStyle = font.foreground;
+        this.context.fillText(text, w / 2, h / 2);
+    }
     var src = this.context.getImageData(0, 0, w, h);
     var image = this.createImage(src.width, src.height, src.data);
     return this.createTexture(image, true, Tma3DScreen.FILTER_LINEAR);
