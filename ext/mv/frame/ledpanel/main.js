@@ -11,10 +11,12 @@ MajVj.frame.ledpanel = function(options) {
   this._effect.properties.resolution = [ this._columns, this._rows ];
 
   this.properties = {
-    image: options.screen.createImage(this._columns, this._rows)
+    image: options.screen.createImage(this._columns, this._rows),
+    volume: 1.0
   }
 
-  this._texture = options.screen.createTexture(this.properties.image);
+  this._texture = options.screen.createTexture(
+      this.properties.image, true, Tma3DScreen.FILTER_NEAREST);
 };
 
 /**
@@ -40,5 +42,6 @@ MajVj.frame.ledpanel.prototype.onresize = function(aspect) {
  */
 MajVj.frame.ledpanel.prototype.draw = function(delta) {
   this._texture.update();
+  this._effect.properties.volume = this.properties.volume;
   this._effect.draw(delta, this._texture);
 };

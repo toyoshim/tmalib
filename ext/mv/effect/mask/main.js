@@ -7,7 +7,8 @@ MajVj.effect.mask = function (options) {
     this._screen = options.screen;
     this.properties = {
         resolution: [ options.width / 8, options.height / 8 ],
-        texture: null
+        texture: null,
+        volume: 1.0
     };
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
@@ -77,5 +78,6 @@ MajVj.effect.mask.prototype.draw = function (delta, texture) {
     this._program.setTexture('uTexture', texture);
     this._program.setTexture('uPatch', this._patch);
     this._program.setUniformVector('uResolution', this.properties.resolution);
+    this._program.setUniformVector('uVolume', [this.properties.volume]);
     this._program.drawArrays(Tma3DScreen.MODE_TRIANGLE_FAN, 0, 4);
 };
