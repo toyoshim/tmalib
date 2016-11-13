@@ -105,6 +105,7 @@ MajVj.prototype.aspect = function () {
  * @return { width, height, aspect } object
  */
 MajVj.prototype.size = function () {
+    // TODO: Returns bound screen's size.
     return {
         width: this._screen.canvas.width,
         height: this._screen.canvas.height,

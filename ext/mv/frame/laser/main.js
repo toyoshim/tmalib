@@ -13,6 +13,8 @@ MajVj.frame.laser = function (options) {
     this._draw = options.draw || function (api) {};
 
     this._api3d = this._mv.create('frame', 'api3d', {
+        width: options.width,
+        height: options.height,
         drawModeVertexShader: MajVj.frame.laser._vLine3dShader,
         drawModeFragmentShader: MajVj.frame.laser._fLine3dShader
     });
@@ -21,7 +23,7 @@ MajVj.frame.laser = function (options) {
     this.properties = {};
     this.properties.api3d = this._api3d.properties;
 
-    this.onresize(options.aspect);
+    this.resize(options.width, options.height);
 
     this._line2dProgram = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
@@ -110,11 +112,21 @@ MajVj.frame.laser.load = function () {
  * @param aspect screen aspect ratio
  */
 MajVj.frame.laser.prototype.onresize = function (aspect) {
-    this._aspect = aspect;
-    this._zoom = [1.0, 1.0, 1.0];
     var size = this._mv.size();
-    this._width = size.width;
-    this._height = size.height;
+    resize(size.width, size.height);
+    this._api3d.onresize(this._aspect);
+};
+
+/**
+ * Resizes screen.
+ * @param width screen width in pixel
+ * @param height screen height in pixel
+ */
+MajVj.frame.laser.prototype.resize = function (width, height) {
+    this._aspect = width / height;
+    this._zoom = [1.0, 1.0, 1.0];
+    this._width = width;
+    this._height = height;
     // Ajust to keep 1:1 aspect and to overfill the screen.
     if (this._aspect > 1.0)
         this._zoom[1] = this._aspect;
@@ -122,8 +134,6 @@ MajVj.frame.laser.prototype.onresize = function (aspect) {
         this._zoom[0] = 1 / this._aspect;
     mat3.identity(this._zoomMatrix);
     mat3.scale(this._zoomMatrix, this._zoomMatrix, this._zoom);
-
-    this._api3d.onresize(aspect);
 };
 
 /**

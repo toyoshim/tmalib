@@ -5,7 +5,9 @@
  */
 MajVj.frame.equalizer = function (options) {
     this._laser = options.mv.create('frame', 'laser', {
-            draw: this._draw.bind(this)
+            draw: this._draw.bind(this),
+            width: options.width,
+            height: options.height
     });
     this.properties = {
         fft: new Uint8Array(1024),
