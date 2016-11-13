@@ -412,11 +412,16 @@ Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
             w = texture.width;
         if (texture.height)
             h = texture.height;
+    } else {
+        var margin = font.stroke * 2 || 1;
+        w += margin * 2;
+        h += margin * 2;
     }
     this.canvas2d.width = w;
     this.canvas2d.height = h;
     // Other rendering contexts should be set after changing canvas size.
     this.context.font = fontname;
+    this.context.lineWidth = font.stroke || 1;
     this.context.fillStyle = font.background;
     this.context.fillRect(0, 0, w, h);
     this.context.textAlign = 'center';
