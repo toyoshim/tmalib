@@ -5,12 +5,14 @@ ShadertoyCommon = function () {
 
 ShadertoyCommon.prototype.init = function (sound) {
     return new Promise((resolve, reject) => {
+        //MajVj.setSetting('misc', 'sound', 'useMicrophone', true);
         Promise.all([
             MajVj.loadPlugin('frame', 'shadertoy'),
             MajVj.loadPlugin('misc', 'sound')
         ]).then(() => {
             if (sound) {
                 this.sound = this.mv.create('misc', 'sound');
+                //this.sound.capture();
                 this.sound.fetch('../data/sample.mp3', true);
             }
             resolve();

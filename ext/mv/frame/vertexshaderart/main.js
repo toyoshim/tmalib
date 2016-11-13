@@ -78,6 +78,22 @@ MajVj.frame.vertexshaderart.load = function () {
     });
 };
 
+MajVj.frame.vertexshaderart.updateSoundHistory = function (h, n) {
+    var i;
+    for (i = 1024 * 240 - 1; i >= 1024; --i)
+        h[i] = h[i - 1024];
+    for (; i >= 0; --i)
+        h[i] = n[i];
+};
+
+MajVj.frame.vertexshaderart.updateFloatSoundHistory = function (h, n) {
+    var i;
+    for (i = 1024 * 240 - 1; i >= 1024; --i)
+        h[i] = h[i - 1024];
+    for (; i >= 0; --i)
+        h[i] = n[i];
+};
+
 /**
  * Handles screen resize.
  * @param aspect screen aspect ratio
@@ -114,12 +130,12 @@ MajVj.frame.vertexshaderart.prototype.draw = function (delta) {
     //             :           : getByteFrenquencyData.
     // soundRes    : vec2      : resolution of sound
     // background  : vec4      : background color
-    // 
+    //
     // Outputs:
     // -------------------------------------------------------------
     // gl_Position : vec4    : standard GLSL vertex shader output
     // v_color     : vec4    : color to output from fragment shader
-    // 
+    //
     // BLEND is enabled, function is ONE,ONE_MINUS_SRC_ALPHA,
     // DEPTH_TEST is enabled.
 
@@ -140,19 +156,15 @@ MajVj.frame.vertexshaderart.prototype.draw = function (delta) {
 
     var i;
     if (this.properties.update.soundHistory) {
-        var sound = this.properties.soundHistory;
-        for (i = 1024 * 240 - 1; i >= 1024; --i)
-            sound[i] = sound[i - 1024];
-        for (; i >= 0; --i)
-            sound[i] = this.properties.sound[i];
+        MajVj.frame.vertexshaderart.updateSoundHistory(
+                this.properties.soundHistory,
+                this.properties.sound);
     }
     this._sound.update(this.properties.soundHistory);
     if (this.properties.update.floatSoundHistory) {
-        var floatSound = this.properties.floatSoundHistory;
-        for (i = 1024 * 240 - 1; i >= 1024; --i)
-            floatSound[i] = floatSound[i - 1024];
-        for (; i >= 0; --i)
-            floatSound[i] = this.properties.floatSound[i];
+        MajVj.frame.vertexshaderart.updateFloatSoundHistory(
+                this.properties.floatSoundHistory,
+                this.properties.floatSound);
     }
     this._floatSound.update(this.properties.floatSoundHistory);
 

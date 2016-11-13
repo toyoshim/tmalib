@@ -9,6 +9,7 @@ tma.onload = function () {
 	var st = new ShadertoyCommon();
 	Promise.all([st.init(true),
 				 MajVj.loadPlugin('frame', name),
+				 MajVj.loadPlugin('frame', 'api3d'),
 				 MajVj.loadPlugin('frame', 'laser')]).then(() => {
 		var frame = st.mv.create('frame', name);
 		var prop = { properties: st.prop() };
