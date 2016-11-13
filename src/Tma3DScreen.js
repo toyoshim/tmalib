@@ -494,12 +494,13 @@ Tma3DScreen.prototype._createTexture =
  * @param width texture width
  * @param height texture height
  * @param flip image flip flag
+ * @param filter texture mag filter (optional)
  */
 Tma3DScreen.prototype.createAlphaFloatTexture =
-        function (data, width, height, flip) {
-    return this._createTexture(data, width, height, flip, this.gl.NEAREST,
-            Tma3DScreen.WRAP_CLAMP_TO_EDGE, this.gl.ALPHA, this.gl.FLOAT,
-            false);
+        function (data, width, height, flip, filter) {
+    return this._createTexture(data, width, height, flip,
+            filter || this.gl.NEAREST, Tma3DScreen.WRAP_CLAMP_TO_EDGE,
+            this.gl.ALPHA, this.gl.FLOAT, false);
 };
 
 /**
@@ -508,12 +509,13 @@ Tma3DScreen.prototype.createAlphaFloatTexture =
  * @param width texture width
  * @param height texture height
  * @param flip image flip flag
+ * @param filter texture mag filter (optional)
  */
 Tma3DScreen.prototype.createAlphaTexture =
-        function (data, width, height, flip) {
-    return this._createTexture(data, width, height, flip, this.gl.NEAREST,
-            Tma3DScreen.WRAP_CLAMP_TO_EDGE, this.gl.ALPHA,
-            this.gl.UNSIGNED_BYTE, false);
+        function (data, width, height, flip, filter) {
+    return this._createTexture(data, width, height, flip,
+            filter || this.gl.NEAREST, Tma3DScreen.WRAP_CLAMP_TO_EDGE,
+            this.gl.ALPHA, this.gl.UNSIGNED_BYTE, false);
 };
 
 /**

@@ -39,9 +39,11 @@ MajVj.frame.vertexshaderart = function (options) {
     this._touch = this._screen.createFloatTexture(
             new Float32Array(32 * 240 * 4), 32, 240, false);
     this._sound = this._screen.createAlphaTexture(
-            this.properties.soundHistory, 1024, 240, false);
+            this.properties.soundHistory, 1024, 240, false,
+            Tma3DScreen.FILTER_LINEAR);
     this._floatSound = this._screen.createAlphaFloatTexture(
-            this.properties.floatSoundHistory, 1024, 240, false);
+            this.properties.floatSoundHistory, 1024, 240, false,
+            Tma3DScreen.FILTER_LINEAR);
 };
 
 MajVj.frame.vertexshaderart._vheader = ' \
