@@ -1,0 +1,94 @@
+<html>
+<head><title>multi vertex arts</title></head>
+<body style="margin: 0">
+<script src="../../tma.js"></script>
+<script>
+
+tma.extlibs = [ 'ext/gl-matrix.js', 'ext/mv/MajVj.js' ];
+tma.onload = function () {
+  MajVj.setSetting('misc', 'sound', 'useMicrophone', true);
+  Promise.all([tma.loadShader('shaders/1.html', 'vertex'),
+               tma.loadShader('shaders/2.html', 'vertex'),
+               tma.loadShader('shaders/3.html', 'vertex'),
+               tma.loadShader('shaders/4.html', 'vertex'),
+               MajVj.loadAllPlugins()]).then(function (data) {
+    var vj = new MajVj();
+    var sound = vj.create('misc', 'sound');
+    sound.capture();
+    var r = 0;
+    var art1 = vj.create('frame', 'vertexshaderart', {
+      vshader: data[0],
+      vertexCount: 50000
+    });
+    var fft = new Uint8Array(1024);
+    var fftH = new Uint8Array(1024 * 240);
+    var fftDb = new Float32Array(1024);
+    var fftDbH = new Float32Array(1024 * 240);
+    var art2 = vj.create('frame', 'vertexshaderart', {
+      vshader: data[1],
+      vertexCount: 100000,
+      mode: Tma3DScreen.MODE_LINES,
+      sound: fft,
+      soundHistory: fftH,
+      floatSound: fftDb,
+      floatSoundHistory: fftDbH
+    });
+    var art3 = vj.create('frame', 'vertexshaderart', {
+      vshader: data[2],
+      vertexCount: 100000,
+      mode: Tma3DScreen.MODE_POINTS,
+      sound: fft,
+      soundHistory: fftH,
+      floatSound: fftDb,
+      floatSoundHistory: fftDbH
+    });
+    var art4 = vj.create('frame', 'vertexshaderart', {
+      vshader: data[3],
+      vertexCount: 100000,
+      mode: Tma3DScreen.MODE_TRIANGLES
+    });
+    var api3d = vj.create('frame', 'api3d', { draw: draw });
+    var fbo1 = vj.screen().createFrameBuffer(320, 240);
+    var fbo2 = vj.screen().createFrameBuffer(320, 240);
+    var fbo3= vj.screen().createFrameBuffer(320, 240);
+    var fbo4 = vj.screen().createFrameBuffer(320, 240);
+    function draw(api) {
+      r += 0.002;
+      var l = r + Math.PI / 2;
+      api.color = [1.0, 1.0, 1.0, 1.0];
+      api.drawBox(320, 240, [-200,  -50, -500], [[ 0,  r, 0]], fbo1.texture);
+      api.drawBox(320, 240, [ 200,  -50, -500], [[ 0, -r, 0]], fbo2.texture);
+      api.drawBox(320, 240, [   0,  150, -500], [[ l,  0, 0]], fbo3.texture);
+      api.drawBox(320, 240, [   0, -250, -500], [[-l,  0, 0]], fbo4.texture);
+    }
+    vj.run(delta => {
+      sound.getByteFrequencyData(fft);
+      sound.getFloatFrequencyData(fftDb);
+      MajVj.frame.vertexshaderart.updateSoundHistory(fftH, fft);
+      MajVj.frame.vertexshaderart.updateFloatSoundHistory(fftDbH, fftDb);
+
+      fbo1.bind();
+      art1.draw(delta);
+
+      fbo2.bind();
+      art2.draw(delta);
+
+      fbo3.bind();
+      art3.draw(delta);
+
+      fbo4.bind();
+      art4.draw(delta);
+
+      vj.screen().bind();
+      vj.screen().fillColor(0, 0.05, 0.1, 1);
+      api3d.draw(delta);
+      vj.screen().flush();
+    });
+    window.onresize = function () {
+      api3d.onresize(vj.onresize());
+    };
+  });
+};
+</script>
+</body>
+</html>
