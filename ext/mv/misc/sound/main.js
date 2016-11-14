@@ -23,6 +23,7 @@ MajVj.misc.sound = function (options) {
     if (options.delay)
         this._delay.delayTime.value = options.delay;
     this._buffer = new Array(this._channel);
+    this._data = null;
     this._playing = 0;
     if (options.url)
         this.fetch(options.url, options.play);
@@ -64,6 +65,7 @@ MajVj.misc.sound._context = null;
 MajVj.misc.sound.prototype.fetch = function (url, play) {
     // FIXME: |play| does not work when multiple fetch requests run.
     this._play = play || false;
+    this._data = null;
     return new Promise(function (resolve, reject) {
         var promise = tma.fetch(url);
         promise.then(function (data) {
@@ -250,4 +252,20 @@ MajVj.misc.sound.prototype.getFloatWaveTable = function (left, right) {
         this._leftAnalyser.getFloatTimeDomainData(left);
         this._rightAnalyser.getFloatTimeDomainData(right);
     }
+};
+
+/**
+ * Checks if any channel plays.
+ * @return true if plays
+ */
+MajVj.misc.sound.prototype.isPlaying = function () {
+  return this._playing != 0;
+};
+
+/**
+ * Checks if any playable data is ready.
+ * @return true if it can play
+ */
+MajVj.misc.sound.prototype.isReady = function () {
+  return this._data != null;
 };
