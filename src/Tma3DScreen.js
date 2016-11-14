@@ -391,6 +391,8 @@ Tma3DScreen.prototype.convertImage = function (image) {
  *      background: e.g., 'rgba(0, 0, 0, 0)', '#000000', etc.
  *      foreground: e.g., 'rgb(255, 255,255)', 'white', etc.
  *      fill: true or false. (optional)
+ *      stroke: 16
+ *      margin: 32
  *    }
  * @param texture output texture restrictions
  *    {
@@ -413,7 +415,7 @@ Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
         if (texture.height)
             h = texture.height;
     } else {
-        var margin = font.stroke * 2 || 1;
+        var margin = font.stroke * 2 || font.margin || 1;
         w += margin * 2;
         h += margin * 2;
     }
