@@ -16,7 +16,7 @@ MajVj.misc.host = function (options) {
         fft: null
     };
     MajVj.loadPlugin(this._type, this._name, this._path).then(() => {
-        this._frame = this._mv.create(this._type, this._name);
+        this._frame = this._mv.create(this._type, this._name, options.options);
         if (this._frame.properties.fftDb !== undefined)
             this.properties.fftDb = this._frame.properties.fftDb;
         if (this._frame.properties.fft !== undefined)
