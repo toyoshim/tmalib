@@ -154,6 +154,7 @@ MajVj.misc.sound.prototype.stop = function (channel) {
     this._buffer[ch].disconnect();
     this._gain[ch].disconnect();
     this._buffer[ch] = null;
+    this._data = null;
     this._playing--;
     if (this._playing == 0) {
         this._splitter.disconnect();
