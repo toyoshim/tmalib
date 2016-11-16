@@ -9,6 +9,7 @@ MajVj.frame.movie = function(options) {
   this._height = options.height;
   this._aspect = options.aspect;
   this._mute = options.mute !== undefined ? options.mute : true;
+  this._loop = options.loop !== undefined ? options.loop : true;
   this._rate = options.rate ? options.rate : 1.0;
   this.properties = {
     scroll: [0, 0],  // base point in the original image pixel range
@@ -63,7 +64,7 @@ MajVj.frame.movie.prototype.play = function(url) {
       this._video = video;
       tma.log('video: ' + video.videoWidth + 'x' + video.videoHeight);
       this._video.volume = this._mute ? 0 : 1;
-      this._video.loop = true;
+      this._video.loop = this._loop;
       this._video.playbackRate = this._rate;
 
       // Calculate automatic adjust scale.
