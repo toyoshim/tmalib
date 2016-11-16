@@ -12,6 +12,7 @@ MajVj.misc.sound = function (options) {
     for (var ch = 0; ch < this._channel; ++ch)
         this._gain[ch] = this._audio.createGain();
     this._splitter = this._audio.createChannelSplitter(2);
+    this._analyserGain = this._audio.createGain();
     this._analyser = this._audio.createAnalyser();
     this._leftAnalyser = this._audio.createAnalyser();
     this._rightAnalyser = this._audio.createAnalyser();
@@ -124,11 +125,16 @@ MajVj.misc.sound.prototype.capture = function (channel) {
  * @param offset in sec (optional: 0)
  */
 MajVj.misc.sound.prototype._connect = function (ch, play, offset) {
+    // buffer* +=> gain*        ==> delay    --> destination
+    //         +=> analyserGain +-> analyser
+    //                          +-> splitter +-> leftAnalyser
+    //                                       +-> rightAnalyser
     this._buffer[ch].connect(this._gain[ch]);
-    this._gain[ch].connect(this._analyser);
     this._gain[ch].connect(this._delay);
-    this._gain[ch].connect(this._splitter);
+    this._buffer[ch].connect(this._analyserGain);
     if (this._playing == 0) {
+        this._analyserGain.connect(this._analyser);
+        this._analyserGain.connect(this._splitter);
         this._splitter.connect(this._leftAnalyser, 0);
         this._splitter.connect(this._rightAnalyser, 1);
         if (play)
@@ -157,6 +163,7 @@ MajVj.misc.sound.prototype.stop = function (channel) {
     this._data = null;
     this._playing--;
     if (this._playing == 0) {
+        this._analyserGain.disconnect();
         this._splitter.disconnect();
         this._delay.disconnect();
     }
@@ -175,11 +182,31 @@ MajVj.misc.sound.prototype.setGain = function (gain, channel) {
 };
 
 /**
+ * Sets analyser gain.
+ * @param gain a gain to set in float from 0.0 to 1.0
+ */
+MajVj.misc.sound.prototype.setAnalyserGain = function (gain) {
+    this._analyserGain.gain.value = gain;
+};
+
+/**
  * Sets sound delay.
  * @param delay a delay time in second.
  */
 MajVj.misc.sound.prototype.setDelay = function (delay) {
     this._delay.delayTime.value = delay;
+};
+
+/**
+ * Sets playback rate.
+ * @param rate playback rate
+ * @param channel a channel to set (optional: 0)
+ */
+MajVj.misc.sound.prototype.setPlaybackRate = function (rate, channel) {
+    var ch = channel || 0;
+    if (ch > this._channel || !this._buffer[ch])
+        return;
+    this._buffer[ch].playbackRate.value = rate;
 };
 
 /**
