@@ -168,11 +168,13 @@ Tma3DScreen.prototype.loadShader = function (type, id) {
  */
 Tma3DScreen.prototype.linkProgram = function (program) {
     this.gl.linkProgram(program);
-    if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS))
+    if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
         tma.log('WebGL link program error: ' +
                 this.gl.getProgramInfoLog(program));
-    tma.log('WebGL program active attributes ' +
-            this.gl.getProgramParameter(program, this.gl.ACTIVE_ATTRIBUTES));
+        tma.log('WebGL program active attributes ' +
+                this.gl.getProgramParameter(program,
+                        this.gl.ACTIVE_ATTRIBUTES));
+    }
 };
 
 /**

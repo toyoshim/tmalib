@@ -35,8 +35,6 @@ MajVj.frame.crlogo = function (options) {
 MajVj.frame.crlogo._createLogo = function (path) {
     return new Promise(function (resolve, reject) {
         MajVj.loadImage('frame', 'crlogo', path).then(function (image) {
-            tma.log('generating ' + image.width + 'x' + image.height +
-                    ' particles from ' + path);
             var canvas = document.createElement('canvas');
             canvas.width = image.width;
             canvas.height = image.height;
