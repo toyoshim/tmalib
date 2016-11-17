@@ -204,8 +204,10 @@ MajVj.misc.sound.prototype.setDelay = function (delay) {
  */
 MajVj.misc.sound.prototype.setPlaybackRate = function (rate, channel) {
     var ch = channel || 0;
-    if (ch > this._channel || !this._buffer[ch])
+    if (ch > this._channel || !this._buffer[ch] ||
+            !this._buffer[ch].playbackRate) {  // for capture.
         return;
+    }
     this._buffer[ch].playbackRate.value = rate;
 };
 
