@@ -11,6 +11,7 @@ MajVj.frame.movie = function(options) {
   this._mute = options.mute !== undefined ? options.mute : true;
   this._loop = options.loop !== undefined ? options.loop : true;
   this._rate = options.rate ? options.rate : 1.0;
+  this._started = false;
   this.properties = {
     scroll: [0, 0],  // base point in the original image pixel range
     scale: 0.0,      // automatically adjusted if 0 is specified
@@ -98,10 +99,12 @@ MajVj.frame.movie.prototype.onresize = function(aspect) {
 MajVj.frame.movie.prototype.draw = function(delta) {
   if (!this._texture)
     return;
-  if (this._video.paused && this.properties.volume != 0)
+  if (!this._started && this._video.paused && this.properties.volume != 0) {
     this._video.play();
-  else if (!this._video.paused && this.properties.volume == 0)
+    this._started = true;
+  } else if (!this._video.paused && this.properties.volume == 0) {
     this._video.pause();
+  }
   this._texture.update(this._video);
   this._program.setAttributeArray('aCoord', this._coords, 0, 2, 0);
   this._program.setUniformVector('uScale', this.properties.scale ? [
