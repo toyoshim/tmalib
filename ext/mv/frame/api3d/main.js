@@ -298,8 +298,9 @@ MajVj.frame.api3d.prototype._drawLine = function (src, dst) {
  * @param d depth
  * @param p position in [x, y, z]
  * @param r rotations in Array of [z, y, z] in radian (optional)
+ * @param v volume (optional)
  */
-MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
+MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r, v) {
     var texture = o.getTexture();
     var mode = o.getDrawMode();
     var point = mode == Tma3DScreen.MODE_POINTS;
@@ -311,6 +312,7 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r) {
         program.setAttributeArray(
                'aTexCoord', o.getCoordsBuffer(this._screen), 0, 2, 0);
         program.setTexture('uTexture', texture);
+        program.setUniformVector('uVolume', [v === undefined ? 1.0 : v]);
     } else if (point) {
         program.setUniformVector('uSize', [(w + h + d) / 3]);
         program.setAttributeArray(
