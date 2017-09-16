@@ -48,6 +48,8 @@ TmaTimeline._functionFor = function (type, options) {
     switch (type) {
     case 'bypass':
         return TmaTimeline._functionBypass;
+    case 'cubic-bezier':
+        return TmaTimeline._functionCubicBezier.bind(null, options);
     case 'ease':
         return TmaTimeline._functionCubicBezier.bind(null, {
             x1: 0.25,
