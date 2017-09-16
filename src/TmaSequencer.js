@@ -172,8 +172,12 @@ TmaSequencer.Task.prototype.spend = function (delta) {
  * @return 0 if not finished, otherwise a positive time that is not consumed
  */
 TmaSequencer.Task.prototype.run = function (delta, time) {
-    if (this._callback)
-      this._callback(delta, time);
+    if (this._callback) {
+      var elapsed = this._elapsed + delta;
+      if (elapsed > this._duration)
+        elapsed = this._duration;
+      this._callback(delta, time, elapsed);
+    }
     return this.spend(delta);
 };
 
