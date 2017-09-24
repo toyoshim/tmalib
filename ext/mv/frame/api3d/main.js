@@ -7,6 +7,7 @@ MajVj.frame.api3d = function (options) {
     this._screen = options.screen;
     this._width = options.width;
     this._height = options.height;
+    this._noclear = options.noclear || false;
     this.properties = {
         vr: false,
         parallax_overlap: 0.0,
@@ -134,7 +135,8 @@ MajVj.frame.api3d.prototype.onresize = function (aspect) {
  */
 MajVj.frame.api3d.prototype.draw = function (delta) {
     var api = this.beginDraw(delta);
-    this._module.clear(api);
+    if (!this._noclear)
+      this._module.clear(api);
     this._module.draw(api);
     this.endDraw();
 };
