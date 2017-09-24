@@ -9,8 +9,10 @@ MajVj.frame.specticle = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this.properties = { fftDb: new Float32Array(1024) };
-    this._color = options.color || [0.7, 0.2, 0.5, 1.0];
+    this.properties = {
+      fftDb: new Float32Array(1024),
+      color: options.color || [0.7, 0.2, 0.5, 1.0]
+    };
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
                     MajVj.frame.specticle._vertexShader),
@@ -93,6 +95,6 @@ MajVj.frame.specticle.prototype.draw = function (delta) {
     this._screen.setAlphaMode(true, this._screen.gl.ONE, this._screen.gl.ONE);
     this._program.setAttributeArray('aCoord', this._coords, 0, 3, 0);
     this._program.setUniformMatrix('uMatrix', this._matrix);
-    this._program.setUniformVector('uColor', this._color);
+    this._program.setUniformVector('uColor', this.properties.color);
     this._program.drawArrays(Tma3DScreen.MODE_POINTS, 0, this._n);
 };
