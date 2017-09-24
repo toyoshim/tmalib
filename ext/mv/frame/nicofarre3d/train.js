@@ -59,13 +59,13 @@ MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
     for (var i = 0; i < this._frontRails.length; ++i) {
         var rail = this._frontRails[i];
         api.drawBox(500, 200, [x, -500.0 - this._fly, z],
-                [-Math.PI / 2.0, r, 0.0]);
+                [[-Math.PI / 2.0, r, 0.0]]);
         var xdiff = 250.0 * Math.cos(r);
         var zdiff = 250.0 * Math.sin(r);
         api.drawBox(800, 10, [x + xdiff, -450.0 - this._fly, z - zdiff],
-                [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
+                [[-Math.PI / 2.0, r, Math.PI / 2.0 - r]]);
         api.drawBox(800, 10, [x - xdiff, -450.0 - this._fly, z + zdiff],
-                [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
+                [[-Math.PI / 2.0, r, Math.PI / 2.0 - r]]);
         if (rail.houseR) {
             api.color = rail.houseRC;
             api.drawPrimitive(this._box,
@@ -93,13 +93,13 @@ MajVj.frame.nicofarre3d.modules.train.prototype.draw = function (api) {
     for (i = this._backRails.length - 1; i >= 0; --i) {
         var rail = this._backRails[i];
         api.drawBox(500, 200, [x, -500.0 - this._fly, z],
-                [-Math.PI / 2.0, r, 0.0]);
+                [[-Math.PI / 2.0, r, 0.0]]);
         var xdiff = 250.0 * Math.cos(r);
         var zdiff = 250.0 * Math.sin(r);
         api.drawBox(800, 10, [x + xdiff, -450.0 - this._fly, z - zdiff],
-                [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
+                [[-Math.PI / 2.0, r, Math.PI / 2.0 - r]]);
         api.drawBox(800, 10, [x - xdiff, -450.0 - this._fly, z + zdiff],
-                [-Math.PI / 2.0, r, Math.PI / 2.0 - r]);
+                [[-Math.PI / 2.0, r, Math.PI / 2.0 - r]]);
         if (rail.houseR) {
             api.color = rail.houseRC;
             api.drawPrimitive(this._box,
