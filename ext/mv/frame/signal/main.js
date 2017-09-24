@@ -9,8 +9,9 @@ MajVj.frame.signal = function (options) {
     this._width = options.width;
     this._height = options.height;
     this._aspect = options.aspect;
-    this.properties = {};
-    this._color = options.color || [1.0, 0.0, 0.0, 1.0];
+    this.properties = {
+      color: options.color || [1.0, 0.0, 0.0, 1.0]
+    };
     this._coord = options.coord || [0.0, 0.0, 0.001];
     this._program = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
@@ -56,15 +57,6 @@ MajVj.frame.signal.prototype.onresize = function (aspect) {
 MajVj.frame.signal.prototype.draw = function (delta) {
     this._screen.setAlphaMode(true, this._screen.gl.ONE, this._screen.gl.ONE);
     this._program.setAttributeArray('aCoord', this._coords, 0, 3, 0);
-    this._program.setUniformVector('uColor', this._color);
+    this._program.setUniformVector('uColor', this.properties.color);
     this._program.drawArrays(Tma3DScreen.MODE_POINTS, 0, 1);
 };
-
-/**
- * Sets a color.
- * @param color a color to draw
- */
-MajVj.frame.signal.prototype.setColor = function (color) {
-    this._color = color;
-};
-
