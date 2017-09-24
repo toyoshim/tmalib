@@ -5,9 +5,7 @@
  */
 MajVj.misc.sound = function (options) {
     this._channel = options.channel || 1;
-    if (!MajVj.misc.sound._context)
-        MajVj.misc.sound._context = new AudioContext();
-    this._audio = MajVj.misc.sound._context;
+    this._audio = MajVj.misc.sound.context();
     this._gain = new Array(this._channel);
     for (var ch = 0; ch < this._channel; ++ch)
         this._gain[ch] = this._audio.createGain();
@@ -49,6 +47,31 @@ MajVj.misc.sound.load = function () {
             resolve();
         });
     });
+};
+
+/**
+ * Gets a common Web Audio context.
+ * @return a Web Autio context
+ */
+MajVj.misc.sound.context = function () {
+    if (!MajVj.misc.sound._context)
+        MajVj.misc.sound._context = new AudioContext();
+    return MajVj.misc.sound._context;
+};
+
+/**
+ * Preloads a sound data.
+ * @param url url from where a sound data will be loaded
+ * @return a Promise object
+ */
+MajVj.misc.sound.prefetch = function (url) {
+    return new Promise(function (resolve, reject) {
+        tma.fetch(url).then(function (data) {
+            MajVj.misc.sound.context().decodeAudioData(data, function (buffer) {
+                resolve(buffer);
+            }.bind(this), function (e) { tma.log(e); });
+        }.bind(this), reject);
+    }.bind(this));
 };
 
 // AudioContext shared in all instances.
