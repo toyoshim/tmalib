@@ -14,6 +14,8 @@ MajVj.frame.textroll = function(options) {
   this._box = TmaModelPrimitives.createBox();
   this._data = [];
   this._position = options.position || [ 0, 0, 0 ];
+  this._initial_position =
+      [ this._position[0], this._position[1], this._position[2] ];
   this._scale = options.scale !== undefined ? options.scale : 1;
   this._rotateBase = options.rotate || 0;
   this._camera = options.camera;
@@ -64,10 +66,20 @@ MajVj.frame.textroll = function(options) {
  * Loads resource asynchronously.
  * @return a Promise object
  */
-MajVj.frame.textroll.load = function() {
+MajVj.frame.textroll.load = function () {
   return new Promise(function(resolve, reject) {
     resolve();
   });
+};
+
+/**
+ * Rewinds to the first frame.
+ */
+MajVj.frame.textroll.prototype.rewind = function () {
+  this.properties.rotate = 0;
+  this._position[0] = this._initial_position[0];
+  this._position[1] = this._initial_position[1];
+  this._position[2] = this._initial_position[2];
 };
 
 /**
