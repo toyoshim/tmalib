@@ -35,6 +35,14 @@ MajVj.misc.host.load = function () {
 };
 
 /**
+ * Rewind to the first frame.
+ */
+MajVj.misc.host.prototype.rewind = function () {
+  if (this._frame.rewind)
+    this._frame.rewind();
+};
+
+/**
  * Handles screen resize.
  * @param aspect screen aspect ratio
  */
