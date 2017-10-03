@@ -120,11 +120,12 @@ MajVj.frame.nicofarre3d.modules.waypoints.prototype.draw = function (api) {
     // Update waypoints.
     var size = this._size;
     var ysize = this._height;
+    var m = api.delta / 16;
     for (var point = 0; point < this._waypoints.length; ++point) {
         var waypoint = this._waypoints[point];
-        waypoint.x += waypoint.vx;
-        waypoint.y += waypoint.vy;
-        waypoint.z += waypoint.vz;
+        waypoint.x += waypoint.vx * m;
+        waypoint.y += waypoint.vy * m;
+        waypoint.z += waypoint.vz * m;
         if ((waypoint.x > size && waypoint.vx > 0) ||
                 (waypoint.x < -size && waypoint.vx < 0))
             waypoint.vx = -waypoint.vx;
@@ -139,12 +140,15 @@ MajVj.frame.nicofarre3d.modules.waypoints.prototype.draw = function (api) {
     // Update particles.
     var emit = Math.min(
         this._emit, this._maxParticles - this._container.length);
+    if (api.delta == 0)
+      emit = 0;
     for (var i = 0; i < emit; ++i) {
         this._container.add(this._h, this._waypoints, this._size,
                             this._gravity, this._range);
     }
     this._h = (this._h + 1) % 360;
-    this._container.update();
+    if (api.delta != 0)
+      this._container.update();
 
     var n = Math.min(this._maxParticles, this._container.length);
     var vertices = this._model.getVerticesBuffer(api.screen);
