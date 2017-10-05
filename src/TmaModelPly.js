@@ -10,9 +10,14 @@
  */
 function TmaModelPly() {
     this._vertices = [];
+    this._verticesBuffer = null;
     this._normals = [];
-    this._coord = [];
+    this._coords = [];
+    this._coordsBuffer = null;
     this._indices = [];
+    this._indicesBuffer = null;
+    this._texture = null;
+    this._mode = Tma3DScreen.MODE_TRIANGLES;
 }
 
 /**
@@ -262,6 +267,87 @@ TmaModelPly.prototype.getCoords = function () {
  */
 TmaModelPly.prototype.getIndices = function () {
     return this._indices;
+};
+
+/**
+ * Gets model's active vertex indices offset.
+ * @return model's vertex indices offset (in bytes)
+ */
+TmaModelPly.prototype.getIndicesOffset = function () {
+    return 0;
+};
+
+/**
+ * Gets model's active vertex indices length.
+ * @return model's vertex indices length (in count)
+ */
+TmaModelPly.prototype.getIndicesLength = function () {
+    return this._indices.length;
+};
+
+/**
+ * Gets an array buffer bound to the vertices. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object
+ */
+TmaModelPly.prototype.getVerticesBuffer = function (screen) {
+    if (!this._verticesBuffer)
+        this._verticesBuffer = screen.createBuffer(this.getVertices());
+    return this._verticesBuffer;
+};
+
+/**
+ * Gets an array buffer bound to the coords. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object for texture coords
+ */
+TmaModelPly.prototype.getCoordsBuffer = function (screen) {
+    if (!this._coordsBuffer)
+        this._coordsBuffer = screen.createBuffer(this.getCoords());
+    return this._coordsBuffer;
+};
+
+/**
+ * Gets an element buffer bound to the indices. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an element buffer object
+ */
+TmaModelPly.prototype.getIndicesBuffer = function (screen) {
+    if (!this._indicesBuffer)
+        this._indicesBuffer = screen.createElementBuffer(this.getIndices());
+    return this._indicesBuffer;
+};
+
+/**
+ * Sets a texture.
+ * @param texture a texture object
+ */
+TmaModelPly.prototype.setTexture = function (texture) {
+    this._texture = texture;
+};
+
+/**
+ * Gets a bound texture object.
+ * @return a texture object
+ */
+TmaModelPly.prototype.getTexture = function () {
+    return this._texture;
+};
+
+/**
+ * Sets a recommended drawing mode.
+ * @param mode a drawing mode, e.g. Tma3DScreen.MODE_TRIANGLES
+ */
+TmaModelPly.prototype.setDrawMode = function (mode) {
+    this._mode = mode;
+};
+
+/**
+ * Gets a recommended drawing mode.
+ * @return a drawing mode, e.g. Tma3DScreen.MODE_TRIANGLES
+ */
+TmaModelPly.prototype.getDrawMode = function () {
+    return this._mode;
 };
 
 // node.js compatible export.
