@@ -95,6 +95,7 @@ TmaModelPly.prototype.load = function (data) {
                 element.keys = 0;
                 element.key = {};
                 element.data = [];
+                element.is_list = [];
                 break;
             case 'end_header':
                 eoh = true;
@@ -118,12 +119,15 @@ TmaModelPly.prototype.load = function (data) {
                     return false;
                 }
                 if (line[1] == 'list') {
+                    element.is_list[element.keys] = true;
                     element.key[line[line.length - 1]] = {
                         index: element.keys++,
-                        type: line[1]
+                        type: line[1],
+                        list_type: line[3]
                     };
                 } else if (line[1] == 'float' || line[1] == 'float32' ||
                         line[1] == 'int' || line[1] == 'uchar') {
+                    element.is_list[element.keys] = false;
                     element.key[line[2]] = {
                         index: element.keys++,
                         type: line[1]
@@ -164,15 +168,27 @@ TmaModelPly.prototype.load = function (data) {
     }
     for (var face = 0; face < structure.face.count; face++) {
         var faceData = reader.next();
-        if (faceData.length != (parseInt(faceData[0]) + 1)) {
+        if (faceData.length < structure.face.keys) {
             tma.error('ply: face element doesn\'t contain enough properties');
             return false;
         }
         var faces = [];
-        for (i = 0; i < faceData.length; ++i)
-            faces.push(parseInt(faceData[i]));
+        var index = 0;
+        for (i = 0; i < faceData.length; ++i) {
+            if (structure.face.is_list[index++]) {
+                var n = parseInt(faceData[i]);
+                var list = [];
+                for (var j = 0; j < n; ++j)
+                    list.push(parseFloat(faceData[i + j + 1]));
+                i += n;
+                faces.push(list);
+            } else {
+                faces.push(parseFloat(faceData[i]));
+            }
+        }
         structure.face.data.push(faces);
     }
+    delete structure.face.is_list;
     for (i = 0; i < structure.vertex.count; ++i) {
         this._vertices.push(
                 structure.vertex.data[i][structure.vertex.key.x.index]);
@@ -181,20 +197,35 @@ TmaModelPly.prototype.load = function (data) {
         this._vertices.push(
                 structure.vertex.data[i][structure.vertex.key.z.index]);
     }
+    var indices_index = structure.face.key.vertex_indices.index;
     for (i = 0; i < structure.face.count; ++i) {
-        if (structure.face.data[i].length == 4) {
+        if (structure.face.data[i][indices_index].length == 3) {
             // triangles.
-            this._indices.push(structure.face.data[i][1]);
-            this._indices.push(structure.face.data[i][2]);
-            this._indices.push(structure.face.data[i][3]);
+            this._indices.push(structure.face.data[i][indices_index][0]);
+            this._indices.push(structure.face.data[i][indices_index][1]);
+            this._indices.push(structure.face.data[i][indices_index][2]);
         } else {
             // quads
-            this._indices.push(structure.face.data[i][1]);
-            this._indices.push(structure.face.data[i][2]);
-            this._indices.push(structure.face.data[i][3]);
-            this._indices.push(structure.face.data[i][3]);
-            this._indices.push(structure.face.data[i][4]);
-            this._indices.push(structure.face.data[i][1]);
+            this._indices.push(structure.face.data[i][indices_index][0]);
+            this._indices.push(structure.face.data[i][indices_index][1]);
+            this._indices.push(structure.face.data[i][indices_index][2]);
+            this._indices.push(structure.face.data[i][indices_index][2]);
+            this._indices.push(structure.face.data[i][indices_index][3]);
+            this._indices.push(structure.face.data[i][indices_index][0]);
+        }
+    }
+    var texcoord_index = structure.face.key.texcoord.index;
+    if (texcoord_index !== undefined) {
+        this._coords = new Array(structure.vertex.count * 2);
+        for (i = 0; i < structure.face.count; ++i) {
+            if (structure.face.data[i][texcoord_index].length == 6) {
+                this._coords[structure.face.data[i][indices_index][0] * 2 + 0] = structure.face.data[i][texcoord_index][0];
+                this._coords[structure.face.data[i][indices_index][0] * 2 + 1] = structure.face.data[i][texcoord_index][1];
+                this._coords[structure.face.data[i][indices_index][1] * 2 + 0] = structure.face.data[i][texcoord_index][2];
+                this._coords[structure.face.data[i][indices_index][1] * 2 + 1] = structure.face.data[i][texcoord_index][3];
+                this._coords[structure.face.data[i][indices_index][2] * 2 + 0] = structure.face.data[i][texcoord_index][4];
+                this._coords[structure.face.data[i][indices_index][2] * 2 + 1] = structure.face.data[i][texcoord_index][5];
+            }
         }
     }
     return true;
@@ -222,7 +253,7 @@ TmaModelPly.prototype.getVertices = function () {
  * @return texture coord in Array
  */
 TmaModelPly.prototype.getCoords = function () {
-    return this._coord;
+    return this._coords;
 };
 
 /**
