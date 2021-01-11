@@ -81,19 +81,19 @@ MajVj.frame.vertexshaderart.load = function () {
 };
 
 MajVj.frame.vertexshaderart.updateSoundHistory = function (h, n) {
-    var i;
-    for (i = 1024 * 240 - 1; i >= 1024; --i)
-        h[i] = h[i - 1024];
-    for (; i >= 0; --i)
-        h[i] = n[i];
+    for (let i = 0; i < 1024 * 239; ++i)
+        h[i] = h[i + 1024];
+    const offset = 1024 * 239;
+    for (let i = 0; i < 1024; ++i)
+        h[offset + i] = n[i];
 };
 
 MajVj.frame.vertexshaderart.updateFloatSoundHistory = function (h, n) {
-    var i;
-    for (i = 1024 * 240 - 1; i >= 1024; --i)
-        h[i] = h[i - 1024];
-    for (; i >= 0; --i)
-        h[i] = n[i];
+    for (let i = 0; i < 1024 * 239; ++i)
+        h[i] = h[i + 1024];
+    const offset = 1024 * 239;
+    for (let i = 0; i < 1024; ++i)
+        h[offset + i] = n[i];
 };
 
 /**

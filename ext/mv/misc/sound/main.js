@@ -21,6 +21,7 @@ MajVj.misc.sound = function (options) {
     this._delay = this._audio.createDelay();
     if (options.delay)
         this._delay.delayTime.value = options.delay;
+    tma.log('audio analysis delay: ' + this._delay.delayTime.value + 's');
     this._buffer = new Array(this._channel);
     this._data = null;
     this._playing = 0;
