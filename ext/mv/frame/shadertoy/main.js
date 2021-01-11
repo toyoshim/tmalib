@@ -18,20 +18,18 @@ MajVj.frame.shadertoy = function (options) {
     this._time = 0.0;
     this._program = null;
     if (options.shader)
-        this.setShader(options.shader);
+        this.setShader(options.shader, options.gl2);
     this._copy = this._screen.createProgram(
             this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.frame.shadertoy._vertexShader),
+                    MajVj.frame.shadertoy._vertexShader1),
             this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
                     MajVj.frame.shadertoy._fragmentShader));
     this._coords = this._screen.createBuffer([-1, -1, -1, 1, 1, 1, 1, -1]);
     var waveTableWidth = this.properties.wave.length;
     var textureHeight = 2;
-    var rgbaSize = 4;
-    this._waveData =
-            new Float32Array(waveTableWidth * rgbaSize * textureHeight);
-    this._waveTexture = this._screen.createFloatTexture(
-            this._waveData, waveTableWidth, 2, true);
+    this._waveData = new Uint8Array(waveTableWidth * textureHeight * 4);
+    this._waveTexture = this._screen.createDataTexture(
+            this._waveData, waveTableWidth, textureHeight, true);
     this._mouse = { x: 0.0, y: 0.0, cx: 0.0, cy: 0.0 };
     this._updateMouse = options.updateMouse !== false;
     this._fbo = [
@@ -41,10 +39,12 @@ MajVj.frame.shadertoy = function (options) {
 };
 
 // Shader programs.
-MajVj.frame.shadertoy._vertexShader = null;
+MajVj.frame.shadertoy._vertexShader1 = null;
+MajVj.frame.shadertoy._vertexShader2 = null;
 MajVj.frame.shadertoy._fragmentShader = null;
 MajVj.frame.shadertoy._shadertoyHeader = null;
-MajVj.frame.shadertoy._shadertoyFooter = null;
+MajVj.frame.shadertoy._shadertoyFooter1 = null;
+MajVj.frame.shadertoy._shadertoyFooter2 = null;
 
 /**
  * Loads resource asynchronously.
@@ -53,17 +53,22 @@ MajVj.frame.shadertoy._shadertoyFooter = null;
 MajVj.frame.shadertoy.load = function () {
     return new Promise(function (resolve, reject) {
         Promise.all([
-            MajVj.loadShader('frame', 'shadertoy', 'shaders.html', 'vertex'),
+            MajVj.loadShader('frame', 'shadertoy', 'shaders.html', 'vertex1'),
+            MajVj.loadShader('frame', 'shadertoy', 'shaders.html', 'vertex2'),
             MajVj.loadShader('frame', 'shadertoy', 'shaders.html', 'fragment'),
             MajVj.loadShader(
                 'frame', 'shadertoy', 'shaders.html', 'fragment_head'),
             MajVj.loadShader(
-                'frame', 'shadertoy', 'shaders.html', 'fragment_foot')
+                'frame', 'shadertoy', 'shaders.html', 'fragment_foot1'),
+            MajVj.loadShader(
+                'frame', 'shadertoy', 'shaders.html', 'fragment_foot2')
         ]).then(function (results) {
-            MajVj.frame.shadertoy._vertexShader = results[0];
-            MajVj.frame.shadertoy._fragmentShader = results[1];
-            MajVj.frame.shadertoy._shadertoyHeader = results[2];
-            MajVj.frame.shadertoy._shadertoyFooter = results[3];
+            MajVj.frame.shadertoy._vertexShader1 = results[0];
+            MajVj.frame.shadertoy._vertexShader2 = results[1];
+            MajVj.frame.shadertoy._fragmentShader = results[2];
+            MajVj.frame.shadertoy._shadertoyHeader = results[3];
+            MajVj.frame.shadertoy._shadertoyFooter1 = results[4];
+            MajVj.frame.shadertoy._shadertoyFooter2 = results[5];
             resolve();
         }, function (error) { tma.log(error); });
     });
@@ -99,13 +104,15 @@ MajVj.frame.shadertoy.prototype.draw = function (delta) {
     this._screen.setAlphaMode(true, this._screen.gl.ONE, this._screen.gl.ONE);
 
     var ratio = this.properties.fft.length / this.properties.wave.length;
-    var rgbSize = 4;
     var width = this.properties.wave.length;
-    var fftOffset = width * rgbSize;
+    var fftOffset = width * 4;
     for (var x = 0; x < width; ++x) {
-      this._waveData[x * rgbSize] = this.properties.wave[x];
-      this._waveData[fftOffset + x * rgbSize] =
-              this.properties.fft[(x * ratio)|0] / 255;
+      let offset = x * 4;
+      this._waveData[offset] = (this.properties.wave[x] * 127 + 128)|0;
+      this._waveData[offset + 3] = this._waveData[offset];
+      offset += fftOffset;
+      this._waveData[offset] = this.properties.fft[(x * ratio)|0];
+      this._waveData[offset + 3] = this._waveData[offset];
     }
     this._waveTexture.update(this._waveData);
 
@@ -115,6 +122,7 @@ MajVj.frame.shadertoy.prototype.draw = function (delta) {
     this._program.setUniformVector(
         'iResolution', [this._width, this._height, 1.0]);
     this._program.setUniformVector('iGlobalTime', [this._time]);
+    this._program.setUniformVector('iTime', [this._time]);
     this._program.setUniformVector('iTimeDelta', [delta / 1000.0]);
     this._program.setUniformVector(
         'iChannelTime', [this._time, this._time, this._time, this._time]);
@@ -173,12 +181,15 @@ MajVj.frame.shadertoy.prototype.draw = function (delta) {
  * Sets a fragment shader.
  * @param shader a fragment shader
  */
-MajVj.frame.shadertoy.prototype.setShader = function (shader) {
-    this._program = this._screen.createProgram(
-            this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
-                    MajVj.frame.shadertoy._vertexShader),
-            this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
-                    MajVj.frame.shadertoy._shadertoyHeader + shader +
-                    MajVj.frame.shadertoy._shadertoyFooter));
+MajVj.frame.shadertoy.prototype.setShader = function (shader, gl2) {
+    const ver = gl2 ? '#version 300 es\n#define texture2D texture\n' : '';
+    const frag_foot =
+            gl2 ? MajVj.frame.shadertoy._shadertoyFooter2
+                : MajVj.frame.shadertoy._shadertoyFooter1;
+    const fs = this._screen.compileShader(Tma3DScreen.FRAGMENT_SHADER,
+            ver + MajVj.frame.shadertoy._shadertoyHeader + shader + frag_foot);
+    const vs = this._screen.compileShader(Tma3DScreen.VERTEX_SHADER,
+            gl2 ? MajVj.frame.shadertoy._vertexShader2
+                : MajVj.frame.shadertoy._vertexShader1);
+    this._program = this._screen.createProgram(vs, fs);
 };
-

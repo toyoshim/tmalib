@@ -6720,6 +6720,7 @@ MajVj.prototype.aspect = function () {
  * @return { width, height, aspect } object
  */
 MajVj.prototype.size = function () {
+    // TODO: Returns bound screen's size.
     return {
         width: this._screen.canvas.width,
         height: this._screen.canvas.height,
@@ -6832,6 +6833,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('effect', 'crt'),
         MajVj.loadPlugin('effect', 'flashpanel'),
         MajVj.loadPlugin('effect', 'glow'),
+        MajVj.loadPlugin('effect', 'hue'),
         MajVj.loadPlugin('effect', 'led'),
         MajVj.loadPlugin('effect', 'mask'),
         MajVj.loadPlugin('effect', 'mirror'),
@@ -6840,6 +6842,7 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('effect', 'rgb'),
         MajVj.loadPlugin('effect', 'rollpanel'),
         MajVj.loadPlugin('effect', 'tuning'),
+        MajVj.loadPlugin('effect', 'zoom'),
         MajVj.loadPlugin('frame', 'ab2'),
         MajVj.loadPlugin('frame', 'api3d'),
         MajVj.loadPlugin('frame', 'astalight'),
@@ -6849,14 +6852,19 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'effect'),
         MajVj.loadPlugin('frame', 'equalizer'),
         MajVj.loadPlugin('frame', 'filter'),
+        MajVj.loadPlugin('frame', 'flushpanel'),
         MajVj.loadPlugin('frame', 'grid'),
+        MajVj.loadPlugin('frame', 'image'),
         MajVj.loadPlugin('frame', 'laser'),
+        MajVj.loadPlugin('frame', 'ledpanel'),
         MajVj.loadPlugin('frame', 'light'),
+        MajVj.loadPlugin('frame', 'mixer'),
         MajVj.loadPlugin('frame', 'morphere'),
         MajVj.loadPlugin('frame', 'movie'),
         MajVj.loadPlugin('frame', 'nico_test'),
         MajVj.loadPlugin('frame', 'nicofarre'),
         MajVj.loadPlugin('frame', 'nicofarre3d'),
+        MajVj.loadPlugin('frame', 'photoframe'),
         MajVj.loadPlugin('frame', 'rolline'),
         MajVj.loadPlugin('frame', 'sandbox'),
         MajVj.loadPlugin('frame', 'shadertoy'),
@@ -6864,14 +6872,17 @@ MajVj.loadAllPlugins = function () {
         MajVj.loadPlugin('frame', 'snow'),
         MajVj.loadPlugin('frame', 'specticle'),
         MajVj.loadPlugin('frame', 'spiline'),
+        MajVj.loadPlugin('frame', 'textroll'),
         MajVj.loadPlugin('frame', 'vertexshaderart'),
         MajVj.loadPlugin('frame', 'wired'),
         MajVj.loadPlugin('misc', 'api2d'),
         MajVj.loadPlugin('misc', 'automator'),
         MajVj.loadPlugin('misc', 'camera'),
+        MajVj.loadPlugin('misc', 'host'),
         MajVj.loadPlugin('misc', 'midi'),
-        MajVj.loadPlugin('misc', 'mixer'),
         MajVj.loadPlugin('misc', 'perlin'),
+        MajVj.loadPlugin('misc', 'random'),
+        MajVj.loadPlugin('misc', 'sequencer'),
         MajVj.loadPlugin('misc', 'sound')
     ]);
 };
@@ -6879,18 +6890,19 @@ MajVj.loadAllPlugins = function () {
 
 /**
  * Loads a MajVj plugin.
- * @param type 'effect' or 'frame'
+ * @param type 'effect', 'frame', 'misc', and 'external'
  * @param name plugin name
+ * @param path plugin relative path for 'external' type (optional)
  * @return a Promise object
  */
-MajVj.loadPlugin = function (type, name) {
+MajVj.loadPlugin = function (type, name, path) {
     return new Promise(function (resolve, reject) {
         if (MajVj[type][name]) {
             // The specified plugin is already loaded.
             resolve();
             return;
         }
-        MajVj.loadScript(type, name, 'main.js').then(function () {
+        var loaded = function () {
             if (!MajVj[type][name]) {
                 reject('MajVj.' + type + '.' + name + ' is not defined.');
                 return;
@@ -6902,7 +6914,12 @@ MajVj.loadPlugin = function (type, name) {
             MajVj[type][name].load().then(function () {
                 resolve();
             }, function (e) { reject(e); });
-        }, function () { reject('plugin load error: ' + name); });
+        };
+        var failed = function () { reject('plugin load error: ' + name); };
+        if (type == 'external')
+            tma.load(path).then(loaded, failed);
+        else
+            MajVj.loadScript(type, name, 'main.js').then(loaded, failed);
     });
 };
 
@@ -6985,6 +7002,7 @@ MajVj.effect = {};
 MajVj.frame = {};
 MajVj.misc = {};
 MajVj.scene = {};
+MajVj.external = {};
 MajVj._settings = {};
     this.core = this.$.core;
     this.MajVj = MajVj;

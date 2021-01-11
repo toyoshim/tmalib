@@ -102,7 +102,7 @@ tma.fetch = function (url, type, cache) {
     if (tma._resources[key].ready) {
       // The same resource is already loaded.
       return new Promise(function (resolve, reject) {
-        resolve(tma_resources[key].resource);
+        resolve(tma._resources[key].resource);
       });
     } else {
       // The same resource is on loading.
@@ -122,7 +122,7 @@ tma.fetch = function (url, type, cache) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.responseType = type;
-    xhr.onload = function () {
+    xhr.onloadend = function () {
       if (!this.response) {
         reject(this);
       } else {
@@ -136,6 +136,7 @@ tma.fetch = function (url, type, cache) {
         }
       }
       this.onload = null;
+      this.abort();
     }.bind(xhr);
     xhr.send();
   });
@@ -813,14 +814,12 @@ function Tma3DScreen (width, height) {
     this.canvas = document.createElement('canvas');
     this.canvas.style.backgroundColor = '#000000';
     this.resize(width, height);
-    this.gl = this.canvas.getContext('webgl', { preserveDrawingBuffer: true });
-    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    this.canvas.onmousemove = this._onmousemove.bind(this);
-    this.canvas.onmouseout = this._onmouseout.bind(this);
-    this.canvas.onmousedown = this._onmousedown.bind(this);
-    this.canvas.onmouseup = this._onmouseup.bind(this);
-    this.canvas2d = document.createElement('canvas');
-    this.context = this.canvas2d.getContext('2d');
+    this.gl = this.canvas.getContext('webgl2', { preserveDrawingBuffer: true });
+    this.gl2 = this.gl;
+    if (!this.gl) {
+        tma.log('WebGL: webgl2 is not supported. Try webgl...');
+        this.gl = this.canvas.getContext('webgl', { preserveDrawingBuffer: true });
+    }
     if (!this.gl) {
         tma.log('WebGL: webgl is not supported. Try experimental-webgl...');
         this.gl = this.canvas.getContext('experimental-webgl');
@@ -832,9 +831,19 @@ function Tma3DScreen (width, height) {
     if (!this.gl) {
         tma.error('WebGL: not supported.');
     }
-    if (this.gl.getExtension('OES_texture_float') == null) {
+    if (this.gl2 && this.gl.getExtension('EXT_color_buffer_float') == null) {
+        tma.log('WebGL2: float texture is not supported.');
+    }
+    if (!this.gl2 && this.gl.getExtension('OES_texture_float') == null) {
         tma.log('WebGL: float texture is not supported.');
     }
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    this.canvas.onmousemove = this._onmousemove.bind(this);
+    this.canvas.onmouseout = this._onmouseout.bind(this);
+    this.canvas.onmousedown = this._onmousedown.bind(this);
+    this.canvas.onmouseup = this._onmouseup.bind(this);
+    this.canvas2d = document.createElement('canvas');
+    this.context = this.canvas2d.getContext('2d');
     this.setAlphaMode(false);
     this.setCullingMode(false, true);
     this._currentAlphaMode = {};
@@ -870,6 +879,8 @@ function Tma3DScreen (width, height) {
         Tma3DScreen.MODE_TRIANGLE_FAN = this.gl.TRIANGLE_FAN;
         Tma3DScreen.FILTER_NEAREST = this.gl.NEAREST;
         Tma3DScreen.FILTER_LINEAR = this.gl.LINEAR;
+        Tma3DScreen.WRAP_CLAMP_TO_EDGE = this.gl.CLAMP_TO_EDGE;
+        Tma3DScreen.WRAP_REPEAT = this.gl.REPEAT;
         Tma3DScreen._MODE_INITIALIZED = true;
     }
 }
@@ -893,6 +904,8 @@ Tma3DScreen.MODE_TRIANGLE_STRIP = 5;
 Tma3DScreen.MODE_TRIANGLE_FAN = 6;
 Tma3DScreen.FILTER_NEAREST = 0x2600;
 Tma3DScreen.FILTER_LINEAR = 0x2601;
+Tma3DScreen.WRAP_CLAMP_TO_EDGE = 0x812f;
+Tma3DScreen.WRAP_REPEAT = 0x2901;
 
 /**
  * Attaches to a DOMElement. TmaScreen.BODY is useful predefined DOMElement
@@ -962,11 +975,13 @@ Tma3DScreen.prototype.loadShader = function (type, id) {
  */
 Tma3DScreen.prototype.linkProgram = function (program) {
     this.gl.linkProgram(program);
-    if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS))
+    if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
         tma.log('WebGL link program error: ' +
                 this.gl.getProgramInfoLog(program));
-    tma.log('WebGL program active attributes ' +
-            this.gl.getProgramParameter(program, this.gl.ACTIVE_ATTRIBUTES));
+        tma.log('WebGL program active attributes ' +
+                this.gl.getProgramParameter(program,
+                        this.gl.ACTIVE_ATTRIBUTES));
+    }
 };
 
 /**
@@ -1145,7 +1160,7 @@ Tma3DScreen.prototype.createFrameBuffer = function (width, height) {
  * Create ImageData for texture.
  * @param width texture width
  * @param height texture height
- * @param data texture data
+ * @param data initial texture data (optional)
  */
 Tma3DScreen.prototype.createImage = function (width, height, data) {
     var image = this.context.createImageData(width, height);
@@ -1178,10 +1193,28 @@ Tma3DScreen.prototype.convertImage = function (image) {
  * Creates a texture buffer from string.
  * @param text a text shown in the created texture
  * @param font font information
+ *    {
+ *      name: "'Open Sans', sans-serif", 'Open Sans', 'sans-serif', etc.
+ *      size: 128 (in px)
+ *      weight: 400, 'bold', etc. (optional)
+ *      background: e.g., 'rgba(0, 0, 0, 0)', '#000000', etc.
+ *      foreground: e.g., 'rgb(255, 255,255)', 'white', etc.
+ *      fill: true or false. (optional)
+ *      stroke: 16
+ *      margin: 32
+ *    }
  * @param texture output texture restrictions
+ *    {
+ *      width: 512
+ *      height: 512
+ *    }
+ }
  */
 Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
-    var fontname = font.size + 'px ' + font.name;
+    var weight = font.weight ? (font.weight + ' ') : '';
+    var name = (font.name.indexOf(' ') < 0 || font.name[0] == '\'') ?
+            font.name : ('\'' + font.name + '\'');
+    var fontname = weight + font.size + 'px ' + name;
     this.context.font = fontname;
     var w = this.context.measureText(text).width;
     var h = font.size * devicePixelRatio * 1.5; // FIXME: just in case.
@@ -1190,17 +1223,27 @@ Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
             w = texture.width;
         if (texture.height)
             h = texture.height;
+    } else {
+        var margin = font.stroke * 2 || font.margin || 1;
+        w += margin * 2;
+        h += margin * 2;
     }
     this.canvas2d.width = w;
     this.canvas2d.height = h;
     // Other rendering contexts should be set after changing canvas size.
     this.context.font = fontname;
+    this.context.lineWidth = font.stroke || 1;
     this.context.fillStyle = font.background;
     this.context.fillRect(0, 0, w, h);
-    this.context.fillStyle = font.foreground;
     this.context.textAlign = 'center';
     this.context.textBaseline = 'middle';
-    this.context.fillText(text, w / 2, h / 2);
+    if (font.fill === false) {
+        this.context.strokeStyle = font.foreground;
+        this.context.strokeText(text, w / 2, h / 2);
+    } else {
+        this.context.fillStyle = font.foreground;
+        this.context.fillText(text, w / 2, h / 2);
+    }
     var src = this.context.getImageData(0, 0, w, h);
     var image = this.createImage(src.width, src.height, src.data);
     return this.createTexture(image, true, Tma3DScreen.FILTER_LINEAR);
@@ -1213,11 +1256,13 @@ Tma3DScreen.prototype.createStringTexture = function (text, font, texture) {
  * @param height texture height
  * @param flip image flip flag
  * @param filter texture mag filter
+ * @param wrap texture wrap flag
  * @param type data type like gl.FLOAT, gl.UNSIGNED_BYTE
  * @param image souce is image source
  */
 Tma3DScreen.prototype._createTexture =
-        function (data, width, height, flip, filter, format, type, image) {
+        function (data, width, height, flip, filter, wrap, format, type, image)
+{
     var texture = this.gl.createTexture();
     texture.width = width;
     texture.height = height;
@@ -1236,22 +1281,20 @@ Tma3DScreen.prototype._createTexture =
             this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, filter);
     this.gl.texParameteri(
             this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, filter);
-    this.gl.texParameteri(
-            this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(
-            this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, wrap);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, wrap);
     texture._flip = flip;
     texture._owner = this;
     texture.update = image ? function (data) {
         var gl = this._owner.gl;
         gl.bindTexture(gl.TEXTURE_2D, this);
         gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type,
-                data);
+                data ? data : this.data);
     } : function (data) {
         var gl = this._owner.gl;
         gl.bindTexture(gl.TEXTURE_2D, this);
         gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.width, this.height,
-                0, this.format, this.type, data);
+                0, this.format, this.type, data ? data : this.data);
     }
     return texture;
 };
@@ -1262,11 +1305,14 @@ Tma3DScreen.prototype._createTexture =
  * @param width texture width
  * @param height texture height
  * @param flip image flip flag
+ * @param filter texture mag filter (optional)
  */
 Tma3DScreen.prototype.createAlphaFloatTexture =
-        function (data, width, height, flip) {
-    return this._createTexture(data, width, height, flip, this.gl.NEAREST,
-            this.gl.ALPHA, this.gl.FLOAT, false);
+        function (data, width, height, flip, filter) {
+    const format = this.gl2 ? this.gl.R32F : this.gl.ALPHA;
+    return this._createTexture(data, width, height, flip,
+            filter || this.gl.NEAREST, Tma3DScreen.WRAP_CLAMP_TO_EDGE,
+            format, this.gl.FLOAT, false);
 };
 
 /**
@@ -1275,10 +1321,12 @@ Tma3DScreen.prototype.createAlphaFloatTexture =
  * @param width texture width
  * @param height texture height
  * @param flip image flip flag
+ * @param filter texture mag filter (optional)
  */
 Tma3DScreen.prototype.createAlphaTexture =
-        function (data, width, height, flip) {
-    return this._createTexture(data, width, height, flip, this.gl.NEAREST,
+        function (data, width, height, flip, filter) {
+    return this._createTexture(data, width, height, flip,
+            filter || this.gl.NEAREST, Tma3DScreen.WRAP_CLAMP_TO_EDGE,
             this.gl.ALPHA, this.gl.UNSIGNED_BYTE, false);
 };
 
@@ -1291,19 +1339,38 @@ Tma3DScreen.prototype.createAlphaTexture =
  */
 Tma3DScreen.prototype.createFloatTexture =
         function (data, width, height, flip) {
+    const format = this.gl2 ? this.gl.RGBA32F : this.gl.RGBA;
     return this._createTexture(data, width, height, flip, this.gl.NEAREST,
-            this.gl.RGBA, this.gl.FLOAT, false);
+            Tma3DScreen.WRAP_CLAMP_TO_EDGE, format, this.gl.FLOAT, false);
+};
+
+/**
+ * Create texture buffer from Uint8 object.
+ * @param data Uint8Array object
+ * @param width texture width
+ * @param height texture height
+ * @param flip image flip flag
+ * @param filter texture mag filter (optional)
+ */
+Tma3DScreen.prototype.createDataTexture =
+        function (data, width, height, flip, filter) {
+    return this._createTexture(data, width, height, flip,
+            filter || this.gl.NEAREST, Tma3DScreen.WRAP_CLAMP_TO_EDGE,
+            this.gl.RGBA, this.gl.UNSIGNED_BYTE, false);
 };
 
 /**
  * Create texture buffer from Image object.
  * @param image Image object or ImageData object
- * @param flip image flip flag
+ * @param flip image flip flag (optional)
  * @param filter texture mag filter (optional)
+ * @param wrap texture wrap flag (optional)
  */
-Tma3DScreen.prototype.createTexture = function (image, flip, filter) {
-    return this._createTexture(image, image.width, image.height, flip,
+Tma3DScreen.prototype.createTexture = function (image, flip, filter, wrap) {
+    return this._createTexture(image, image.width, image.height,
+            flip ? flip : true,
             filter ? filter : Tma3DScreen.FILTER_LINEAR,
+            wrap ? wrap : Tma3DScreen.WRAP_CLAMP_TO_EDGE,
             this.gl.RGBA, this.gl.UNSIGNED_BYTE, true);
 };
 
@@ -2324,8 +2391,12 @@ TmaSequencer.Task.prototype.spend = function (delta) {
  * @return 0 if not finished, otherwise a positive time that is not consumed
  */
 TmaSequencer.Task.prototype.run = function (delta, time) {
-    if (this._callback)
-      this._callback(delta, time);
+    if (this._callback) {
+      var elapsed = this._elapsed + delta;
+      if (elapsed > this._duration)
+        elapsed = this._duration;
+      this._callback(delta, time, elapsed);
+    }
     return this.spend(delta);
 };
 
@@ -2618,6 +2689,8 @@ TmaTimeline._functionFor = function (type, options) {
     switch (type) {
     case 'bypass':
         return TmaTimeline._functionBypass;
+    case 'cubic-bezier':
+        return TmaTimeline._functionCubicBezier.bind(null, options);
     case 'ease':
         return TmaTimeline._functionCubicBezier.bind(null, {
             x1: 0.25,
@@ -3273,9 +3346,14 @@ exports.TmaMotionBvh = TmaMotionBvh;
  */
 function TmaModelPly() {
     this._vertices = [];
+    this._verticesBuffer = null;
     this._normals = [];
-    this._coord = [];
+    this._coords = [];
+    this._coordsBuffer = null;
     this._indices = [];
+    this._indicesBuffer = null;
+    this._texture = null;
+    this._mode = Tma3DScreen.MODE_TRIANGLES;
 }
 
 /**
@@ -3358,6 +3436,7 @@ TmaModelPly.prototype.load = function (data) {
                 element.keys = 0;
                 element.key = {};
                 element.data = [];
+                element.is_list = [];
                 break;
             case 'end_header':
                 eoh = true;
@@ -3381,12 +3460,15 @@ TmaModelPly.prototype.load = function (data) {
                     return false;
                 }
                 if (line[1] == 'list') {
+                    element.is_list[element.keys] = true;
                     element.key[line[line.length - 1]] = {
                         index: element.keys++,
-                        type: line[1]
+                        type: line[1],
+                        list_type: line[3]
                     };
                 } else if (line[1] == 'float' || line[1] == 'float32' ||
                         line[1] == 'int' || line[1] == 'uchar') {
+                    element.is_list[element.keys] = false;
                     element.key[line[2]] = {
                         index: element.keys++,
                         type: line[1]
@@ -3427,15 +3509,27 @@ TmaModelPly.prototype.load = function (data) {
     }
     for (var face = 0; face < structure.face.count; face++) {
         var faceData = reader.next();
-        if (faceData.length != (parseInt(faceData[0]) + 1)) {
+        if (faceData.length < structure.face.keys) {
             tma.error('ply: face element doesn\'t contain enough properties');
             return false;
         }
         var faces = [];
-        for (i = 0; i < faceData.length; ++i)
-            faces.push(parseInt(faceData[i]));
+        var index = 0;
+        for (i = 0; i < faceData.length; ++i) {
+            if (structure.face.is_list[index++]) {
+                var n = parseInt(faceData[i]);
+                var list = [];
+                for (var j = 0; j < n; ++j)
+                    list.push(parseFloat(faceData[i + j + 1]));
+                i += n;
+                faces.push(list);
+            } else {
+                faces.push(parseFloat(faceData[i]));
+            }
+        }
         structure.face.data.push(faces);
     }
+    delete structure.face.is_list;
     for (i = 0; i < structure.vertex.count; ++i) {
         this._vertices.push(
                 structure.vertex.data[i][structure.vertex.key.x.index]);
@@ -3444,20 +3538,35 @@ TmaModelPly.prototype.load = function (data) {
         this._vertices.push(
                 structure.vertex.data[i][structure.vertex.key.z.index]);
     }
+    var indices_index = structure.face.key.vertex_indices.index;
     for (i = 0; i < structure.face.count; ++i) {
-        if (structure.face.data[i].length == 4) {
+        if (structure.face.data[i][indices_index].length == 3) {
             // triangles.
-            this._indices.push(structure.face.data[i][1]);
-            this._indices.push(structure.face.data[i][2]);
-            this._indices.push(structure.face.data[i][3]);
+            this._indices.push(structure.face.data[i][indices_index][0]);
+            this._indices.push(structure.face.data[i][indices_index][1]);
+            this._indices.push(structure.face.data[i][indices_index][2]);
         } else {
             // quads
-            this._indices.push(structure.face.data[i][1]);
-            this._indices.push(structure.face.data[i][2]);
-            this._indices.push(structure.face.data[i][3]);
-            this._indices.push(structure.face.data[i][3]);
-            this._indices.push(structure.face.data[i][4]);
-            this._indices.push(structure.face.data[i][1]);
+            this._indices.push(structure.face.data[i][indices_index][0]);
+            this._indices.push(structure.face.data[i][indices_index][1]);
+            this._indices.push(structure.face.data[i][indices_index][2]);
+            this._indices.push(structure.face.data[i][indices_index][2]);
+            this._indices.push(structure.face.data[i][indices_index][3]);
+            this._indices.push(structure.face.data[i][indices_index][0]);
+        }
+    }
+    var texcoord_index = structure.face.key.texcoord.index;
+    if (texcoord_index !== undefined) {
+        this._coords = new Array(structure.vertex.count * 2);
+        for (i = 0; i < structure.face.count; ++i) {
+            if (structure.face.data[i][texcoord_index].length == 6) {
+                this._coords[structure.face.data[i][indices_index][0] * 2 + 0] = structure.face.data[i][texcoord_index][0];
+                this._coords[structure.face.data[i][indices_index][0] * 2 + 1] = structure.face.data[i][texcoord_index][1];
+                this._coords[structure.face.data[i][indices_index][1] * 2 + 0] = structure.face.data[i][texcoord_index][2];
+                this._coords[structure.face.data[i][indices_index][1] * 2 + 1] = structure.face.data[i][texcoord_index][3];
+                this._coords[structure.face.data[i][indices_index][2] * 2 + 0] = structure.face.data[i][texcoord_index][4];
+                this._coords[structure.face.data[i][indices_index][2] * 2 + 1] = structure.face.data[i][texcoord_index][5];
+            }
         }
     }
     return true;
@@ -3485,7 +3594,7 @@ TmaModelPly.prototype.getVertices = function () {
  * @return texture coord in Array
  */
 TmaModelPly.prototype.getCoords = function () {
-    return this._coord;
+    return this._coords;
 };
 
 /**
@@ -3494,6 +3603,87 @@ TmaModelPly.prototype.getCoords = function () {
  */
 TmaModelPly.prototype.getIndices = function () {
     return this._indices;
+};
+
+/**
+ * Gets model's active vertex indices offset.
+ * @return model's vertex indices offset (in bytes)
+ */
+TmaModelPly.prototype.getIndicesOffset = function () {
+    return 0;
+};
+
+/**
+ * Gets model's active vertex indices length.
+ * @return model's vertex indices length (in count)
+ */
+TmaModelPly.prototype.getIndicesLength = function () {
+    return this._indices.length;
+};
+
+/**
+ * Gets an array buffer bound to the vertices. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object
+ */
+TmaModelPly.prototype.getVerticesBuffer = function (screen) {
+    if (!this._verticesBuffer)
+        this._verticesBuffer = screen.createBuffer(this.getVertices());
+    return this._verticesBuffer;
+};
+
+/**
+ * Gets an array buffer bound to the coords. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object for texture coords
+ */
+TmaModelPly.prototype.getCoordsBuffer = function (screen) {
+    if (!this._coordsBuffer)
+        this._coordsBuffer = screen.createBuffer(this.getCoords());
+    return this._coordsBuffer;
+};
+
+/**
+ * Gets an element buffer bound to the indices. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an element buffer object
+ */
+TmaModelPly.prototype.getIndicesBuffer = function (screen) {
+    if (!this._indicesBuffer)
+        this._indicesBuffer = screen.createElementBuffer(this.getIndices());
+    return this._indicesBuffer;
+};
+
+/**
+ * Sets a texture.
+ * @param texture a texture object
+ */
+TmaModelPly.prototype.setTexture = function (texture) {
+    this._texture = texture;
+};
+
+/**
+ * Gets a bound texture object.
+ * @return a texture object
+ */
+TmaModelPly.prototype.getTexture = function () {
+    return this._texture;
+};
+
+/**
+ * Sets a recommended drawing mode.
+ * @param mode a drawing mode, e.g. Tma3DScreen.MODE_TRIANGLES
+ */
+TmaModelPly.prototype.setDrawMode = function (mode) {
+    this._mode = mode;
+};
+
+/**
+ * Gets a recommended drawing mode.
+ * @return a drawing mode, e.g. Tma3DScreen.MODE_TRIANGLES
+ */
+TmaModelPly.prototype.getDrawMode = function () {
+    return this._mode;
 };
 
 // node.js compatible export.

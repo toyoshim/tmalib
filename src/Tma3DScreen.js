@@ -15,14 +15,12 @@ function Tma3DScreen (width, height) {
     this.canvas = document.createElement('canvas');
     this.canvas.style.backgroundColor = '#000000';
     this.resize(width, height);
-    this.gl = this.canvas.getContext('webgl', { preserveDrawingBuffer: true });
-    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    this.canvas.onmousemove = this._onmousemove.bind(this);
-    this.canvas.onmouseout = this._onmouseout.bind(this);
-    this.canvas.onmousedown = this._onmousedown.bind(this);
-    this.canvas.onmouseup = this._onmouseup.bind(this);
-    this.canvas2d = document.createElement('canvas');
-    this.context = this.canvas2d.getContext('2d');
+    this.gl = this.canvas.getContext('webgl2', { preserveDrawingBuffer: true });
+    this.gl2 = this.gl;
+    if (!this.gl) {
+        tma.log('WebGL: webgl2 is not supported. Try webgl...');
+        this.gl = this.canvas.getContext('webgl', { preserveDrawingBuffer: true });
+    }
     if (!this.gl) {
         tma.log('WebGL: webgl is not supported. Try experimental-webgl...');
         this.gl = this.canvas.getContext('experimental-webgl');
@@ -34,9 +32,19 @@ function Tma3DScreen (width, height) {
     if (!this.gl) {
         tma.error('WebGL: not supported.');
     }
-    if (this.gl.getExtension('OES_texture_float') == null) {
+    if (this.gl2 && this.gl.getExtension('EXT_color_buffer_float') == null) {
+        tma.log('WebGL2: float texture is not supported.');
+    }
+    if (!this.gl2 && this.gl.getExtension('OES_texture_float') == null) {
         tma.log('WebGL: float texture is not supported.');
     }
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    this.canvas.onmousemove = this._onmousemove.bind(this);
+    this.canvas.onmouseout = this._onmouseout.bind(this);
+    this.canvas.onmousedown = this._onmousedown.bind(this);
+    this.canvas.onmouseup = this._onmouseup.bind(this);
+    this.canvas2d = document.createElement('canvas');
+    this.context = this.canvas2d.getContext('2d');
     this.setAlphaMode(false);
     this.setCullingMode(false, true);
     this._currentAlphaMode = {};
@@ -502,9 +510,10 @@ Tma3DScreen.prototype._createTexture =
  */
 Tma3DScreen.prototype.createAlphaFloatTexture =
         function (data, width, height, flip, filter) {
+    const format = this.gl2 ? this.gl.R32F : this.gl.ALPHA;
     return this._createTexture(data, width, height, flip,
             filter || this.gl.NEAREST, Tma3DScreen.WRAP_CLAMP_TO_EDGE,
-            this.gl.ALPHA, this.gl.FLOAT, false);
+            format, this.gl.FLOAT, false);
 };
 
 /**
@@ -531,8 +540,24 @@ Tma3DScreen.prototype.createAlphaTexture =
  */
 Tma3DScreen.prototype.createFloatTexture =
         function (data, width, height, flip) {
+    const format = this.gl2 ? this.gl.RGBA32F : this.gl.RGBA;
     return this._createTexture(data, width, height, flip, this.gl.NEAREST,
-            Tma3DScreen.WRAP_CLAMP_TO_EDGE, this.gl.RGBA, this.gl.FLOAT, false);
+            Tma3DScreen.WRAP_CLAMP_TO_EDGE, format, this.gl.FLOAT, false);
+};
+
+/**
+ * Create texture buffer from Uint8 object.
+ * @param data Uint8Array object
+ * @param width texture width
+ * @param height texture height
+ * @param flip image flip flag
+ * @param filter texture mag filter (optional)
+ */
+Tma3DScreen.prototype.createDataTexture =
+        function (data, width, height, flip, filter) {
+    return this._createTexture(data, width, height, flip,
+            filter || this.gl.NEAREST, Tma3DScreen.WRAP_CLAMP_TO_EDGE,
+            this.gl.RGBA, this.gl.UNSIGNED_BYTE, false);
 };
 
 /**

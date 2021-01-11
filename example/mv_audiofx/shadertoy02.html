@@ -17,7 +17,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     vec2  uv     = fragCoord.xy/iResolution.xy;
     uv.y         = 1.0 - uv.y; // +Y is now "up"
     float freq   = 0.25*texture2D(iChannel0,vec2(uv.x,0.25)).x;
-    float wave   = texture2D(iChannel0,vec2(uv.x,0.75)).x;
+    float wave   = texture2D(iChannel0,vec2(uv.x,0.75)).x - 0.5;
     float freqc  = smoothstep(0.0,(1.0/iResolution.y), freq + uv.y - 0.9);
     float wavec  = smoothbump(0.0,(4.0/iResolution.y), wave + uv.y - 0.5);
     fragColor = vec4(freqc, wavec, 0.25,1.0);
@@ -32,7 +32,8 @@ tma.onload = function () {
   st.init(true).then(() => {
     var shadertoy = st.mv.create('frame', 'shadertoy', {
         shader: document.getElementById('shader').text,
-        textures: [ 'audio' ]
+        textures: [ 'audio' ],
+        gl2: false
     });
     st.mv.run(function (delta) {
       st.run(shadertoy);
