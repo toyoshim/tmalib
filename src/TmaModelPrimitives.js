@@ -11,10 +11,12 @@
  */
 function TmaModelPrimitives() {
     this._vertices = [];
+    this._normals = [];
     this._coords = [];
     this._indices = [];
     this._colors = [];
     this._verticesBuffer = null;
+    this._normalsBuffer = null;
     this._coordsBuffer = null;
     this._indicesBuffer = null;
     this._colorsBuffer = null;
@@ -45,6 +47,14 @@ TmaModelPrimitives.prototype.items = function () {
  */
 TmaModelPrimitives.prototype.getVertices = function () {
     return this._vertices;
+};
+
+/**
+ * Gets model's normals array.
+ * @return model's normals in Array or Float32Array
+ */
+TmaModelPrimitives.prototype.getNormals = function () {
+    return this._normals;
 };
 
 /**
@@ -99,6 +109,17 @@ TmaModelPrimitives.prototype.getVerticesBuffer = function (screen) {
 };
 
 /**
+ * Gets an array buffer bound to the normals. It may be created if needed.
+ * @param screen a Tma3DScreen object that will be used to create a buffer
+ * @return an array buffer object
+ */
+TmaModelPrimitives.prototype.getNormalsBuffer = function (screen) {
+    if (!this._normalsBuffer)
+        this._normalsBuffer = screen.createBuffer(this.getNormals());
+    return this._normalsBuffer;
+};
+
+/**
  * Gets an array buffer bound to the coords. It may be created if needed.
  * @param screen a Tma3DScreen object that will be used to create a buffer
  * @return an array buffer object for texture coords
@@ -131,6 +152,32 @@ TmaModelPrimitives.prototype.getColorsBuffer = function (screen) {
     return this._colorsBuffer;
 };
 
+/**
+ * Pushes a vertex attributes.
+ * @param p position [x, y, z] in the local space.
+ * @param coords texture [u, v].
+ * @param normal [normal] [x, y, z] for the vertex.
+ */
+TmaModelPrimitives.prototype.pushVertex = function (p, coords, normal) {
+    this._vertices = this._vertices.concat(p);
+    this._coords = this._coords.concat(coords);
+    if (normal)
+        this._normals = this._normals.concat(normal);
+    else if (this.getNormals().length != 0)
+        this._normals = this._normals.concat([0, 0, 0]);
+};
+
+/**
+ * Pushes indices for a polygon.
+ * @param a the first vertex index
+ * @param b the second vertex index
+ * @param c the third vertex index
+ */
+TmaModelPrimitives.prototype.pushPolygon = function (a, b, c) {
+    this._indices.push(a);
+    this._indices.push(b);
+    this._indices.push(c);
+};
 
 /**
  * Sets a texture.
