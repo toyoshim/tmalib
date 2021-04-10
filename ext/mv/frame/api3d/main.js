@@ -65,6 +65,7 @@ MajVj.frame.api3d = function (options) {
     };
 
     this._pMatrix = mat4.identity(mat4.create());
+    this._rMatrix = mat4.identity(mat4.create());
     this._mvMatrixL = mat4.identity(mat4.create());
     this._mvMatrixR = mat4.identity(mat4.create());
     this._iMatrix = mat4.identity(mat4.create());
@@ -329,17 +330,22 @@ MajVj.frame.api3d.prototype._drawPrimitive = function (o, w, h, d, p, r, v) {
         p[2] - this.properties.position[2]
     ];
     mat4.translate(this._matrix, this._iMatrix, rp);
+    mat4.translate(this._rMatrix, this._iMatrix, [0, 0, 0]);
     if (r) {
         for (var i = r.length - 1; i >= 0; --i) {
             var rotate = r[i];
             mat4.rotateX(this._matrix, this._matrix, rotate[0]);
             mat4.rotateY(this._matrix, this._matrix, rotate[1]);
             mat4.rotateZ(this._matrix, this._matrix, rotate[2]);
+            mat4.rotateX(this._rMatrix, this._rMatrix, rotate[0]);
+            mat4.rotateY(this._rMatrix, this._rMatrix, rotate[1]);
+            mat4.rotateZ(this._rMatrix, this._rMatrix, rotate[2]);
         }
     }
     mat4.scale(this._matrix, this._matrix, [w, h, d]);
     program.setUniformMatrix('uMatrix', this._matrix);
-
+    if (texture)
+        program.setUniformMatrix('uRMatrix', this._rMatrix);
     program.setUniformMatrix('uPMatrix', this._pMatrix);
     program.setUniformMatrix('uMVMatrix', this._mvMatrixL);
     if (mode != Tma3DScreen.MODE_LINE_TRIANGLES) {
