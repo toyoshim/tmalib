@@ -55,6 +55,7 @@ MajVj.frame.vertexshaderart._vheader = ' \
         uniform sampler2D sound; \
         uniform sampler2D floatSound; \
         uniform vec4 background; \
+        uniform vec2 soundRes; \
         varying vec4 v_color;';
 
 MajVj.frame.vertexshaderart._vshader = ' \
