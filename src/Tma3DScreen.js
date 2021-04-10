@@ -232,6 +232,11 @@ Tma3DScreen.prototype.createProgram = function (vertex, fragment) {
         buffer.bind();
         this._owner.setAttributeArray(this, index, offset, dimension, stride);
     };
+    programObject.setUniformArray = function (name, array) {
+        var index = this.uniformIndex(name);
+        if (index != -1)
+            this._owner.setUniformArray(this, index, array);
+    };
     programObject.setUniformVector = function (name, array) {
         var index = this.uniformIndex(name);
         if (index != -1)
@@ -618,6 +623,16 @@ Tma3DScreen.prototype.setAttributeArray =
     this.gl.vertexAttribPointer(
             index, dimension, this.gl.FLOAT, false, stride, offset);
     this.gl.enableVertexAttribArray(index);
+};
+
+/**
+ * Sets a float array to an internal buffer as a constant uniform array.
+ * @param index uniform index
+ * @param array float vector
+ */
+Tma3DScreen.prototype.setUniformArray = function (program, index, array) {
+    this.gl.useProgram(program);
+    this.gl.uniform1fv(index, array);
 };
 
 /**
